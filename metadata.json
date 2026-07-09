@@ -1,0 +1,6 @@
+{
+  "name": "Sneaker Roulette",
+  "description": "An interactive utility to organize and catalog your sneaker inventory, with a dynamic spinner to randomly pick your footwear.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
