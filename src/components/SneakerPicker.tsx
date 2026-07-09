@@ -181,9 +181,9 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
                 <div className="p-4 space-y-2">
                   <h3 className="text-base font-semibold text-zinc-100">{selected.name}</h3>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded-md border border-blue-500/20">{selected.brand}</span>
-                    <span className="text-xs px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-md border border-emerald-500/20">{selected.height}</span>
-                    <span className="text-xs px-2 py-0.5 bg-zinc-800 text-zinc-400 rounded">Worn {selected.worn}x</span>
+                    <span className="text-xs px-2 pt-0.5 pb-1.5 bg-sky-500/10 text-sky-400 rounded-2xl border border-sky-500/20">{selected.style.join(", ")}</span>
+                    <span className="text-xs px-2 pt-0.5 pb-1.5 bg-emerald-500/10 text-emerald-400 rounded-2xl border border-emerald-500/20">{selected.height} Top</span>
+                    <span className="text-xs px-2 pt-0.5 pb-1.5 bg-rose-500/10 text-rose-400 rounded-2xl border border-rose-500/20">Worn {selected.worn}x</span>
                   </div>
                 </div>
               </div>
