@@ -1,5 +1,7 @@
 import { Sneaker } from '../lib/supabase';
 import { Trash2, Edit3, Footprints } from 'lucide-react';
+import multicolorImg from '../assets/images/multicolor_1783660247625.jpg';
+import iridescentImg from '../assets/images/iridescent_color_1783660705612.jpg';
 
 interface SneakerCardProps {
   sneaker: Sneaker;
@@ -14,10 +16,11 @@ const COLOR_HEX: Record<string, string> = {
   'Orange': '#ff8c00', 'Light Yellow': '#ffffe0', 'Yellow': '#ffff00', 'Mint': '#aaf0d1',
   'Lime Green': '#84cc16', 'Green': '#228b22', 'Forest Green': '#228b22', 'Olive': '#6b8e23',
   'Teal': '#008080', 'Turquoise': '#40e0d0', 'Light Blue': '#add8e6', 'Aqua': '#00ffff',
-  'Blue': '#0000ff', 'Navy': '#000080', 'Indigo': '#4b0082', 'Purple': '#a020f0',
+  'Blue': '#0000ff', 'Navy': '#000080', 'Indigo': '#4b0082', 'Purple': '#4b0082',
   'Maroon': '#800000', 'Burgundy': '#800020', 'Magenta': '#ff00ff', 'Pink': '#ffc0cb',
-  'Hot Pink': '#ff1493', 'Gold': '#ffd700', 'Silver': '#c0c0c0', 'Reflective Silver': '#e8e8e8',
-  'Glow': '#00ff80', 'Iridescent': '#b469ff', 'Ice': '#b0e6ff', 'Multicolor': '#ff69b4',
+  'Hot Pink': '#ff1493', 'Gold': '#ffd700', 'Silver': '#c0c0c0', 'Reflective': '#e8e8e8',
+  'Glow': '#00ff80', 'Iridescent': iridescentImg, 'Ice': '#99bce1', 'Multicolor': multicolorImg, 'Paua': '#433b70',
+  'Light Green': '#90dbc2', 'Cyan': '#0bb8eb',
 };
 
 export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardProps) {
@@ -77,14 +80,18 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
         {/* Color swatches */}
         {sneaker.color.length > 0 && (
           <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
-            {sneaker.color.slice(0, 6).map((c, idx) => (
-              <div
-                key={`${c}-${idx}`}
-                className="w-5 h-5 rounded-full border-2 border-gray-200 hover:border-gray-400 transition-colors"
-                style={{ backgroundColor: COLOR_HEX[c] || '#cccccc' }}
-                title={c}
-              />
-            ))}
+            {sneaker.color.slice(0, 6).map((c, idx) => {
+              const val = COLOR_HEX[c] || '#cccccc';
+              const isImage = val.startsWith('/') || val.startsWith('data:') || val.includes('assets/') || val.includes('blob:');
+              return (
+                <div
+                  key={`${c}-${idx}`}
+                  className="w-5 h-5 rounded-full border-2 border-gray-200 hover:border-gray-400 transition-colors bg-center bg-cover"
+                  style={isImage ? { backgroundImage: `url(${val})` } : { backgroundColor: val }}
+                  title={c}
+                />
+              );
+            })}
             {sneaker.color.length > 6 && (
               <span className="text-xs text-gray-500">+{sneaker.color.length - 6}</span>
             )}

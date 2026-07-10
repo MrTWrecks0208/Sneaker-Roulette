@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Sneaker, SneakerInsert, BRANDS, HEIGHTS, STYLES, COLORS, buildName } from '../lib/supabase';
 import { X, Upload, Loader2, Camera, Sparkles } from 'lucide-react';
+import multicolorImg from '../assets/images/multicolor_1783660247625.jpg';
+import iridescentImg from '../assets/images/iridescent_color_1783660705612.jpg';
 
 const COLOR_GLOW: Record<string, { bg: string; text: string; border: string; shadow: string }> = {
   'White':            { bg: 'rgba(255,255,255,.80)', text: '#000000', border: 'rgba(255,255,255,.80)' },
@@ -500,18 +502,34 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
               {COLORS.map(c => {
                 const glow = COLOR_GLOW[c];
                 const selected = color.includes(c);
+                const isMulticolor = c === 'Multicolor';
+                const isIridescent = c === 'Iridescent';
                 return (
                   <button
                     key={c}
                     type="button"
                     onClick={() => toggleMultiSelect(color, c, setColor)}
-                    className={'px-3 py-1.5 rounded-2xl text-xs font-medium transition-all duration-200 border ' + (selected && glow ? '' : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-zinc-500')}
-                    style={selected && glow ? {
+                    className={'px-3 py-1.5 rounded-2xl text-xs font-medium transition-all duration-200 border ' + (selected && (glow || isMulticolor || isIridescent) ? '' : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-zinc-500')}
+                    style={selected ? (isMulticolor ? {
+                      backgroundImage: `url(${multicolorImg})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      color: '#ffffff',
+                      borderColor: '#ffffff',
+                      textShadow: '0px 1px 4px rgba(0,0,0,0.9), 0px 1px 2px rgba(0,0,0,0.9)',
+                    } : (isIridescent ? {
+                      backgroundImage: `url(${iridescentImg})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      color: '#000000',
+                      borderColor: '#ffffff',
+                      textShadow: '0px 1px 3px rgba(255,255,255,0.8)',
+                    } : (glow ? {
                       backgroundColor: glow.bg,
                       color: glow.text,
                       borderColor: glow.border,
                       boxShadow: glow.shadow,
-                    } : undefined}
+                    } : undefined))) : undefined}
                   >
                     {c}
                   </button>

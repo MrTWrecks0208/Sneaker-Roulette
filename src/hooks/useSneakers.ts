@@ -49,7 +49,6 @@ const DEFAULT_SNEAKERS: Sneaker[] = [
   },
 ];
 
-// Check if live Supabase keys are configured
 export const isSupabaseConfigured = !!(
   import.meta.env.VITE_SUPABASE_URL &&
   import.meta.env.VITE_SUPABASE_URL !== 'https://placeholder.supabase.co' &&
@@ -57,23 +56,33 @@ export const isSupabaseConfigured = !!(
   import.meta.env.VITE_SUPABASE_ANON_KEY !== 'placeholder'
 );
 
-export function useSneakers() {
+export function useSneakers(userId?: string) {
   const [sneakers, setSneakers] = useState<Sneaker[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchSneakers = useCallback(async () => {
+    if (!userId) {
+      setSneakers([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
-    if (!isSupabaseConfigured) {
-      // LocalStorage mode
+    const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass';
+
+    if (!isLiveMode) {
+      // Scoped local storage keys by userId to isolate user accounts locally!
       try {
-        const stored = localStorage.getItem('sneakers_inventory');
+        const storageKey = `sneakers_inventory_${userId}`;
+        const stored = localStorage.getItem(storageKey);
         if (stored) {
           setSneakers(JSON.parse(stored));
         } else {
-          localStorage.setItem('sneakers_inventory', JSON.stringify(DEFAULT_SNEAKERS));
+          // Put default sneakers in first time
+          localStorage.setItem(storageKey, JSON.stringify(DEFAULT_SNEAKERS));
           setSneakers(DEFAULT_SNEAKERS);
         }
       } catch (e) {
@@ -83,11 +92,12 @@ export function useSneakers() {
       return;
     }
 
-    // Live Supabase mode
+    // Live user-scoped Supabase mode
     try {
       const { data, error } = await supabase
         .from('sneakers')
         .select('*')
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -99,9 +109,10 @@ export function useSneakers() {
       const err = e as Error;
       console.error('Error querying Supabase database:', err);
       setError(err.message || 'Failed to connect to Supabase database.');
-      // Graceful fallback to localStorage on network or table failure
+      // Scoped local storage fallback
       try {
-        const stored = localStorage.getItem('sneakers_inventory');
+        const storageKey = `sneakers_inventory_${userId}`;
+        const stored = localStorage.getItem(storageKey);
         setSneakers(stored ? JSON.parse(stored) : DEFAULT_SNEAKERS);
       } catch {
         // Fallback silently if localStorage fails or is empty
@@ -109,27 +120,37 @@ export function useSneakers() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     fetchSneakers();
   }, [fetchSneakers]);
 
+  const saveToStorage = (updated: Sneaker[]) => {
+    if (userId) {
+      localStorage.setItem(`sneakers_inventory_${userId}`, JSON.stringify(updated));
+    }
+    setSneakers(updated);
+  };
+
   const addSneaker = async (sneaker: SneakerInsert) => {
+    if (!userId) return null;
     const name = buildName(sneaker.brand, sneaker.model, sneaker.variant || '', sneaker.colorway);
     
-    if (!isSupabaseConfigured) {
+    const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass';
+
+    if (!isLiveMode) {
       const newSneaker: Sneaker = {
         ...sneaker,
         id: crypto.randomUUID?.() || Math.random().toString(36).substring(2, 11),
         name,
         variant: sneaker.variant || '',
+        user_id: userId,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
       const updated = [newSneaker, ...sneakers];
-      localStorage.setItem('sneakers_inventory', JSON.stringify(updated));
-      setSneakers(updated);
+      saveToStorage(updated);
       return newSneaker;
     }
 
@@ -140,6 +161,7 @@ export function useSneakers() {
           ...sneaker,
           name,
           variant: sneaker.variant || '',
+          user_id: userId,
         })
         .select()
         .single();
@@ -154,7 +176,11 @@ export function useSneakers() {
   };
 
   const addSneakersBatch = async (sneakersData: SneakerInsert[]) => {
-    if (!isSupabaseConfigured) {
+    if (!userId) return null;
+    
+    const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass';
+
+    if (!isLiveMode) {
       const withNames: Sneaker[] = sneakersData.map(s => {
         const name = buildName(s.brand, s.model, s.variant || '', s.colorway);
         return {
@@ -162,13 +188,13 @@ export function useSneakers() {
           id: crypto.randomUUID?.() || Math.random().toString(36).substring(2, 11),
           name,
           variant: s.variant || '',
+          user_id: userId,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
       });
       const updated = [...withNames, ...sneakers];
-      localStorage.setItem('sneakers_inventory', JSON.stringify(updated));
-      setSneakers(updated);
+      saveToStorage(updated);
       return withNames;
     }
 
@@ -177,6 +203,7 @@ export function useSneakers() {
         ...s,
         name: buildName(s.brand, s.model, s.variant || '', s.colorway),
         variant: s.variant || '',
+        user_id: userId,
       }));
 
       const { data, error } = await supabase
@@ -194,7 +221,11 @@ export function useSneakers() {
   };
 
   const updateSneaker = async (id: string, updates: Partial<SneakerInsert>) => {
-    if (!isSupabaseConfigured) {
+    if (!userId) return null;
+
+    const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass';
+
+    if (!isLiveMode) {
       const current = sneakers.find(s => s.id === id);
       if (!current) return null;
 
@@ -213,8 +244,7 @@ export function useSneakers() {
       };
 
       const updatedList = sneakers.map(s => s.id === id ? updatedSneaker : s);
-      localStorage.setItem('sneakers_inventory', JSON.stringify(updatedList));
-      setSneakers(updatedList);
+      saveToStorage(updatedList);
       return updatedSneaker;
     }
 
@@ -235,6 +265,7 @@ export function useSneakers() {
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)
+        .eq('user_id', userId) // guarantee ownership validation
         .select()
         .single();
 
@@ -248,10 +279,13 @@ export function useSneakers() {
   };
 
   const deleteSneaker = async (id: string) => {
-    if (!isSupabaseConfigured) {
+    if (!userId) return false;
+
+    const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass';
+
+    if (!isLiveMode) {
       const updatedList = sneakers.filter(s => s.id !== id);
-      localStorage.setItem('sneakers_inventory', JSON.stringify(updatedList));
-      setSneakers(updatedList);
+      saveToStorage(updatedList);
       return true;
     }
 
@@ -259,7 +293,8 @@ export function useSneakers() {
       const { error } = await supabase
         .from('sneakers')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', userId); // guarantee ownership validation
 
       if (error) throw error;
       setSneakers(prev => prev.filter(s => s.id !== id));

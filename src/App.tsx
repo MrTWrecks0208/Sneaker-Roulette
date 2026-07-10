@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useSneakers } from './hooks/useSneakers';
+import { useAuth } from './hooks/useAuth';
+import SignIn from './components/SignIn';
 import { SneakerInsert, Sneaker } from './lib/supabase';
 import SneakerCard from './components/SneakerCard';
 import SneakerForm from './components/SneakerForm';
@@ -7,12 +9,15 @@ import FileUpload from './components/FileUpload';
 import SneakerPicker from './components/SneakerPicker';
 import {
   Plus, Upload, Search, Footprints,
-  SlidersHorizontal, X, AlertCircle, CheckCircle2, Database
+  SlidersHorizontal, X, AlertCircle, CheckCircle2, Database, LogOut
 } from 'lucide-react';
 import pinwheelIcon from '../icons/loader-pinwheel.png';
 
 function App() {
-  const { sneakers, loading, error, isSupabaseConfigured, addSneaker, addSneakersBatch, updateSneaker, deleteSneaker, incrementWorn } = useSneakers();
+  const { user, loading: authLoading, signOut } = useAuth();
+  const { sneakers, loading, error, isSupabaseConfigured, addSneaker, addSneakersBatch, updateSneaker, deleteSneaker, incrementWorn } = useSneakers(user?.id);
+  const isGuest = user?.id === 'guest-user-bypass';
+  const isLive = isSupabaseConfigured && !isGuest;
   const [showForm, setShowForm] = useState(false);
   const [editSneaker, setEditSneaker] = useState<Sneaker | null>(null);
   const [showImport, setShowImport] = useState(false);
@@ -77,6 +82,23 @@ function App() {
     return incrementWorn(id);
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center select-none">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center shadow-xl shadow-red-500/10 animate-bounce">
+            <Footprints className="w-6 h-6 text-white" />
+          </div>
+          <span className="text-sm font-semibold text-zinc-400 uppercase tracking-widest animate-pulse">Loading Locker...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <SignIn />;
+  }
+
   return (
     <div className="min-h-screen bg-zinc-950">
       {/* Header */}
@@ -90,7 +112,7 @@ function App() {
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-lg font-bold text-zinc-100 leading-tight">Sneaker Roulette </h1>
-                  {isSupabaseConfigured ? (
+                  {isLive ? (
                     <span className="flex h-2 w-2 relative" title="Connected to Supabase Live">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -102,7 +124,7 @@ function App() {
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <p className="text-[10px] text-zinc-500 uppercase tracking-widest leading-none">Inventory</p>
                   <span className="text-[9px] px-1 py-0.5 bg-zinc-900 text-zinc-400 border border-zinc-800/80 rounded">
-                    {isSupabaseConfigured ? 'Supabase Live' : 'Local Sandbox'}
+                    {isLive ? 'Supabase Live' : (isGuest ? 'Guest Sandbox' : 'Local Sandbox')}
                   </span>
                 </div>
               </div>
@@ -111,25 +133,51 @@ function App() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowPicker(true)}
-                className="hidden sm:flex items-center gap-2 px-4 py-2 bg-emerald-600/10 text-emerald-400 text-sm font-medium rounded-2xl border border-emerald-500/20 hover:bg-emerald-600/20 transition-colors"
+                className="hidden sm:flex items-center gap-2 px-4 py-2 bg-emerald-600/10 text-emerald-400 text-sm font-medium rounded-2xl border border-emerald-500/20 hover:bg-emerald-600/20 transition-colors cursor-pointer"
               >
                 <img src={pinwheelIcon} alt="" className="w-4 h-4" />
                 Spin the Wheel
               </button>
               <button
                 onClick={() => setShowImport(true)}
-                className="hidden sm:flex items-center gap-2 px-4 py-2 bg-zinc-800 text-white text-sm font-medium rounded-2xl border border-zinc-700 hover:bg-zinc-700 transition-colors"
+                className="hidden sm:flex items-center gap-2 px-4 py-2 bg-zinc-800 text-white text-sm font-medium rounded-2xl border border-zinc-700 hover:bg-zinc-700 transition-colors cursor-pointer"
               >
                 <Upload className="w-4 h-4" />
                 Import
               </button>
               <button
                 onClick={() => setShowForm(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-2xl hover:bg-red-500 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-2xl hover:bg-red-500 transition-colors cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 <span className="hidden sm:inline">Add Sneaker</span>
               </button>
+
+              <div className="h-8 w-px bg-zinc-800/80 mx-1 hidden sm:block" />
+
+              <div className="flex items-center gap-2.5">
+                <img
+                  src={user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(user.email)}`}
+                  alt="Avatar"
+                  className="w-8 h-8 rounded-xl object-cover border border-zinc-800 bg-zinc-900"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="hidden md:flex flex-col text-left">
+                  <span className="text-xs font-semibold text-zinc-200 truncate max-w-[120px]">
+                    {user.user_metadata?.username || user.user_metadata?.full_name || user.email.split('@')[0]}
+                  </span>
+                  <span className="text-[10px] text-zinc-500 truncate max-w-[120px]">
+                    {user.email}
+                  </span>
+                </div>
+                <button
+                  onClick={() => signOut()}
+                  title="Sign Out"
+                  className="p-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800/80 hover:border-zinc-700 text-zinc-400 hover:text-red-400 rounded-xl transition-all cursor-pointer"
+                >
+                  <LogOut className="w-4.5 h-4.5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -137,7 +185,21 @@ function App() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {/* Supabase connection guide / state banners */}
-        {!isSupabaseConfigured && (
+        {isGuest && (
+          <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 text-amber-200">
+            <div className="p-2.5 bg-amber-500/10 rounded-xl text-amber-400 shrink-0">
+              <Database className="w-5 h-5" />
+            </div>
+            <div className="flex-1 space-y-1">
+              <h4 className="text-sm font-semibold text-amber-300">Guest Sandbox Mode Active</h4>
+              <p className="text-xs text-amber-400/80 leading-relaxed">
+                You are currently bypassing live database authentication. Your collection, wears, and additions are saved in your browser's offline Local Sandbox cache.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {!isSupabaseConfigured && !isGuest && (
           <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 text-amber-200">
             <div className="p-2.5 bg-amber-500/10 rounded-xl text-amber-400 shrink-0">
               <Database className="w-5 h-5" />
@@ -155,7 +217,7 @@ function App() {
           </div>
         )}
 
-        {isSupabaseConfigured && error && (
+        {isLive && error && (
           <div className="bg-red-500/5 border border-red-500/20 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 text-red-200">
             <div className="p-2.5 bg-red-500/10 rounded-xl text-red-400 shrink-0">
               <AlertCircle className="w-5 h-5" />
@@ -169,7 +231,7 @@ function App() {
           </div>
         )}
 
-        {isSupabaseConfigured && !error && (
+        {isLive && !error && (
           <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 text-emerald-200">
             <div className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-400 shrink-0">
               <Database className="w-5 h-5" />
