@@ -67,6 +67,7 @@ export function useSneakers(userId?: string) {
   const [sneakers, setSneakers] = useState<Sneaker[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [usingLocalStorageFallback, setUsingLocalStorageFallback] = useState(false);
 
   const fetchSneakers = useCallback(async () => {
     if (!userId) {
@@ -81,6 +82,7 @@ export function useSneakers(userId?: string) {
     const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass' && isValidUuid(userId);
 
     if (!isLiveMode) {
+      setUsingLocalStorageFallback(false);
       // Scoped local storage keys by userId to isolate user accounts locally!
       try {
         const storageKey = `sneakers_inventory_${userId}`;
@@ -112,10 +114,12 @@ export function useSneakers(userId?: string) {
       }
 
       setSneakers(data || []);
+      setUsingLocalStorageFallback(false);
     } catch (e: unknown) {
       const err = e as Error;
       console.error('Error querying Supabase database:', err);
       setError(err.message || 'Failed to connect to Supabase database.');
+      setUsingLocalStorageFallback(true);
       // Scoped local storage fallback
       try {
         const storageKey = `sneakers_inventory_${userId}`;
@@ -144,7 +148,7 @@ export function useSneakers(userId?: string) {
     if (!userId) return null;
     const name = buildName(sneaker.brand, sneaker.model, sneaker.variant || '', sneaker.colorway);
     
-    const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass' && isValidUuid(userId);
+    const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass' && isValidUuid(userId) && !usingLocalStorageFallback;
 
     if (!isLiveMode) {
       const newSneaker: Sneaker = {
@@ -185,7 +189,7 @@ export function useSneakers(userId?: string) {
   const addSneakersBatch = async (sneakersData: SneakerInsert[]) => {
     if (!userId) return null;
     
-    const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass' && isValidUuid(userId);
+    const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass' && isValidUuid(userId) && !usingLocalStorageFallback;
 
     if (!isLiveMode) {
       const withNames: Sneaker[] = sneakersData.map(s => {
@@ -230,7 +234,7 @@ export function useSneakers(userId?: string) {
   const updateSneaker = async (id: string, updates: Partial<SneakerInsert>) => {
     if (!userId) return null;
 
-    const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass' && isValidUuid(userId);
+    const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass' && isValidUuid(userId) && !usingLocalStorageFallback;
 
     if (!isLiveMode) {
       const current = sneakers.find(s => s.id === id);
@@ -288,7 +292,7 @@ export function useSneakers(userId?: string) {
   const deleteSneaker = async (id: string) => {
     if (!userId) return false;
 
-    const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass' && isValidUuid(userId);
+    const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass' && isValidUuid(userId) && !usingLocalStorageFallback;
 
     if (!isLiveMode) {
       const updatedList = sneakers.filter(s => s.id !== id);
@@ -323,6 +327,7 @@ export function useSneakers(userId?: string) {
     loading,
     error,
     isSupabaseConfigured,
+    usingLocalStorageFallback,
     fetchSneakers,
     addSneaker,
     addSneakersBatch,

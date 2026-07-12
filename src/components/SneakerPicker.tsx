@@ -149,7 +149,7 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
                 <button
                   key={key}
                   onClick={() => { setFilter(key); setSelected(null); }}
-                  className={`flex flex-col items-center gap-1 py-3 rounded-xl text-xs font-medium transition-all border ${
+                  className={`flex flex-col items-center gap-1 py-3 rounded-xl text-xs font-medium transition-all duration-75 border ${
                     filter === key
                       ? activeClass
                       : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-600'
@@ -168,7 +168,7 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
                   {styleFilters.length > 0 && (
                     <button
                       onClick={() => { setStyleFilters([]); setSelected(null); }}
-                      className="text-[11px] text-zinc-400 hover:text-zinc-200 underline transition-colors"
+                      className="text-[11px] text-zinc-400 hover:text-zinc-200 underline transition-colors duration-75"
                     >
                       Clear all
                     </button>
@@ -179,7 +179,7 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
                 <div className="flex items-center gap-1.5 p-1 bg-zinc-950/60 rounded-xl border border-zinc-800/80 max-w-[240px]">
                   <button
                     onClick={() => { setLogicOperator('OR'); setSelected(null); }}
-                    className={`flex-1 py-1 px-2.5 text-center rounded-lg text-xs font-semibold transition-all ${
+                    className={`flex-1 py-1 px-2.5 text-center rounded-lg text-xs font-semibold transition-all duration-75 ${
                       logicOperator === 'OR'
                         ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                         : 'text-zinc-400 hover:text-zinc-200 border border-transparent'
@@ -189,7 +189,7 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
                   </button>
                   <button
                     onClick={() => { setLogicOperator('AND'); setSelected(null); }}
-                    className={`flex-1 py-1 px-2.5 text-center rounded-lg text-xs font-semibold transition-all ${
+                    className={`flex-1 py-1 px-2.5 text-center rounded-lg text-xs font-semibold transition-all duration-75 ${
                       logicOperator === 'AND'
                         ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                         : 'text-zinc-400 hover:text-zinc-200 border border-transparent'
@@ -206,7 +206,7 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
                       <button
                         key={s}
                         onClick={() => toggleStyleFilter(s)}
-                        className={`px-3 py-1 rounded-lg text-xs transition-colors border flex items-center gap-1.5 ${
+                        className={`px-3 py-1 rounded-lg text-xs transition-colors duration-75 border flex items-center gap-1.5 ${
                           isSelected
                             ? 'bg-amber-600/20 text-amber-400 border-amber-500/40'
                             : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-600'
@@ -228,7 +228,7 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
                   {colorFilters.length > 0 && (
                     <button
                       onClick={() => { setColorFilters([]); setSelected(null); }}
-                      className="text-[11px] text-zinc-400 hover:text-zinc-200 underline transition-colors"
+                      className="text-[11px] text-zinc-400 hover:text-zinc-200 underline transition-colors duration-75"
                     >
                       Clear all
                     </button>
@@ -239,7 +239,7 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
                 <div className="flex items-center gap-1.5 p-1 bg-zinc-950/60 rounded-xl border border-zinc-800/80 max-w-[240px]">
                   <button
                     onClick={() => { setLogicOperator('OR'); setSelected(null); }}
-                    className={`flex-1 py-1 px-2.5 text-center rounded-lg text-xs font-semibold transition-all ${
+                    className={`flex-1 py-1 px-2.5 text-center rounded-lg text-xs font-semibold transition-all duration-75 ${
                       logicOperator === 'OR'
                         ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
                         : 'text-zinc-400 hover:text-zinc-200 border border-transparent'
@@ -249,7 +249,7 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
                   </button>
                   <button
                     onClick={() => { setLogicOperator('AND'); setSelected(null); }}
-                    className={`flex-1 py-1 px-2.5 text-center rounded-lg text-xs font-semibold transition-all ${
+                    className={`flex-1 py-1 px-2.5 text-center rounded-lg text-xs font-semibold transition-all duration-75 ${
                       logicOperator === 'AND'
                         ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
                         : 'text-zinc-400 hover:text-zinc-200 border border-transparent'
@@ -266,7 +266,7 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
                       <button
                         key={c}
                         onClick={() => toggleColorFilter(c)}
-                        className={`px-3 py-1 rounded-lg text-xs transition-colors border flex items-center gap-1.5 ${
+                        className={`px-3 py-1 rounded-lg text-xs transition-colors duration-75 border flex items-center gap-1.5 ${
                           isSelected
                             ? 'bg-blue-600/20 text-blue-400 border-blue-500/40'
                             : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-600'

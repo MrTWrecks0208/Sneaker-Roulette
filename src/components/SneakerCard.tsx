@@ -81,12 +81,12 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
         {sneaker.color.length > 0 && (
           <div className="flex items-center gap-2 pt-3">
             {sneaker.color.slice(0, 6).map((c, idx) => {
-              const val = COLOR_HEX[c] || '#cccccc';
+              const val = COLOR_HEX[c] || (c.startsWith('#') ? c : '#cccccc');
               const isImage = val.startsWith('/') || val.startsWith('data:') || val.includes('assets/') || val.includes('blob:');
               return (
                 <div
                   key={`${c}-${idx}`}
-                  className="w-5 h-5 rounded-full border-1 border-black hover:scale-125 transition-200 transition-colors bg-center bg-cover"
+                  className="w-5 h-5 rounded-full border border-gray-300 hover:scale-125 transition-all duration-200 bg-center bg-cover"
                   style={isImage ? { backgroundImage: `url(${val})` } : { backgroundColor: val }}
                   title={c}
                 />

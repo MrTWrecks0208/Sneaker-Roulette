@@ -9,19 +9,22 @@ import FileUpload from './components/FileUpload';
 import SneakerPicker from './components/SneakerPicker';
 import {
   Plus, Upload, Search, Footprints,
-  SlidersHorizontal, X, AlertCircle, CheckCircle2, Database, LogOut
+  SlidersHorizontal, X, AlertCircle, CheckCircle2, Database, LogOut,
+  ChevronDown, ChevronUp, Copy, Terminal, Check
 } from 'lucide-react';
 import rouletteWheelIcon from '../icons/roulette-wheel.png';
 
 function App() {
   const { user, loading: authLoading, signOut } = useAuth();
-  const { sneakers, loading, error, isSupabaseConfigured, addSneaker, addSneakersBatch, updateSneaker, deleteSneaker, incrementWorn } = useSneakers(user?.id);
+  const { sneakers, loading, error, isSupabaseConfigured, usingLocalStorageFallback, addSneaker, addSneakersBatch, updateSneaker, deleteSneaker, incrementWorn } = useSneakers(user?.id);
   const isGuest = user?.id === 'guest-user-bypass';
   const isLive = isSupabaseConfigured && !isGuest;
   const [showForm, setShowForm] = useState(false);
   const [editSneaker, setEditSneaker] = useState<Sneaker | null>(null);
   const [showImport, setShowImport] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
+  const [showSqlGuide, setShowSqlGuide] = useState(false);
+  const [copiedSql, setCopiedSql] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterBrand, setFilterBrand] = useState('');
   const [filterStyle, setFilterStyle] = useState('');
@@ -128,21 +131,21 @@ function App() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowPicker(true)}
-                className="hidden sm:flex items-center gap-2 px-4 py-2 bg-emerald-600/10 text-emerald-400 text-sm font-medium rounded-2xl border border-emerald-500/20 hover:bg-emerald-600/20 transition-colors cursor-pointer"
+                className="hidden sm:flex items-center gap-2 px-4 py-2 bg-emerald-600/10 text-emerald-400 hover:animate-spin text-sm font-medium rounded-2xl border border-emerald-500/20 hover:bg-emerald-600/20 transition-colors cursor-pointer"
               >
                 <img src={rouletteWheelIcon} alt="" className="w-5 h-5 object-contain" />
                 Spin the Wheel
               </button>
               <button
                 onClick={() => setShowImport(true)}
-                className="hidden sm:flex items-center gap-2 px-4 py-2 bg-zinc-800 text-white text-sm font-medium rounded-2xl border border-zinc-700 hover:bg-zinc-700 transition-colors cursor-pointer"
+                className="hidden sm:flex items-center gap-2 px-4 py-2 bg-sky-600/10 text-sky-400 text-sm font-medium rounded-2xl border border-sky-700/20 hover:bg-blue-600/20 transition-colors cursor-pointer"
               >
                 <Upload className="w-4 h-4" />
                 Import
               </button>
               <button
                 onClick={() => setShowForm(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-2xl hover:bg-red-500 transition-colors cursor-pointer"
+                className="flex items-center gap-2 px-4 py-2 bg-rose-600/10 text-rose-400 text-sm font-medium rounded-2xl border border-rose-700/20 hover:bg-rose-600/20 transition-colors cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 <span className="hidden sm:inline">Add Sneaker</span>
@@ -229,16 +232,151 @@ function App() {
         )}
 
         {isLive && error && (
-          <div className="bg-red-500/5 border border-red-500/20 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 text-red-200">
-            <div className="p-2.5 bg-red-500/10 rounded-xl text-red-400 shrink-0">
-              <AlertCircle className="w-5 h-5" />
+          <div className="bg-red-500/5 border border-red-500/20 rounded-2xl p-5 space-y-4 text-red-200">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="p-2.5 bg-red-500/10 rounded-xl text-red-400 shrink-0">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <div className="flex-1 space-y-1">
+                <h4 className="text-sm font-semibold text-red-300">Supabase Connection or Table Missing</h4>
+                <p className="text-xs text-red-400/80 leading-relaxed">
+                  Vite is using your custom Supabase environment variables but failed to query: <span className="font-mono text-red-200 bg-red-950/40 px-1.5 py-0.5 rounded border border-red-500/10">{error}</span>.
+                </p>
+                <p className="text-xs text-amber-400/90 font-medium">
+                  {usingLocalStorageFallback ? (
+                    <span>💡 Active Fallback: The app has automatically fallen back to <strong>Offline Local Storage</strong> so you can still add, edit, delete, and spin sneakers!</span>
+                  ) : (
+                    <span>🔄 Attempting to query Supabase database...</span>
+                  )}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowSqlGuide(!showSqlGuide)}
+                className="flex items-center gap-1 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-300 hover:text-white rounded-lg text-xs font-semibold border border-red-500/20 transition-all cursor-pointer self-stretch sm:self-center justify-center"
+              >
+                <Terminal className="w-3.5 h-3.5" />
+                <span>{showSqlGuide ? 'Hide Setup SQL' : 'View Setup SQL'}</span>
+                {showSqlGuide ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              </button>
             </div>
-            <div className="flex-1 space-y-1">
-              <h4 className="text-sm font-semibold text-red-300">Supabase Connection Error</h4>
-              <p className="text-xs text-red-400/80 leading-relaxed">
-                Vite is using your custom Supabase environment variables but failed to connect: <span className="font-mono text-red-200">{error}</span>. Please verify that your keys are correct and your <code>sneakers</code> table is fully setup in your Supabase SQL editor.
-              </p>
-            </div>
+
+            {showSqlGuide && (
+              <div className="space-y-3 pt-3 border-t border-red-500/10 animate-fadeIn">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-zinc-300">Run this SQL script in your Supabase SQL Editor:</span>
+                  <button
+                    onClick={() => {
+                      const sql = `CREATE TABLE IF NOT EXISTS sneakers (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL DEFAULT '',
+  brand text NOT NULL DEFAULT '',
+  model text NOT NULL DEFAULT '',
+  variant text NOT NULL DEFAULT '',
+  colorway text NOT NULL DEFAULT '',
+  height text NOT NULL DEFAULT 'Low',
+  style text[] DEFAULT '{}',
+  color text[] DEFAULT '{}',
+  worn integer NOT NULL DEFAULT 0,
+  image_url text DEFAULT '',
+  user_id uuid REFERENCES auth.users(id),
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Enable RLS
+ALTER TABLE sneakers ENABLE ROW LEVEL SECURITY;
+
+-- Select policy
+CREATE POLICY "Users can view own sneakers"
+  ON sneakers FOR SELECT
+  TO anon, authenticated
+  USING (auth.uid() = user_id OR user_id IS NULL);
+
+-- Insert policy
+CREATE POLICY "Users can insert own sneakers"
+  ON sneakers FOR INSERT
+  TO anon, authenticated
+  WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
+
+-- Update policy
+CREATE POLICY "Users can update own sneakers"
+  ON sneakers FOR UPDATE
+  TO anon, authenticated
+  USING (auth.uid() = user_id OR user_id IS NULL)
+  WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
+
+-- Delete policy
+CREATE POLICY "Users can delete own sneakers"
+  ON sneakers FOR DELETE
+  TO anon, authenticated
+  USING (auth.uid() = user_id OR user_id IS NULL);`;
+                      navigator.clipboard.writeText(sql);
+                      setCopiedSql(true);
+                      setTimeout(() => setCopiedSql(false), 2000);
+                    }}
+                    className="flex items-center gap-1 px-2.5 py-1 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white rounded text-[11px] font-medium transition-all cursor-pointer"
+                  >
+                    {copiedSql ? (
+                      <>
+                        <Check className="w-3 h-3 text-emerald-400" />
+                        <span className="text-emerald-400">Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3" />
+                        <span>Copy SQL</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                <pre className="text-[10px] font-mono text-zinc-400 bg-zinc-950/80 p-3 rounded-lg border border-zinc-800 max-h-60 overflow-y-auto leading-normal select-all">
+{`CREATE TABLE IF NOT EXISTS sneakers (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL DEFAULT '',
+  brand text NOT NULL DEFAULT '',
+  model text NOT NULL DEFAULT '',
+  variant text NOT NULL DEFAULT '',
+  colorway text NOT NULL DEFAULT '',
+  height text NOT NULL DEFAULT 'Low',
+  style text[] DEFAULT '{}',
+  color text[] DEFAULT '{}',
+  worn integer NOT NULL DEFAULT 0,
+  image_url text DEFAULT '',
+  user_id uuid REFERENCES auth.users(id),
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Enable RLS
+ALTER TABLE sneakers ENABLE ROW LEVEL SECURITY;
+
+-- Select policy
+CREATE POLICY "Users can view own sneakers"
+  ON sneakers FOR SELECT
+  TO anon, authenticated
+  USING (auth.uid() = user_id OR user_id IS NULL);
+
+-- Insert policy
+CREATE POLICY "Users can insert own sneakers"
+  ON sneakers FOR INSERT
+  TO anon, authenticated
+  WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
+
+-- Update policy
+CREATE POLICY "Users can update own sneakers"
+  ON sneakers FOR UPDATE
+  TO anon, authenticated
+  USING (auth.uid() = user_id OR user_id IS NULL)
+  WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
+
+-- Delete policy
+CREATE POLICY "Users can delete own sneakers"
+  ON sneakers FOR DELETE
+  TO anon, authenticated
+  USING (auth.uid() = user_id OR user_id IS NULL);`}
+                </pre>
+              </div>
+            )}
           </div>
         )}
         {/* Mobile action buttons */}
