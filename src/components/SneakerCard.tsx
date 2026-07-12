@@ -56,7 +56,7 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
 
         {/* Worn count badge */}
         {sneaker.worn > 0 && (
-          <div className="absolute bottom-3 left-3 px-2 py-1 bg-black/70 backdrop-blur-sm rounded-md text-xs text-white font-medium">
+          <div className="absolute bottom-3 left-3 px-2.5 pt-0.5 pb-1.5 bg-black/70 backdrop-blur-sm rounded-md text-xs text-white font-medium">
             Worn {sneaker.worn}x
           </div>
         )}
@@ -79,14 +79,14 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
 
         {/* Color swatches */}
         {sneaker.color.length > 0 && (
-          <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
+          <div className="flex items-center gap-2 pt-3">
             {sneaker.color.slice(0, 6).map((c, idx) => {
               const val = COLOR_HEX[c] || '#cccccc';
               const isImage = val.startsWith('/') || val.startsWith('data:') || val.includes('assets/') || val.includes('blob:');
               return (
                 <div
                   key={`${c}-${idx}`}
-                  className="w-5 h-5 rounded-full border-2 border-gray-200 hover:border-gray-400 transition-colors bg-center bg-cover"
+                  className="w-5 h-5 rounded-full border-1 border-black hover:scale-125 transition-200 transition-colors bg-center bg-cover"
                   style={isImage ? { backgroundImage: `url(${val})` } : { backgroundColor: val }}
                   title={c}
                 />

@@ -32,11 +32,17 @@ export function useAuth() {
     // Check if there is a local mock/guest user first
     const savedMock = localStorage.getItem('sneakers_mock_user');
     if (savedMock) {
-      setUser(JSON.parse(savedMock));
-      setLoading(false);
-      return () => {
-        window.removeEventListener('mock-auth-change', handleMockAuthChange);
-      };
+      const parsed = JSON.parse(savedMock);
+      if (parsed.id === 'guest-user-bypass' || !isSupabaseConfigured) {
+        setUser(parsed);
+        setLoading(false);
+        return () => {
+          window.removeEventListener('mock-auth-change', handleMockAuthChange);
+        };
+      } else {
+        // Clear mock user that is not a guest bypass if Supabase is configured
+        localStorage.removeItem('sneakers_mock_user');
+      }
     }
 
     if (!isSupabaseConfigured) {

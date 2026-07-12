@@ -12,13 +12,32 @@ interface SneakerPickerProps {
 
 export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPickerProps) {
   const [filter, setFilter] = useState<PickerFilter>('random');
-  const [styleFilter, setStyleFilter] = useState<string>('');
-  const [colorFilter, setColorFilter] = useState<string>('');
+  const [styleFilters, setStyleFilters] = useState<string[]>([]);
+  const [colorFilters, setColorFilters] = useState<string[]>([]);
+  const [logicOperator, setLogicOperator] = useState<'AND' | 'OR'>('OR');
   const [selected, setSelected] = useState<Sneaker | null>(null);
   const [picking, setPicking] = useState(false);
 
   const allStyles = [...new Set(sneakers.flatMap(s => s.style))].sort();
   const allColors = [...new Set(sneakers.flatMap(s => s.color))].sort();
+
+  const toggleStyleFilter = (style: string) => {
+    setStyleFilters(prev => 
+      prev.includes(style) 
+        ? prev.filter(s => s !== style) 
+        : [...prev, style]
+    );
+    setSelected(null);
+  };
+
+  const toggleColorFilter = (color: string) => {
+    setColorFilters(prev => 
+      prev.includes(color) 
+        ? prev.filter(c => c !== color) 
+        : [...prev, color]
+    );
+    setSelected(null);
+  };
 
   const pickSneaker = useCallback(() => {
     if (sneakers.length === 0) return;
@@ -28,10 +47,18 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
     if (filter === 'least_worn') {
       const minWorn = Math.min(...pool.map(s => s.worn));
       pool = pool.filter(s => s.worn === minWorn);
-    } else if (filter === 'style' && styleFilter) {
-      pool = pool.filter(s => s.style.includes(styleFilter));
-    } else if (filter === 'color' && colorFilter) {
-      pool = pool.filter(s => s.color.includes(colorFilter));
+    } else if (filter === 'style' && styleFilters.length > 0) {
+      if (logicOperator === 'AND') {
+        pool = pool.filter(s => styleFilters.every(sf => s.style.includes(sf)));
+      } else {
+        pool = pool.filter(s => styleFilters.some(sf => s.style.includes(sf)));
+      }
+    } else if (filter === 'color' && colorFilters.length > 0) {
+      if (logicOperator === 'AND') {
+        pool = pool.filter(s => colorFilters.every(cf => s.color.includes(cf)));
+      } else {
+        pool = pool.filter(s => colorFilters.some(cf => s.color.includes(cf)));
+      }
     }
 
     if (pool.length === 0) {
@@ -54,7 +81,7 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
         setPicking(false);
       }
     }, 120);
-  }, [sneakers, filter, styleFilter, colorFilter]);
+  }, [sneakers, filter, styleFilters, colorFilters, logicOperator]);
 
   const handleWear = async () => {
     if (!selected) return;
@@ -108,38 +135,122 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
             </div>
 
             {filter === 'style' && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {allStyles.map(s => (
+              <div className="space-y-3 mt-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-medium text-zinc-500">Select one or more styles:</span>
+                  {styleFilters.length > 0 && (
+                    <button
+                      onClick={() => { setStyleFilters([]); setSelected(null); }}
+                      className="text-[11px] text-zinc-400 hover:text-zinc-200 underline transition-colors"
+                    >
+                      Clear all
+                    </button>
+                  )}
+                </div>
+
+                {/* Style Logic Selector */}
+                <div className="flex items-center gap-1.5 p-1 bg-zinc-950/60 rounded-xl border border-zinc-800/80 max-w-[240px]">
                   <button
-                    key={s}
-                    onClick={() => { setStyleFilter(s); setSelected(null); }}
-                    className={`px-3 py-1 rounded-lg text-xs transition-colors border ${
-                      styleFilter === s
-                        ? 'bg-amber-600/20 text-amber-400 border-amber-500/40'
-                        : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-600'
+                    onClick={() => { setLogicOperator('OR'); setSelected(null); }}
+                    className={`flex-1 py-1 px-2.5 text-center rounded-lg text-xs font-semibold transition-all ${
+                      logicOperator === 'OR'
+                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                        : 'text-zinc-400 hover:text-zinc-200 border border-transparent'
                     }`}
                   >
-                    {s}
+                    OR (Any)
                   </button>
-                ))}
+                  <button
+                    onClick={() => { setLogicOperator('AND'); setSelected(null); }}
+                    className={`flex-1 py-1 px-2.5 text-center rounded-lg text-xs font-semibold transition-all ${
+                      logicOperator === 'AND'
+                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                        : 'text-zinc-400 hover:text-zinc-200 border border-transparent'
+                    }`}
+                  >
+                    AND (All)
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {allStyles.map(s => {
+                    const isSelected = styleFilters.includes(s);
+                    return (
+                      <button
+                        key={s}
+                        onClick={() => toggleStyleFilter(s)}
+                        className={`px-3 py-1 rounded-lg text-xs transition-colors border flex items-center gap-1.5 ${
+                          isSelected
+                            ? 'bg-amber-600/20 text-amber-400 border-amber-500/40'
+                            : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-600'
+                        }`}
+                      >
+                        {isSelected && <Check className="w-3.5 h-3.5" />}
+                        {s}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
             {filter === 'color' && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {allColors.map(c => (
+              <div className="space-y-3 mt-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-medium text-zinc-500">Select one or more colors:</span>
+                  {colorFilters.length > 0 && (
+                    <button
+                      onClick={() => { setColorFilters([]); setSelected(null); }}
+                      className="text-[11px] text-zinc-400 hover:text-zinc-200 underline transition-colors"
+                    >
+                      Clear all
+                    </button>
+                  )}
+                </div>
+
+                {/* Color Logic Selector */}
+                <div className="flex items-center gap-1.5 p-1 bg-zinc-950/60 rounded-xl border border-zinc-800/80 max-w-[240px]">
                   <button
-                    key={c}
-                    onClick={() => { setColorFilter(c); setSelected(null); }}
-                    className={`px-3 py-1 rounded-lg text-xs transition-colors border ${
-                      colorFilter === c
-                        ? 'bg-blue-600/20 text-blue-400 border-blue-500/40'
-                        : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-600'
+                    onClick={() => { setLogicOperator('OR'); setSelected(null); }}
+                    className={`flex-1 py-1 px-2.5 text-center rounded-lg text-xs font-semibold transition-all ${
+                      logicOperator === 'OR'
+                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                        : 'text-zinc-400 hover:text-zinc-200 border border-transparent'
                     }`}
                   >
-                    {c}
+                    OR (Any)
                   </button>
-                ))}
+                  <button
+                    onClick={() => { setLogicOperator('AND'); setSelected(null); }}
+                    className={`flex-1 py-1 px-2.5 text-center rounded-lg text-xs font-semibold transition-all ${
+                      logicOperator === 'AND'
+                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                        : 'text-zinc-400 hover:text-zinc-200 border border-transparent'
+                    }`}
+                  >
+                    AND (All)
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {allColors.map(c => {
+                    const isSelected = colorFilters.includes(c);
+                    return (
+                      <button
+                        key={c}
+                        onClick={() => toggleColorFilter(c)}
+                        className={`px-3 py-1 rounded-lg text-xs transition-colors border flex items-center gap-1.5 ${
+                          isSelected
+                            ? 'bg-blue-600/20 text-blue-400 border-blue-500/40'
+                            : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-600'
+                        }`}
+                      >
+                        {isSelected && <Check className="w-3.5 h-3.5" />}
+                        {c}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
@@ -148,7 +259,7 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
           {!selected && (
             <button
               onClick={pickSneaker}
-              disabled={picking || sneakers.length === 0 || ((filter === 'style' && !styleFilter) || (filter === 'color' && !colorFilter))}
+              disabled={picking || sneakers.length === 0 || (filter === 'style' && styleFilters.length === 0) || (filter === 'color' && colorFilters.length === 0)}
               className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold rounded-xl hover:from-blue-500 hover:to-blue-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
             >
               {picking ? (
@@ -171,7 +282,7 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
               <div className={`bg-zinc-950 rounded-xl border border-zinc-800 overflow-hidden transition-all ${picking ? 'opacity-60' : ''}`}>
                 <div className="aspect-video bg-zinc-950 relative overflow-hidden">
                   {selected.image_url ? (
-                    <img src={selected.image_url} alt={selected.name} className="w-full h-full object-contain" />
+                    <img src={selected.image_url} alt={selected.name} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <Footprints className="w-16 h-16 text-zinc-700" />
@@ -207,8 +318,8 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
             </div>
           )}
 
-          {selected === null && sneakers.length > 0 && (filter === 'style' && !styleFilter || filter === 'color' && !colorFilter) && (
-            <p className="text-xs text-zinc-500 text-center">Select a {filter === 'style' ? 'style' : 'color'} filter above to continue</p>
+          {selected === null && sneakers.length > 0 && ((filter === 'style' && styleFilters.length === 0) || (filter === 'color' && colorFilters.length === 0)) && (
+            <p className="text-xs text-zinc-500 text-center">Select one or more {filter === 'style' ? 'styles' : 'colors'} above to continue</p>
           )}
 
           {sneakers.length === 0 && (

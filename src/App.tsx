@@ -11,7 +11,7 @@ import {
   Plus, Upload, Search, Footprints,
   SlidersHorizontal, X, AlertCircle, CheckCircle2, Database, LogOut
 } from 'lucide-react';
-import pinwheelIcon from '../icons/loader-pinwheel.png';
+import rouletteWheelIcon from '../icons/roulette-wheel.png';
 
 function App() {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -24,6 +24,9 @@ function App() {
   const [showPicker, setShowPicker] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterBrand, setFilterBrand] = useState('');
+  const [filterStyle, setFilterStyle] = useState('');
+  const [filterColor, setFilterColor] = useState('');
+  const [filterHeight, setFilterHeight] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -32,7 +35,10 @@ function App() {
     setTimeout(() => setToast(null), 4000);
   };
 
-  const brands = [...new Set(sneakers.map(s => s.brand))].sort();
+  const availableBrands = [...new Set(sneakers.map(s => s.brand))].filter(Boolean).sort();
+  const availableHeights = [...new Set(sneakers.map(s => s.height))].filter(Boolean).sort();
+  const availableStyles = [...new Set(sneakers.flatMap(s => s.style || []))].filter(Boolean).sort();
+  const availableColors = [...new Set(sneakers.flatMap(s => s.color || []))].filter(Boolean).sort();
 
   const filtered = sneakers.filter(s => {
     const matchesSearch = !searchQuery ||
@@ -41,7 +47,10 @@ function App() {
       s.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
       s.colorway.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesBrand = !filterBrand || s.brand === filterBrand;
-    return matchesSearch && matchesBrand;
+    const matchesHeight = !filterHeight || s.height === filterHeight;
+    const matchesStyle = !filterStyle || (Array.isArray(s.style) && s.style.includes(filterStyle));
+    const matchesColor = !filterColor || (Array.isArray(s.color) && s.color.includes(filterColor));
+    return matchesSearch && matchesBrand && matchesHeight && matchesStyle && matchesColor;
   });
 
   const handleSave = async (data: SneakerInsert) => {
@@ -104,29 +113,15 @@ function App() {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center">
-                <Footprints className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-lg font-bold text-zinc-100 leading-tight">Sneaker Roulette </h1>
-                  {isLive ? (
-                    <span className="flex h-2 w-2 relative" title="Connected to Supabase Live">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
-                  ) : (
-                    <span className="flex h-2 w-2 rounded-full bg-amber-500" title="Running in Local Sandbox Mode"></span>
-                  )}
-                </div>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <p className="text-[10px] text-zinc-500 uppercase tracking-widest leading-none">Inventory</p>
-                  <span className="text-[9px] px-1 py-0.5 bg-zinc-900 text-zinc-400 border border-zinc-800/80 rounded">
-                    {isLive ? 'Supabase Live' : (isGuest ? 'Guest Sandbox' : 'Local Sandbox')}
-                  </span>
-                </div>
+          <div className="flex items-center justify-between h-20">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <img
+                  src="https://i.postimg.cc/8P8rydQY/Sneaker-Roulette-Logo-(plain).png"
+                  alt="Sneaker Roulette"
+                  className="h-16 sm:h-18 w-auto object-cover"
+                  referrerPolicy="no-referrer"
+                />
               </div>
             </div>
 
@@ -135,7 +130,7 @@ function App() {
                 onClick={() => setShowPicker(true)}
                 className="hidden sm:flex items-center gap-2 px-4 py-2 bg-emerald-600/10 text-emerald-400 text-sm font-medium rounded-2xl border border-emerald-500/20 hover:bg-emerald-600/20 transition-colors cursor-pointer"
               >
-                <img src={pinwheelIcon} alt="" className="w-4 h-4" />
+                <img src={rouletteWheelIcon} alt="" className="w-5 h-5 object-contain" />
                 Spin the Wheel
               </button>
               <button
@@ -155,28 +150,44 @@ function App() {
 
               <div className="h-8 w-px bg-zinc-800/80 mx-1 hidden sm:block" />
 
-              <div className="flex items-center gap-2.5">
-                <img
-                  src={user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(user.email)}`}
-                  alt="Avatar"
-                  className="w-8 h-8 rounded-xl object-cover border border-zinc-800 bg-zinc-900"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="hidden md:flex flex-col text-left">
-                  <span className="text-xs font-semibold text-zinc-200 truncate max-w-[120px]">
-                    {user.user_metadata?.username || user.user_metadata?.full_name || user.email.split('@')[0]}
-                  </span>
-                  <span className="text-[10px] text-zinc-500 truncate max-w-[120px]">
-                    {user.email}
+              <div className="flex flex-col items-start gap-1">
+                <div className="flex items-center gap-2.5">
+                  <img
+                    src={user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(user.email)}`}
+                    alt="Avatar"
+                    className="w-8 h-8 rounded-xl object-cover border border-zinc-800 bg-zinc-900"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="hidden md:flex flex-col text-left">
+                    <span className="text-xs font-semibold text-zinc-200 truncate max-w-[120px]">
+                      {user.user_metadata?.username || user.user_metadata?.full_name || user.email.split('@')[0]}
+                    </span>
+                    <span className="text-[10px] text-zinc-500 truncate max-w-[120px]">
+                      {user.email}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => signOut()}
+                    title="Sign Out"
+                    className="p-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800/80 hover:border-zinc-700 text-zinc-400 hover:text-red-400 rounded-xl transition-all cursor-pointer"
+                  >
+                    <LogOut className="w-4.5 h-4.5" />
+                  </button>
+                </div>
+                {/* Connection status under the avatar */}
+                <div className="flex items-center gap-1.5">
+                  {isLive ? (
+                    <span className="flex h-1.5 w-1.5 relative" title="Connected to Supabase Live">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                    </span>
+                  ) : (
+                    <span className="flex h-1.5 w-1.5 rounded-full bg-amber-500" title="Running in Local Sandbox Mode"></span>
+                  )}
+                  <span className="text-[9px] px-1.5 py-0.5 bg-zinc-900 text-zinc-400 border border-zinc-800/80 rounded tracking-wider leading-none">
+                    {isLive ? 'Connected' : (isGuest ? 'Guest Sandbox' : 'Local Sandbox')}
                   </span>
                 </div>
-                <button
-                  onClick={() => signOut()}
-                  title="Sign Out"
-                  className="p-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800/80 hover:border-zinc-700 text-zinc-400 hover:text-red-400 rounded-xl transition-all cursor-pointer"
-                >
-                  <LogOut className="w-4.5 h-4.5" />
-                </button>
               </div>
             </div>
           </div>
@@ -230,27 +241,13 @@ function App() {
             </div>
           </div>
         )}
-
-        {isLive && !error && (
-          <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 text-emerald-200">
-            <div className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-400 shrink-0">
-              <Database className="w-5 h-5" />
-            </div>
-            <div className="flex-1 space-y-1">
-              <h4 className="text-sm font-semibold text-emerald-300">Connected to Live Supabase Database</h4>
-              <p className="text-xs text-emerald-400/80 leading-relaxed">
-                Successfully synchronized! All sneaker additions, spin history, and details are stored directly in your secure cloud-hosted database.
-              </p>
-            </div>
-          </div>
-        )}
         {/* Mobile action buttons */}
         <div className="flex sm:hidden gap-2">
           <button
             onClick={() => setShowPicker(true)}
             className="flex-1 flex items-center justify-center gap-2 py-3 bg-emerald-600/10 text-emerald-400 text-sm font-medium rounded-xl border border-emerald-500/20"
           >
-            <img src={pinwheelIcon} alt="" className="w-10 h-10" /> Spin the Wheel
+            <img src={rouletteWheelIcon} alt="" className="w-8 h-8 object-contain" /> Spin the Wheel
           </button>
           <button
             onClick={() => setShowImport(true)}
@@ -288,27 +285,89 @@ function App() {
             </button>
           </div>
 
-          {showFilters && brands.length > 0 && (
-            <div className="flex flex-wrap gap-2 animate-in">
-              <button
-                onClick={() => setFilterBrand('')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
-                  !filterBrand ? 'bg-red-600/20 text-red-400 border-red-500/40' : 'bg-zinc-900 text-zinc-400 border-zinc-800'
-                }`}
-              >
-                All Brands
-              </button>
-              {brands.map(b => (
-                <button
-                  key={b}
-                  onClick={() => setFilterBrand(b === filterBrand ? '' : b)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
-                    filterBrand === b ? 'bg-red-600/20 text-red-400 border-red-500/40' : 'bg-zinc-900 text-zinc-400 border-zinc-800'
-                  }`}
-                >
-                  {b}
-                </button>
-              ))}
+          {showFilters && (
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-4 animate-in fade-in duration-200">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                {/* Brand Filter */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider block">Brand</label>
+                  <select
+                    value={filterBrand}
+                    onChange={e => setFilterBrand(e.target.value)}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-red-500 transition-colors cursor-pointer appearance-none"
+                    style={{ backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>")`, backgroundPosition: 'right 0.75rem center', backgroundSize: '1rem', backgroundRepeat: 'no-repeat', paddingRight: '2rem' }}
+                  >
+                    <option value="">All Brands</option>
+                    {availableBrands.map(b => (
+                      <option key={b} value={b}>{b}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Style Filter */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider block">Style</label>
+                  <select
+                    value={filterStyle}
+                    onChange={e => setFilterStyle(e.target.value)}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-red-500 transition-colors cursor-pointer appearance-none"
+                    style={{ backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>")`, backgroundPosition: 'right 0.75rem center', backgroundSize: '1rem', backgroundRepeat: 'no-repeat', paddingRight: '2rem' }}
+                  >
+                    <option value="">All Styles</option>
+                    {availableStyles.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Color Filter */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider block">Color</label>
+                  <select
+                    value={filterColor}
+                    onChange={e => setFilterColor(e.target.value)}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-red-500 transition-colors cursor-pointer appearance-none"
+                    style={{ backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>")`, backgroundPosition: 'right 0.75rem center', backgroundSize: '1rem', backgroundRepeat: 'no-repeat', paddingRight: '2rem' }}
+                  >
+                    <option value="">All Colors</option>
+                    {availableColors.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Height Filter */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider block">Height</label>
+                  <select
+                    value={filterHeight}
+                    onChange={e => setFilterHeight(e.target.value)}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-red-500 transition-colors cursor-pointer appearance-none"
+                    style={{ backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>")`, backgroundPosition: 'right 0.75rem center', backgroundSize: '1rem', backgroundRepeat: 'no-repeat', paddingRight: '2rem' }}
+                  >
+                    <option value="">All Heights</option>
+                    {availableHeights.map(h => (
+                      <option key={h} value={h}>{h}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {(filterBrand || filterStyle || filterColor || filterHeight) && (
+                <div className="flex justify-end pt-1">
+                  <button
+                    onClick={() => {
+                      setFilterBrand('');
+                      setFilterStyle('');
+                      setFilterColor('');
+                      setFilterHeight('');
+                    }}
+                    className="flex items-center gap-1.5 text-xs font-medium text-red-400 hover:text-red-300 transition-colors cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" /> Clear Filters
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

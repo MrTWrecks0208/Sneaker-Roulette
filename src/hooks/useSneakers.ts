@@ -56,6 +56,13 @@ export const isSupabaseConfigured = !!(
   import.meta.env.VITE_SUPABASE_ANON_KEY !== 'placeholder'
 );
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function isValidUuid(id?: string): boolean {
+  if (!id) return false;
+  return UUID_REGEX.test(id);
+}
+
 export function useSneakers(userId?: string) {
   const [sneakers, setSneakers] = useState<Sneaker[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,7 +78,7 @@ export function useSneakers(userId?: string) {
     setLoading(true);
     setError(null);
 
-    const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass';
+    const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass' && isValidUuid(userId);
 
     if (!isLiveMode) {
       // Scoped local storage keys by userId to isolate user accounts locally!
@@ -137,7 +144,7 @@ export function useSneakers(userId?: string) {
     if (!userId) return null;
     const name = buildName(sneaker.brand, sneaker.model, sneaker.variant || '', sneaker.colorway);
     
-    const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass';
+    const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass' && isValidUuid(userId);
 
     if (!isLiveMode) {
       const newSneaker: Sneaker = {
@@ -178,7 +185,7 @@ export function useSneakers(userId?: string) {
   const addSneakersBatch = async (sneakersData: SneakerInsert[]) => {
     if (!userId) return null;
     
-    const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass';
+    const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass' && isValidUuid(userId);
 
     if (!isLiveMode) {
       const withNames: Sneaker[] = sneakersData.map(s => {
@@ -223,7 +230,7 @@ export function useSneakers(userId?: string) {
   const updateSneaker = async (id: string, updates: Partial<SneakerInsert>) => {
     if (!userId) return null;
 
-    const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass';
+    const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass' && isValidUuid(userId);
 
     if (!isLiveMode) {
       const current = sneakers.find(s => s.id === id);
@@ -281,7 +288,7 @@ export function useSneakers(userId?: string) {
   const deleteSneaker = async (id: string) => {
     if (!userId) return false;
 
-    const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass';
+    const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass' && isValidUuid(userId);
 
     if (!isLiveMode) {
       const updatedList = sneakers.filter(s => s.id !== id);
