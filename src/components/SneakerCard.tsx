@@ -1,6 +1,6 @@
 import { Sneaker } from '../lib/supabase';
 import { Trash2, Edit3, Footprints } from 'lucide-react';
-import multicolorImg from '../assets/images/multicolor_1783660247625.jpg';
+import multicolorImg from '../assets/images/multicolor_swatch_1783883698636.jpg';
 import iridescentImg from '../assets/images/iridescent_color_1783660705612.jpg';
 
 interface SneakerCardProps {
@@ -19,8 +19,8 @@ const COLOR_HEX: Record<string, string> = {
   'Blue': '#0000ff', 'Navy': '#000080', 'Indigo': '#4b0082', 'Purple': '#4b0082',
   'Maroon': '#800000', 'Burgundy': '#800020', 'Magenta': '#ff00ff', 'Pink': '#ffc0cb',
   'Hot Pink': '#ff1493', 'Gold': '#ffd700', 'Silver': '#c0c0c0', 'Reflective': '#e8e8e8',
-  'Glow': '#00ff80', 'Iridescent': iridescentImg, 'Ice': '#99bce1', 'Multicolor': multicolorImg, 'Paua': '#433b70',
-  'Light Green': '#90dbc2', 'Cyan': '#0bb8eb',
+  'Glow': '#00ff80', 'Iridescent': iridescentImg, 'Ice': '#b2e9f3', 'Multicolor': multicolorImg, 'Paua': '#433b70',
+  'Light Green': '#90dbc2', 'Cyan Blue': '#0bb8eb', 'Citrus': '#eb9a00', 'Gum': '#85674b', 'Green Cyan': '#7cceaf',
 };
 
 export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardProps) {
@@ -56,7 +56,7 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
 
         {/* Worn count badge */}
         {sneaker.worn > 0 && (
-          <div className="absolute bottom-3 left-3 px-2.5 pt-0.5 pb-1.5 bg-black/70 backdrop-blur-sm rounded-md text-xs text-white font-medium">
+          <div className="absolute bottom-3 left-3 px-2.5 pt-1 pb-1.5 bg-black/70 backdrop-blur-sm rounded-md text-xs text-white font-medium">
             Worn {sneaker.worn}x
           </div>
         )}
@@ -65,7 +65,7 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
       {/* Content Container */}
       <div className="p-4 space-y-3">
         {/* Title */}
-        <h3 className="font-bold text-gray-900 leading-tight line-clamp-2" title={sneaker.name}>
+        <h3 className="font-bold text-gray-900 leading-tight line-clamp-2 h-10" title={sneaker.name}>
           {sneaker.name || 'Unnamed Sneaker'}
         </h3>
 

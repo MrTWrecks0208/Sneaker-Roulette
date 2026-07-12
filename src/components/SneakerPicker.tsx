@@ -1,6 +1,33 @@
 import { useState, useCallback } from 'react';
 import { Sneaker } from '../lib/supabase';
-import { Shuffle, Check, X, Filter, Footprints, Sparkles, Paintbrush, Shirt } from 'lucide-react';
+import { Shuffle, Check, X, Filter, Footprints, Sparkles, Paintbrush } from 'lucide-react';
+
+const HighTopSneaker = ({ className }: { className?: string }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    {/* Base Sole */}
+    <path d="M 3 19 C 3 19 3 17.5 4.5 17.5 L 20 17.5 C 21 17.5 21 19 21 19 Z" />
+    {/* Outer boundary of the high-top sneaker */}
+    <path d="M 4.5 17.5 L 4.5 7 C 4.5 6 5.5 5.5 6.5 5.5 L 9 5.5 C 10 5.5 10.5 6.5 11 7.5 L 14 11.5 L 18.5 12.5 C 20 13 20.5 14.5 20 16 L 19.5 17.5" />
+    {/* Toe Cap */}
+    <path d="M 17 13 C 18 14 19.5 15.5 19.5 17.5" />
+    {/* Heel collar / panel details */}
+    <path d="M 4.5 9 C 6 9 7.5 9 8.5 8.5" />
+    {/* Laces / eyelets */}
+    <path d="M 10 7 L 12 9" />
+    <path d="M 11 8.5 L 13 10.5" />
+    <path d="M 12 10 L 14 12" />
+    {/* Side stripe / swoosh-like aesthetic curve */}
+    <path d="M 7 13.5 C 10 13.5 12 14.5 15.5 13" />
+  </svg>
+);
 
 type PickerFilter = 'least_worn' | 'style' | 'color' | 'random';
 
@@ -69,7 +96,7 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
     setPicking(true);
     // Animation: cycle through a few options before landing
     let cycles = 0;
-    const maxCycles = 8;
+    const maxCycles = 12;
     const interval = setInterval(() => {
       const randomIdx = Math.floor(Math.random() * pool.length);
       setSelected(pool[randomIdx]);
@@ -114,17 +141,17 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {([
-                { key: 'random', label: 'Random', icon: Shuffle },
-                { key: 'least_worn', label: 'Least Worn', icon: Footprints },
-                { key: 'style', label: 'Style', icon: Shirt },
-                { key: 'color', label: 'Color', icon: Paintbrush },
-              ] as const).map(({ key, label, icon: Icon }) => (
+                { key: 'random', label: 'Random', icon: Shuffle, activeClass: 'bg-red-500/20 text-red-400 border-red-500/40' },
+                { key: 'least_worn', label: 'Least Worn', icon: Footprints, activeClass: 'bg-amber-500/20 text-amber-400 border-amber-500/40' },
+                { key: 'style', label: 'Style', icon: HighTopSneaker, activeClass: 'bg-sky-500/20 text-sky-400 border-sky-500/40' },
+                { key: 'color', label: 'Color', icon: Paintbrush, activeClass: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' },
+              ] as const).map(({ key, label, icon: Icon, activeClass }) => (
                 <button
                   key={key}
                   onClick={() => { setFilter(key); setSelected(null); }}
                   className={`flex flex-col items-center gap-1 py-3 rounded-xl text-xs font-medium transition-all border ${
                     filter === key
-                      ? 'bg-blue-600/20 text-blue-400 border-blue-500/40'
+                      ? activeClass
                       : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-600'
                   }`}
                 >

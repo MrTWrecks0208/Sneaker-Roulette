@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Sneaker, SneakerInsert, BRANDS, HEIGHTS, STYLES, COLORS, buildName } from '../lib/supabase';
 import { X, Upload, Loader2, Camera, Sparkles } from 'lucide-react';
-import multicolorImg from '../assets/images/multicolor_1783660247625.jpg';
+import multicolorImg from '../assets/images/multicolor_swatch_1783883698636.jpg';
 import iridescentImg from '../assets/images/iridescent_color_1783660705612.jpg';
 
 const COLOR_GLOW: Record<string, { bg: string; text: string; border: string; shadow: string }> = {
