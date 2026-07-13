@@ -3,7 +3,6 @@ import { Sneaker, SneakerInsert, BRANDS, HEIGHTS, STYLES, COLORS, buildName } fr
 import { X, Upload, Loader2, Camera, Sparkles } from 'lucide-react';
 import multicolorImg from '../assets/images/multicolor_swatch_1783883698636.jpg';
 import iridescentImg from '../assets/images/iridescent_color_1783660705612.jpg';
-import { getPalette } from 'colorthief';
 
 const COLOR_GLOW: Record<string, { bg: string; text: string; border: string; shadow: string }> = {
   'White':            { bg: 'rgba(255,255,255,.80)', text: '#000000', border: 'rgba(255,255,255,.80)' },
@@ -224,46 +223,6 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  const [extractedColors, setExtractedColors] = useState<string[]>(
-    sneaker?.color.filter(c => c.startsWith('#')) || []
-  );
-
-  const extractPaletteFromDataUrl = useCallback((dataUrl: string): Promise<string[]> => {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.crossOrigin = 'Anonymous';
-      img.onload = async () => {
-        try {
-          const palette = await getPalette(img, { colorCount: 5 });
-          if (palette && palette.length > 0) {
-            const hexes = palette.map(c => c.hex());
-            resolve(hexes);
-          } else {
-            resolve([]);
-          }
-        } catch (err) {
-          console.error('Error extracting color palette:', err);
-          resolve([]);
-        }
-      };
-      img.onerror = (err) => {
-        console.error('Error loading image for palette extraction:', err);
-        resolve([]);
-      };
-      img.src = dataUrl;
-    });
-  }, []);
-
-  useEffect(() => {
-    if (sneaker && sneaker.image_url && (!sneaker.color || !sneaker.color.some(c => c.startsWith('#')))) {
-      extractPaletteFromDataUrl(sneaker.image_url).then(hexColors => {
-        if (hexColors.length > 0) {
-          setExtractedColors(hexColors);
-        }
-      });
-    }
-  }, [sneaker, extractPaletteFromDataUrl]);
-
   const autoName = buildName(brand, model, variant, colorway);
 
   useEffect(() => {
@@ -317,20 +276,6 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
       reader.onload = async (e) => {
         const dataUrl = e.target?.result as string;
         setImageUrl(dataUrl);
-        try {
-          const hexColors = await extractPaletteFromDataUrl(dataUrl);
-          if (hexColors.length > 0) {
-            setExtractedColors(hexColors);
-            setColor(prev => {
-              // Remove any existing custom hex colors
-              const nonHex = prev.filter(c => !c.startsWith('#'));
-              // Auto-select the newly extracted ones
-              return [...nonHex, ...hexColors];
-            });
-          }
-        } catch (colorErr) {
-          console.error('Error extracting colors during upload:', colorErr);
-        }
         setUploading(false);
       };
       reader.onerror = () => {
@@ -564,7 +509,7 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
                     key={c}
                     type="button"
                     onClick={() => toggleMultiSelect(color, c, setColor)}
-                    className={'px-3 py-1.5 rounded-2xl text-xs font-medium transition-all duration-200 border ' + (selected && (glow || isMulticolor || isIridescent) ? '' : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-zinc-500')}
+                    className={'px-2 pt-1 pb-1.5 rounded-2xl text-xs font-medium transition-all duration-200 border ' + (selected && (glow || isMulticolor || isIridescent) ? '' : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-zinc-500')}
                     style={selected ? (isMulticolor ? {
                       backgroundImage: `url(${multicolorImg})`,
                       backgroundSize: 'cover',
@@ -591,32 +536,6 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
                 );
               })}
             </div>
-
-            {extractedColors.length > 0 && (
-              <div className="mt-3 bg-zinc-950/40 p-3 rounded-xl border border-zinc-800/80">
-                <span className="block text-xs font-semibold text-zinc-400 mb-2 uppercase tracking-wider">Extracted Palette (Click to toggle)</span>
-                <div className="flex flex-wrap gap-2">
-                  {extractedColors.map(hex => {
-                    const selected = color.includes(hex);
-                    return (
-                      <button
-                        key={hex}
-                        type="button"
-                        onClick={() => toggleMultiSelect(color, hex, setColor)}
-                        className={`px-3 py-1.5 rounded-2xl text-xs font-medium transition-all duration-200 border flex items-center gap-1.5 ${
-                          selected
-                            ? 'bg-zinc-100 text-zinc-900 border-zinc-100 shadow-sm'
-                            : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-zinc-500'
-                        }`}
-                      >
-                        <span className="w-3.5 h-3.5 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: hex }} />
-                        {hex.toUpperCase()}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Worn */}
@@ -652,7 +571,7 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="px-4 py-2 bg-zinc-800 text-zinc-300 text-sm rounded-lg border border-zinc-700 hover:bg-zinc-700 transition-colors flex items-center gap-2"
+                  className="px-4 py-2 bg-zinc-800 text-zinc-300 text-sm rounded-lg border border-zinc-700 hover:bg-zinc-700 transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-40"
                 >
                   {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                   Upload Image
@@ -661,7 +580,7 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
                   type="button"
                   onClick={() => cameraInputRef.current?.click()}
                   disabled={uploading}
-                  className="px-4 py-2 bg-zinc-800 text-zinc-300 text-sm rounded-lg border border-zinc-700 hover:bg-zinc-700 transition-colors flex items-center gap-2"
+                  className="px-4 py-2 bg-zinc-800 text-zinc-300 text-sm rounded-lg border border-zinc-700 hover:bg-zinc-700 transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-40"
                 >
                   <Camera className="w-4 h-4" />
                   Take Photo

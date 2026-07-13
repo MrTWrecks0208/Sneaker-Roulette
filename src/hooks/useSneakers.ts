@@ -117,7 +117,7 @@ export function useSneakers(userId?: string) {
       setUsingLocalStorageFallback(false);
     } catch (e: unknown) {
       const err = e as Error;
-      console.error('Error querying Supabase database:', err);
+      console.warn('Error querying Supabase database:', err);
       setError(err.message || 'Failed to connect to Supabase database.');
       setUsingLocalStorageFallback(true);
       // Scoped local storage fallback
@@ -181,7 +181,7 @@ export function useSneakers(userId?: string) {
       setSneakers(prev => [data, ...prev]);
       return data;
     } catch (e) {
-      console.error('Supabase addSneaker error:', e);
+      console.warn('Supabase addSneaker error:', e);
       return null;
     }
   };
@@ -226,7 +226,7 @@ export function useSneakers(userId?: string) {
       setSneakers(prev => [...(data || []), ...prev]);
       return data || [];
     } catch (e) {
-      console.error('Supabase addSneakersBatch error:', e);
+      console.warn('Supabase addSneakersBatch error:', e);
       return null;
     }
   };
@@ -284,7 +284,7 @@ export function useSneakers(userId?: string) {
       setSneakers(prev => prev.map(s => s.id === id ? data : s));
       return data;
     } catch (e) {
-      console.error('Supabase updateSneaker error:', e);
+      console.warn('Supabase updateSneaker error:', e);
       return null;
     }
   };
@@ -311,7 +311,7 @@ export function useSneakers(userId?: string) {
       setSneakers(prev => prev.filter(s => s.id !== id));
       return true;
     } catch (e) {
-      console.error('Supabase deleteSneaker error:', e);
+      console.warn('Supabase deleteSneaker error:', e);
       return false;
     }
   };

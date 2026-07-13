@@ -10,9 +10,8 @@ import SneakerPicker from './components/SneakerPicker';
 import {
   Plus, Upload, Search, Footprints,
   SlidersHorizontal, X, AlertCircle, CheckCircle2, Database, LogOut,
-  ChevronDown, ChevronUp, Copy, Terminal, Check
+  ChevronDown, ChevronUp, Copy, Terminal, Check, LifeBuoy
 } from 'lucide-react';
-import rouletteWheelIcon from '../icons/roulette-wheel.png';
 
 function App() {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -120,7 +119,7 @@ function App() {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3">
                 <img
-                  src="https://i.postimg.cc/8P8rydQY/Sneaker-Roulette-Logo-(plain).png"
+                  src="https://i.postimg.cc/sgbkTBQW/imageedit-41-6518783016.png"
                   alt="Sneaker Roulette"
                   className="h-16 sm:h-18 w-auto object-cover"
                   referrerPolicy="no-referrer"
@@ -133,7 +132,7 @@ function App() {
                 onClick={() => setShowPicker(true)}
                 className="hidden sm:flex items-center gap-2 px-4 py-2 bg-emerald-600/10 text-emerald-400 hover:animate-spin text-sm font-medium rounded-2xl border border-emerald-500/20 hover:bg-emerald-600/20 transition-colors cursor-pointer"
               >
-                <img src={rouletteWheelIcon} alt="" className="w-5 h-5 object-contain" />
+                <LifeBuoy className="w-5 h-5 text-emerald-400" />
                 Spin the Wheel
               </button>
               <button
@@ -385,7 +384,7 @@ CREATE POLICY "Users can delete own sneakers"
             onClick={() => setShowPicker(true)}
             className="flex-1 flex items-center justify-center gap-2 py-3 bg-emerald-600/10 text-emerald-400 text-sm font-medium rounded-xl border border-emerald-500/20"
           >
-            <img src={rouletteWheelIcon} alt="" className="w-8 h-8 object-contain" /> Spin the Wheel
+            <LifeBuoy className="w-6 h-6 text-emerald-400" /> Spin the Wheel
           </button>
           <button
             onClick={() => setShowImport(true)}
