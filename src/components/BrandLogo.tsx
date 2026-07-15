@@ -34,7 +34,9 @@ export function BrandLogo({ brand }: { brand: string }) {
   if (bLower.includes('new balance') || bLower === 'nb') {
     return (
       <div title="New Balance" className="flex items-center justify-center">
-        <span className="font-sans font-black italic tracking-tighter text-5xl text-black leading-none">NB</span>
+        <svg viewBox="0 0 24 24" className="w-24 h-12 text-black fill-current">
+          <path d="M12.169 10.306l1.111-1.937 3.774-.242.132-.236-3.488-.242.82-1.414h6.47c1.99 0 3.46.715 2.887 2.8-.17.638-.979 2.233-3.356 2.899.507.06 1.76.616 1.54 2.057-.384 2.558-3.69 3.774-5.533 3.774l-7.641.006-.38-1.48 4.005-.28.137-.237-4.346-.264-.467-1.755 6.178-.363.137-.231-11.096-.693.534-.925 11.948-.775.138-.231-3.504-.231m5 .385l1.1-.006c.738-.005 1.502-.34 1.783-1.018.259-.632-.088-1.171-.55-1.166h-1.067l-1.266 2.19zm-1.27 2.195l-1.326 2.305h1.265c.589 0 1.64-.292 1.964-1.128.302-.781-.253-1.177-.638-1.177h-1.266zM6.26 16.445l-.77 1.315L0 17.77l.534-.923 5.726-.402zm.385-10.216l4.417.006.336 1.248-5.276-.33.523-.924zm5 2.245l.484 1.832-7.542-.495.528-.92 6.53-.417zm-3.84 5.281l-.957 1.661-5.32-.302.534-.924 5.743-.435z" />
+        </svg>
       </div>
     );
   }
@@ -78,6 +80,25 @@ export function BrandLogo({ brand }: { brand: string }) {
     return (
       <div title="ASICS" className="flex items-center justify-center">
         <span className="font-sans font-black italic tracking-tighter text-5xl text-black lowercase leading-none">asics</span>
+      </div>
+    );
+  }
+
+  if (bLower.includes('mizuno')) {
+    return (
+      <div title="Mizuno" className="flex items-center justify-center">
+        <svg viewBox="0 0 280 120" className="w-24 h-12 text-black fill-current">
+          <g transform="translate(-148.40002,-446.44274)">
+            <g transform="matrix(1.0073792,0,0,-1.0073792,-9.5773087,951.25202)">
+              <g transform="translate(322.5298,389.0898)">
+                <path
+                  fillRule="evenodd"
+                  d="m 0,0 c -3.504,11.245 -8.675,36.434 13.568,52.048 15.894,11.15 64.13,24.327 89.973,33.797 l 18.577,25.184 C 104.397,101.934 81.405,92.618 60.435,86.192 13.692,71.869 -14.266,63.372 -50.28,62.666 -76.203,62.156 -76.559,74.389 -51.335,96.327 -79.656,85.335 -119.26,72.31 -164.717,62.136 c 40.551,-1.14 71.339,-9.384 89.84,-20.13 C -48.526,26.701 -42.139,10.628 -39.164,0 L 0,0 Z m -48.812,46.55 c 12.641,-0.451 22.343,0.542 39.98,4.396 -8.32,-6.203 -15.661,-17.499 -16.488,-26.135 -4.382,6.558 -14.53,16.746 -23.492,21.739"
+                />
+              </g>
+            </g>
+          </g>
+        </svg>
       </div>
     );
   }

@@ -25,12 +25,12 @@ export interface Sneaker {
 export type SneakerInsert = Omit<Sneaker, 'id' | 'created_at' | 'updated_at'>;
 
 export const BRANDS = [
-'A Bathing Ape', 'Adidas', 'Alexander McQueen', 'Allbirds', 'ASICS', 'Balenciaga',
-'Brooks', 'Clarks', 'Cole Haan', 'Common Projects', 'Converse', 'ECCO', 'Fila',
-'Gucci', 'Hoka', 'Jordan', 'Li-Ning', 'Louis Vuitton', 'Maison Margiela', 'Mizuno',
-'Moonstar', 'New Balance', 'Nike', 'Off-White', 'On Running', 'Other', 'Prada', 'Puma',
-'Reebok', 'Rick Owens', 'Salomon', 'Saucony', 'Skechers', "Sperry's", 'Under Armour',
-'Vans', 'Versace',
+'361', 'A Bathing Ape', 'Adidas', 'Alexander McQueen', 'Airwalk', 'Allbirds', 'And 1', 'Anta', 'ASICS', 'Avia', 'Balenciaga', 'Bata', 'Birkenstock',
+'Brooks', 'Clarks', 'Cole Haan', 'Common Projects', 'Converse', 'Crocs', 'DC', 'ECCO', 'Etnies', 'Etonic', 'Ewing', 'Fila',
+'Gucci', 'Hoka', 'Jordan', 'K-Swiss', 'KangaROOS', 'Karhu', 'Keds', 'Li-Ning', 'Louis Vuitton', 'Maison Margiela', 'Merrell', 'Mizuno',
+'Moonstar', 'New Balance', 'Nike', 'Off-White', 'On Running', 'Osiris', 'Other', 'Peak', 'Pony', 'Prada', 'Puma', 'Qiaodan',
+'Reebok', 'Rick Owens', 'Rigorer', 'Ryka', 'Salomon', 'Saucony', 'SeaVees', 'Skechers', 'Speedland', "Sperry's", 'Supra', 'Timberland', 'Topo Athletics', 
+'Tracksmith', 'UGG', 'Under Armour','Vans', 'Versace', 'Wolverine',
 ] as const;
 
 export const HEIGHTS = ['Low', 'Mid', 'High'] as const;
