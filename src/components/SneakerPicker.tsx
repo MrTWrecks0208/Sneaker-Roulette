@@ -35,18 +35,22 @@ interface SneakerPickerProps {
   sneakers: Sneaker[];
   onWear: (id: string) => Promise<unknown>;
   onClose: () => void;
+  resultCount: number;
 }
 
-export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPickerProps) {
+export default function SneakerPicker({ sneakers, onWear, onClose, resultCount }: SneakerPickerProps) {
   const [filter, setFilter] = useState<PickerFilter>('random');
   const [styleFilters, setStyleFilters] = useState<string[]>([]);
   const [colorFilters, setColorFilters] = useState<string[]>([]);
   const [logicOperator, setLogicOperator] = useState<'AND' | 'OR'>('OR');
-  const [selected, setSelected] = useState<Sneaker | null>(null);
+  const [selectedSneakers, setSelectedSneakers] = useState<Sneaker[]>([]);
+  const [activeSelectedIndex, setActiveSelectedIndex] = useState<number>(0);
   const [picking, setPicking] = useState(false);
 
   const allStyles = [...new Set(sneakers.flatMap(s => s.style))].sort();
   const allColors = [...new Set(sneakers.flatMap(s => s.color))].sort();
+
+  const selected = selectedSneakers[activeSelectedIndex] || null;
 
   const toggleStyleFilter = (style: string) => {
     setStyleFilters(prev => 
@@ -54,7 +58,7 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
         ? prev.filter(s => s !== style) 
         : [...prev, style]
     );
-    setSelected(null);
+    setSelectedSneakers([]);
   };
 
   const toggleColorFilter = (color: string) => {
@@ -63,7 +67,7 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
         ? prev.filter(c => c !== color) 
         : [...prev, color]
     );
-    setSelected(null);
+    setSelectedSneakers([]);
   };
 
   const pickSneaker = useCallback(() => {
@@ -89,26 +93,44 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
     }
 
     if (pool.length === 0) {
-      setSelected(null);
+      setSelectedSneakers([]);
       return;
     }
 
     setPicking(true);
+    setActiveSelectedIndex(0);
+
+    const targetCount = Math.min(resultCount, pool.length);
+
     // Animation: cycle through a few options before landing
     let cycles = 0;
     const maxCycles = 12;
     const interval = setInterval(() => {
-      const randomIdx = Math.floor(Math.random() * pool.length);
-      setSelected(pool[randomIdx]);
+      const tempPool = [...pool];
+      const selection: Sneaker[] = [];
+      for (let i = 0; i < targetCount; i++) {
+        if (tempPool.length === 0) break;
+        const idx = Math.floor(Math.random() * tempPool.length);
+        selection.push(tempPool[idx]);
+        tempPool.splice(idx, 1);
+      }
+      setSelectedSneakers(selection);
       cycles++;
       if (cycles >= maxCycles) {
         clearInterval(interval);
-        const finalIdx = Math.floor(Math.random() * pool.length);
-        setSelected(pool[finalIdx]);
+        const finalPool = [...pool];
+        const finalSelection: Sneaker[] = [];
+        for (let i = 0; i < targetCount; i++) {
+          if (finalPool.length === 0) break;
+          const idx = Math.floor(Math.random() * finalPool.length);
+          finalSelection.push(finalPool[idx]);
+          finalPool.splice(idx, 1);
+        }
+        setSelectedSneakers(finalSelection);
         setPicking(false);
       }
     }, 120);
-  }, [sneakers, filter, styleFilters, colorFilters, logicOperator]);
+  }, [sneakers, filter, styleFilters, colorFilters, logicOperator, resultCount]);
 
   const handleWear = async () => {
     if (!selected) return;
@@ -117,20 +139,20 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
   };
 
   const handleReject = () => {
-    setSelected(null);
+    setSelectedSneakers([]);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/70 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-zinc-900 border border-zinc-800 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-zinc-800 bg-zinc-900 shrink-0">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-amber-400" />
+            <Sparkles className="w-5 h-5 text-amber-400 animate-pulse" />
             <h2 className="text-base font-semibold text-zinc-100">
               {selected || picking ? "The Selection" : "What to Wear Today"}
             </h2>
           </div>
-          <button onClick={onClose} className="p-1 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer">
+          <button onClick={onClose} className="p-1 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer focus:outline-none">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -139,48 +161,111 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
           {selected || picking ? (
             /* Result Screen */
             <div className="space-y-4">
-              <div className={`bg-zinc-950 rounded-xl border border-zinc-800 overflow-hidden transition-all ${picking ? 'opacity-75 scale-[0.98]' : ''}`}>
-                <div className="aspect-square sm:aspect-video bg-zinc-950 relative overflow-hidden flex items-center justify-center p-2">
-                  {selected?.image_url ? (
-                    <img src={selected.image_url} alt={selected.name} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Footprints className="w-16 h-16 text-zinc-700" />
-                    </div>
-                  )}
-                  {picking && (
+              {picking ? (
+                /* Dynamic cycling card during picker animation */
+                <div className="bg-zinc-950 rounded-xl border border-zinc-800 overflow-hidden transition-all opacity-75 scale-[0.98]">
+                  <div className="aspect-square sm:aspect-video bg-zinc-950 relative overflow-hidden flex items-center justify-center p-2">
+                    {selected?.image_url ? (
+                      <img src={selected.image_url} alt={selected.name} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Footprints className="w-16 h-16 text-zinc-700 animate-pulse" />
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex flex-col items-center justify-center gap-2">
                       <Shuffle className="w-8 h-8 text-blue-500 animate-spin" />
                       <span className="text-xs font-semibold text-blue-400 tracking-wider uppercase">Choosing...</span>
                     </div>
-                  )}
-                </div>
-                <div className="p-4 space-y-2 border-t border-zinc-800/50">
-                  <h3 className="text-base font-semibold text-zinc-100">{selected?.name}</h3>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs px-2.5 py-1 bg-sky-500/10 text-sky-400 rounded-2xl border border-sky-500/20">{selected?.style.join(", ")}</span>
-                    <span className="text-xs px-2.5 py-1 bg-emerald-500/10 text-emerald-400 rounded-2xl border border-emerald-500/20">{selected?.height} Top</span>
-                    <span className="text-xs px-2.5 py-1 bg-rose-500/10 text-rose-400 rounded-2xl border border-rose-500/20">Worn {selected?.worn}x</span>
                   </div>
                 </div>
-              </div>
-
-              {!picking && (
-                <div className="flex gap-3">
-                  <button
-                    onClick={handleWear}
-                    className="flex-1 py-2.5 bg-emerald-600 text-white text-base font-semibold rounded-xl hover:bg-emerald-500 transition-colors flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <Check className="w-5 h-5" /> Wear These
-                  </button>
-                  <button
-                    onClick={handleReject}
-                    className="flex-1 py-2.5 bg-rose-600 text-white text-base font-semibold rounded-xl border border-rose-500 hover:bg-rose-500 transition-colors flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <X className="w-5 h-5" /> Try Again
-                  </button>
+              ) : selectedSneakers.length > 1 ? (
+                /* List of results if we picked multiple */
+                <div className="space-y-3">
+                  <span className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">
+                    Select a pair to wear:
+                  </span>
+                  <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
+                    {selectedSneakers.map((sneaker, idx) => {
+                      const isHighlighted = idx === activeSelectedIndex;
+                      return (
+                        <button
+                          key={sneaker.id}
+                          onClick={() => setActiveSelectedIndex(idx)}
+                          className={`w-full text-left flex items-center gap-3 p-2.5 rounded-xl border transition-all cursor-pointer focus:outline-none ${
+                            isHighlighted
+                              ? 'bg-zinc-100 text-zinc-900 border-zinc-100 shadow-lg scale-[1.01]'
+                              : 'bg-zinc-950 text-zinc-300 border-zinc-800/65 hover:border-zinc-700 hover:bg-zinc-900/40'
+                          }`}
+                        >
+                          <div className={`w-14 h-14 rounded-lg bg-zinc-900/60 p-1 flex items-center justify-center shrink-0 border ${isHighlighted ? 'border-zinc-300/60' : 'border-zinc-800/80'}`}>
+                            {sneaker.image_url ? (
+                              <img src={sneaker.image_url} alt={sneaker.name} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                            ) : (
+                              <Footprints className={`w-7 h-7 ${isHighlighted ? 'text-zinc-600' : 'text-zinc-500'}`} />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0 space-y-1">
+                            <h4 className={`text-xs font-bold truncate ${isHighlighted ? 'text-zinc-900' : 'text-zinc-100'}`}>
+                              {sneaker.name}
+                            </h4>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${isHighlighted ? 'bg-zinc-900/10 text-zinc-800 border border-zinc-900/10' : 'bg-sky-500/10 text-sky-400 border border-sky-500/20'}`}>
+                                {sneaker.style[0] || 'Sneaker'}
+                              </span>
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${isHighlighted ? 'bg-zinc-900/10 text-zinc-800 border border-zinc-900/10' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
+                                Worn {sneaker.worn}x
+                              </span>
+                            </div>
+                          </div>
+                          <div className="shrink-0 pr-1">
+                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                              isHighlighted ? 'border-zinc-900 bg-zinc-900 text-white' : 'border-zinc-700'
+                            }`}>
+                              {isHighlighted && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                /* Original Single Card Layout */
+                <div className="bg-zinc-950 rounded-xl border border-zinc-800 overflow-hidden transition-all">
+                  <div className="aspect-square sm:aspect-video bg-zinc-950 relative overflow-hidden flex items-center justify-center p-2">
+                    {selected?.image_url ? (
+                      <img src={selected.image_url} alt={selected.name} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Footprints className="w-16 h-16 text-zinc-700" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4 space-y-2 border-t border-zinc-800/50">
+                    <h3 className="text-base font-semibold text-zinc-100">{selected?.name}</h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs px-2.5 py-1 bg-sky-500/10 text-sky-400 rounded-2xl border border-sky-500/20">{selected?.style.join(", ")}</span>
+                      <span className="text-xs px-2.5 py-1 bg-emerald-500/10 text-emerald-400 rounded-2xl border border-emerald-500/20">{selected?.height} Top</span>
+                      <span className="text-xs px-2.5 py-1 bg-rose-500/10 text-rose-400 rounded-2xl border border-rose-500/20">Worn {selected?.worn}x</span>
+                    </div>
+                  </div>
                 </div>
               )}
+
+              <div className="flex gap-3">
+                <button
+                  onClick={handleWear}
+                  className="flex-1 py-2.5 bg-emerald-600 text-white text-base font-semibold rounded-xl hover:bg-emerald-500 transition-colors flex items-center justify-center gap-2 cursor-pointer focus:outline-none"
+                >
+                  <Check className="w-5 h-5" /> Wear These
+                </button>
+                <button
+                  onClick={handleReject}
+                  className="flex-1 py-2.5 bg-rose-600 text-white text-base font-semibold rounded-xl border border-rose-500 hover:bg-rose-500 transition-colors flex items-center justify-center gap-2 cursor-pointer focus:outline-none"
+                >
+                  <X className="w-5 h-5" /> Try Again
+                </button>
+              </div>
             </div>
           ) : (
             /* Filter Selection and Trigger Screen */
@@ -199,8 +284,8 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
                   ] as const).map(({ key, label, icon: Icon, activeClass }) => (
                     <button
                       key={key}
-                      onClick={() => { setFilter(key); setSelected(null); }}
-                      className={`flex flex-col items-center gap-1 py-2.5 rounded-xl text-xs font-medium transition-all duration-75 border cursor-pointer ${
+                      onClick={() => { setFilter(key); setSelectedSneakers([]); }}
+                      className={`flex flex-col items-center gap-1 py-2.5 rounded-xl text-xs font-medium transition-all duration-75 border cursor-pointer focus:outline-none ${
                         filter === key
                           ? activeClass
                           : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-600'
@@ -218,8 +303,8 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
                       <span className="text-[11px] font-medium text-zinc-500">Select one or more styles:</span>
                       {styleFilters.length > 0 && (
                         <button
-                          onClick={() => { setStyleFilters([]); setSelected(null); }}
-                          className="text-[11px] text-zinc-400 hover:text-zinc-200 underline transition-colors duration-75 cursor-pointer"
+                          onClick={() => { setStyleFilters([]); setSelectedSneakers([]); }}
+                          className="text-[11px] text-zinc-400 hover:text-zinc-200 underline transition-colors duration-75 cursor-pointer focus:outline-none"
                         >
                           Clear all
                         </button>
@@ -229,8 +314,8 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
                     {/* Style Logic Selector */}
                     <div className="flex items-center gap-1.5 p-1 bg-zinc-950/60 rounded-xl border border-zinc-800/80 max-w-[200px]">
                       <button
-                        onClick={() => { setLogicOperator('OR'); setSelected(null); }}
-                        className={`flex-1 py-0.5 px-2 text-center rounded-lg text-[10px] font-semibold transition-all duration-75 cursor-pointer ${
+                        onClick={() => { setLogicOperator('OR'); setSelectedSneakers([]); }}
+                        className={`flex-1 py-0.5 px-2 text-center rounded-lg text-[10px] font-semibold transition-all duration-75 cursor-pointer focus:outline-none ${
                           logicOperator === 'OR'
                             ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                             : 'text-zinc-400 hover:text-zinc-200 border border-transparent'
@@ -239,8 +324,8 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
                         OR (Any)
                       </button>
                       <button
-                        onClick={() => { setLogicOperator('AND'); setSelected(null); }}
-                        className={`flex-1 py-0.5 px-2 text-center rounded-lg text-[10px] font-semibold transition-all duration-75 cursor-pointer ${
+                        onClick={() => { setLogicOperator('AND'); setSelectedSneakers([]); }}
+                        className={`flex-1 py-0.5 px-2 text-center rounded-lg text-[10px] font-semibold transition-all duration-75 cursor-pointer focus:outline-none ${
                           logicOperator === 'AND'
                             ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                             : 'text-zinc-400 hover:text-zinc-200 border border-transparent'
@@ -257,7 +342,7 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
                           <button
                             key={s}
                             onClick={() => toggleStyleFilter(s)}
-                            className={`px-2.5 py-1 rounded-lg text-xs transition-colors duration-75 border flex items-center gap-1 cursor-pointer ${
+                            className={`px-2.5 py-1 rounded-lg text-xs transition-colors duration-75 border flex items-center gap-1 cursor-pointer focus:outline-none ${
                               isSelected
                                 ? 'bg-amber-600/20 text-amber-400 border-amber-500/40'
                                 : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-600'
@@ -278,8 +363,8 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
                       <span className="text-[11px] font-medium text-zinc-500">Select one or more colors:</span>
                       {colorFilters.length > 0 && (
                         <button
-                          onClick={() => { setColorFilters([]); setSelected(null); }}
-                          className="text-[11px] text-zinc-400 hover:text-zinc-200 underline transition-colors duration-75 cursor-pointer"
+                          onClick={() => { setColorFilters([]); setSelectedSneakers([]); }}
+                          className="text-[11px] text-zinc-400 hover:text-zinc-200 underline transition-colors duration-75 cursor-pointer focus:outline-none"
                         >
                           Clear all
                         </button>
@@ -289,20 +374,20 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
                     {/* Color Logic Selector */}
                     <div className="flex items-center gap-1.5 p-1 bg-zinc-950/60 rounded-xl border border-zinc-800/80 max-w-[200px]">
                       <button
-                        onClick={() => { setLogicOperator('OR'); setSelected(null); }}
-                        className={`flex-1 py-0.5 px-2 text-center rounded-lg text-[10px] font-semibold transition-all duration-75 cursor-pointer ${
+                        onClick={() => { setLogicOperator('OR'); setSelectedSneakers([]); }}
+                        className={`flex-1 py-0.5 px-2 text-center rounded-lg text-[10px] font-semibold transition-all duration-75 cursor-pointer focus:outline-none ${
                           logicOperator === 'OR'
-                            ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                            ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
                             : 'text-zinc-400 hover:text-zinc-200 border border-transparent'
                         }`}
                       >
                         OR (Any)
                       </button>
                       <button
-                        onClick={() => { setLogicOperator('AND'); setSelected(null); }}
-                        className={`flex-1 py-0.5 px-2 text-center rounded-lg text-[10px] font-semibold transition-all duration-75 cursor-pointer ${
+                        onClick={() => { setLogicOperator('AND'); setSelectedSneakers([]); }}
+                        className={`flex-1 py-0.5 px-2 text-center rounded-lg text-[10px] font-semibold transition-all duration-75 cursor-pointer focus:outline-none ${
                           logicOperator === 'AND'
-                            ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                            ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
                             : 'text-zinc-400 hover:text-zinc-200 border border-transparent'
                         }`}
                       >
@@ -317,7 +402,7 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
                           <button
                             key={c}
                             onClick={() => toggleColorFilter(c)}
-                            className={`px-2.5 py-1 rounded-lg text-xs transition-colors duration-75 border flex items-center gap-1 cursor-pointer ${
+                            className={`px-2.5 py-1 rounded-lg text-xs transition-colors duration-75 border flex items-center gap-1 cursor-pointer focus:outline-none ${
                               isSelected
                                 ? 'bg-blue-600/20 text-blue-400 border-blue-500/40'
                                 : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-600'
@@ -337,7 +422,7 @@ export default function SneakerPicker({ sneakers, onWear, onClose }: SneakerPick
               <button
                 onClick={pickSneaker}
                 disabled={picking || sneakers.length === 0 || (filter === 'style' && styleFilters.length === 0) || (filter === 'color' && colorFilters.length === 0)}
-                className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold rounded-xl hover:from-blue-500 hover:to-blue-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold rounded-xl hover:from-blue-500 hover:to-blue-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none"
               >
                 <Shuffle className="w-5 h-5" />
                 Pick My Sneakers

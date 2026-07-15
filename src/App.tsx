@@ -1,16 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useSneakers } from './hooks/useSneakers';
 import { useAuth } from './hooks/useAuth';
 import SignIn from './components/SignIn';
+import LoadingScreen from './components/LoadingScreen';
 import { SneakerInsert, Sneaker } from './lib/supabase';
 import SneakerCard from './components/SneakerCard';
 import SneakerForm from './components/SneakerForm';
 import FileUpload from './components/FileUpload';
 import SneakerPicker from './components/SneakerPicker';
+import SneakerListView from './components/SneakerListView';
+import SneakerTableView from './components/SneakerTableView';
 import {
   Plus, Upload, Search, Footprints,
   SlidersHorizontal, X, AlertCircle, CheckCircle2, Database, LogOut,
-  ChevronDown, ChevronUp, Copy, Terminal, Check, LifeBuoy
+  ChevronDown, ChevronUp, Copy, Terminal, Check, LifeBuoy, Settings, ArrowUpDown,
+  LayoutGrid, List, Table
 } from 'lucide-react';
 
 function App() {
@@ -18,8 +23,20 @@ function App() {
   const { sneakers, loading, error, isSupabaseConfigured, usingLocalStorageFallback, addSneaker, addSneakersBatch, updateSneaker, deleteSneaker, incrementWorn } = useSneakers(user?.id);
   const isGuest = user?.id === 'guest-user-bypass';
   const isLive = isSupabaseConfigured && !isGuest;
+  const [showLoading, setShowLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      const justSignedIn = sessionStorage.getItem('just_signed_in') === 'true';
+      if (justSignedIn) {
+        sessionStorage.removeItem('just_signed_in');
+        setShowLoading(true);
+      }
+    }
+  }, [user, authLoading]);
   const [editSneaker, setEditSneaker] = useState<Sneaker | null>(null);
+  const [sneakerToDelete, setSneakerToDelete] = useState<Sneaker | null>(null);
   const [showImport, setShowImport] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
   const [showSqlGuide, setShowSqlGuide] = useState(false);
@@ -29,8 +46,89 @@ function App() {
   const [filterStyle, setFilterStyle] = useState('');
   const [filterColor, setFilterColor] = useState('');
   const [filterHeight, setFilterHeight] = useState('');
+  const [sortBy, setSortBy] = useState<'brand' | 'style' | 'worn' | 'created_at'>('created_at');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [showFilters, setShowFilters] = useState(false);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const [viewMode, setViewMode] = useState<'cards' | 'list' | 'table'>(() => {
+    const saved = localStorage.getItem('sneaker_view_mode');
+    return (saved === 'cards' || saved === 'list' || saved === 'table') ? saved : 'cards';
+  });
+
+  const handleSetViewMode = (mode: 'cards' | 'list' | 'table') => {
+    setViewMode(mode);
+    localStorage.setItem('sneaker_view_mode', mode);
+  };
+
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const sortDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target as Node)) {
+        setShowSortDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const sortOptions = [
+    { field: 'created_at', order: 'desc', label: 'Newest' },
+    { field: 'created_at', order: 'asc', label: 'Oldest' },
+    { field: 'brand', order: 'asc', label: 'Brand (A-Z)' },
+    { field: 'brand', order: 'desc', label: 'Brand (Z-A)' },
+    { field: 'style', order: 'asc', label: 'Style (A-Z)' },
+    { field: 'style', order: 'desc', label: 'Style (Z-A)' },
+    { field: 'worn', order: 'desc', label: 'Wear Count (High to Low)' },
+    { field: 'worn', order: 'asc', label: 'Wear Count (Low to High)' },
+  ] as const;
+
+  const currentSortOption = sortOptions.find(opt => opt.field === sortBy && opt.order === sortOrder) || sortOptions[0];
+
+  const [pickerResultCount, setPickerResultCount] = useState<number>(() => {
+    const saved = localStorage.getItem('picker_result_count');
+    if (saved) {
+      const parsed = parseInt(saved, 10);
+      if ([1, 3, 5].includes(parsed)) return parsed;
+    }
+    return 1;
+  });
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 300) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    localStorage.setItem('picker_result_count', pickerResultCount.toString());
+  }, [pickerResultCount]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const container = document.getElementById('user-menu-container');
+      if (container && !container.contains(event.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const showToast = (type: 'success' | 'error', message: string) => {
     setToast({ type, message });
@@ -55,6 +153,24 @@ function App() {
     return matchesSearch && matchesBrand && matchesHeight && matchesStyle && matchesColor;
   });
 
+  const sortedAndFiltered = [...filtered].sort((a, b) => {
+    let comparison = 0;
+    if (sortBy === 'brand') {
+      comparison = a.brand.localeCompare(b.brand);
+    } else if (sortBy === 'style') {
+      const styleA = (a.style || []).join(', ');
+      const styleB = (b.style || []).join(', ');
+      comparison = styleA.localeCompare(styleB);
+    } else if (sortBy === 'worn') {
+      comparison = a.worn - b.worn;
+    } else if (sortBy === 'created_at') {
+      const dateA = new Date(a.created_at || 0).getTime();
+      const dateB = new Date(b.created_at || 0).getTime();
+      comparison = dateA - dateB;
+    }
+    return sortOrder === 'asc' ? comparison : -comparison;
+  });
+
   const handleSave = async (data: SneakerInsert) => {
     if (editSneaker) {
       const result = await updateSneaker(editSneaker.id, data);
@@ -74,12 +190,19 @@ function App() {
     setEditSneaker(sneaker);
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this sneaker?')) {
-      const ok = await deleteSneaker(id);
-      if (ok) showToast('success', 'Sneaker deleted');
-      else showToast('error', 'Failed to delete sneaker');
+  const handleDelete = (id: string) => {
+    const s = sneakers.find(x => x.id === id);
+    if (s) {
+      setSneakerToDelete(s);
     }
+  };
+
+  const confirmDelete = async () => {
+    if (!sneakerToDelete) return;
+    const ok = await deleteSneaker(sneakerToDelete.id);
+    if (ok) showToast('success', 'Sneaker deleted');
+    else showToast('error', 'Failed to delete sneaker');
+    setSneakerToDelete(null);
   };
 
   const handleImport = async (sneakersData: SneakerInsert[]) => {
@@ -108,6 +231,10 @@ function App() {
 
   if (!user) {
     return <SignIn />;
+  }
+
+  if (showLoading) {
+    return <LoadingScreen onComplete={() => setShowLoading(false)} />;
   }
 
   return (
@@ -153,31 +280,56 @@ function App() {
               <div className="h-8 w-px bg-zinc-800/80 mx-1 hidden sm:block" />
 
               <div className="flex flex-col items-start gap-1">
-                <div className="flex items-center gap-2.5">
-                  <img
-                    src={user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(user.email)}`}
-                    alt="Avatar"
-                    className="w-8 h-8 rounded-xl object-cover border border-zinc-800 bg-zinc-900"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="hidden md:flex flex-col text-left">
-                    <span className="text-xs font-semibold text-zinc-200 truncate max-w-[120px]">
-                      {user.user_metadata?.username || user.user_metadata?.full_name || user.email.split('@')[0]}
-                    </span>
-                    <span className="text-[10px] text-zinc-500 truncate max-w-[120px]">
-                      {user.email}
-                    </span>
-                  </div>
+                <div className="relative" id="user-menu-container">
                   <button
-                    onClick={() => signOut()}
-                    title="Sign Out"
-                    className="p-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800/80 hover:border-zinc-700 text-zinc-400 hover:text-red-400 rounded-xl transition-all cursor-pointer"
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center gap-2.5 p-1 hover:bg-zinc-800/50 rounded-xl border border-transparent hover:border-zinc-800/50 transition-all cursor-pointer text-left focus:outline-none"
                   >
-                    <LogOut className="w-4.5 h-4.5" />
+                    <img
+                      src={user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(user.email)}`}
+                      alt="Avatar"
+                      className="w-8 h-8 rounded-xl object-cover border border-zinc-800 bg-zinc-900"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="hidden md:flex flex-col text-left">
+                      <span className="text-xs font-semibold text-zinc-200 truncate max-w-[120px]">
+                        {user.user_metadata?.username || user.user_metadata?.full_name || user.email.split('@')[0]}
+                      </span>
+                      <span className="text-[10px] text-zinc-500 truncate max-w-[120px]">
+                        {user.email}
+                      </span>
+                    </div>
+                    <ChevronDown className="w-4 h-4 text-zinc-400 hidden md:block" />
                   </button>
+
+                  {showUserMenu && (
+                    <div className="absolute right-0 mt-2 w-48 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl py-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-100">
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          setShowSettingsModal(true);
+                        }}
+                        className="w-full px-4 py-2.5 text-left text-xs font-medium text-zinc-300 hover:text-white hover:bg-zinc-800/80 transition-colors flex items-center gap-2 cursor-pointer focus:outline-none"
+                      >
+                        <Settings className="w-4 h-4 text-zinc-400" />
+                        Settings
+                      </button>
+                      <div className="h-px bg-zinc-800/60 my-1" />
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          signOut();
+                        }}
+                        className="w-full px-4 py-2.5 text-left text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors flex items-center gap-2 cursor-pointer focus:outline-none"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign Out
+                      </button>
+                    </div>
+                  )}
                 </div>
                 {/* Connection status under the avatar */}
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 ml-1">
                   {isLive ? (
                     <span className="flex h-1.5 w-1.5 relative" title="Connected to Supabase Live">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -396,7 +548,7 @@ CREATE POLICY "Users can delete own sneakers"
 
         {/* Search & Filters */}
         <div className="space-y-3">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
               <input
@@ -412,14 +564,92 @@ CREATE POLICY "Users can delete own sneakers"
                 </button>
               )}
             </div>
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`p-2.5 rounded-xl border transition-colors ${
-                showFilters ? 'bg-zinc-800 border-zinc-600 text-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              <SlidersHorizontal className="w-4 h-4" />
-            </button>
+
+            <div className="flex items-center gap-3">
+              {/* Custom Modern Sort Dropdown */}
+              <div className="relative flex-1 sm:flex-initial" ref={sortDropdownRef}>
+                <button
+                  onClick={() => setShowSortDropdown(!showSortDropdown)}
+                  className="w-full sm:w-auto flex items-center justify-between gap-3 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-300 hover:text-zinc-100 hover:border-zinc-700 transition-all cursor-pointer select-none"
+                >
+                  <div className="flex items-center gap-2">
+                    <ArrowUpDown className="w-4 h-4 text-zinc-500 flex-shrink-0" />
+                    <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Sort:</span>
+                    <span className="text-xs font-medium text-zinc-200">{currentSortOption.label}</span>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-zinc-500 transition-transform duration-200 flex-shrink-0 ${showSortDropdown ? 'rotate-180 text-zinc-300' : ''}`} />
+                </button>
+
+                {showSortDropdown && (
+                  <div className="absolute right-[-30px] mt-2 w-56 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden z-50 py-1.5 animate-in fade-in slide-in-from-top-2 duration-150">
+                    <div className="px-3 py-1.5 border-b border-zinc-800/60 mb-1">
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Sort Order</span>
+                    </div>
+                    {sortOptions.map(option => {
+                      const isSelected = sortBy === option.field && sortOrder === option.order;
+                      return (
+                        <button
+                          key={`${option.field}-${option.order}`}
+                          onClick={() => {
+                            setSortBy(option.field);
+                            setSortOrder(option.order);
+                            setShowSortDropdown(false);
+                          }}
+                          className={`w-full text-left px-4 py-2 text-xs flex items-center justify-between transition-colors ${
+                            isSelected
+                              ? 'bg-red-500/15 text-red-400 font-semibold'
+                              : 'text-zinc-400 hover:text-red-400 hover:bg-red-500/10'
+                          }`}
+                        >
+                          <span>{option.label}</span>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* View Mode Switcher */}
+              <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-xl p-1 text-zinc-400">
+                <button
+                  onClick={() => handleSetViewMode('cards')}
+                  title="Card View"
+                  className={`p-1.5 rounded-lg transition-all flex items-center justify-center cursor-pointer ${
+                    viewMode === 'cards' ? 'bg-red-500/15 text-red-400' : 'hover:text-zinc-200 hover:bg-zinc-850'
+                  }`}
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => handleSetViewMode('list')}
+                  title="List View"
+                  className={`p-1.5 rounded-lg transition-all flex items-center justify-center cursor-pointer ${
+                    viewMode === 'list' ? 'bg-red-500/15 text-red-400' : 'hover:text-zinc-200 hover:bg-zinc-850'
+                  }`}
+                >
+                  <List className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => handleSetViewMode('table')}
+                  title="Table View"
+                  className={`p-1.5 rounded-lg transition-all flex items-center justify-center cursor-pointer ${
+                    viewMode === 'table' ? 'bg-red-500/15 text-red-400' : 'hover:text-zinc-200 hover:bg-zinc-850'
+                  }`}
+                >
+                  <Table className="w-4 h-4" />
+                </button>
+              </div>
+
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`p-2.5 rounded-xl border transition-colors flex items-center justify-center ${
+                  showFilters ? 'bg-zinc-800 border-zinc-600 text-zinc-200' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <SlidersHorizontal className="w-4.5 h-4.5" />
+              </button>
+            </div>
           </div>
 
           {showFilters && (
@@ -551,9 +781,23 @@ CREATE POLICY "Users can delete own sneakers"
               </div>
             )}
           </div>
+        ) : viewMode === 'list' ? (
+          <SneakerListView
+            sneakers={sortedAndFiltered}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onIncrementWorn={handleWear}
+          />
+        ) : viewMode === 'table' ? (
+          <SneakerTableView
+            sneakers={sortedAndFiltered}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onIncrementWorn={handleWear}
+          />
         ) : (
           <div className="flex flex-none flex-wrap flex-row items-start justify-start gap-3 mt-8">
-            {filtered.map(sneaker => (
+            {sortedAndFiltered.map(sneaker => (
               <SneakerCard
                 key={sneaker.id}
                 sneaker={sneaker}
@@ -607,8 +851,120 @@ CREATE POLICY "Users can delete own sneakers"
           sneakers={sneakers}
           onWear={handleWear}
           onClose={() => setShowPicker(false)}
+          resultCount={pickerResultCount}
         />
       )}
+
+      {/* Settings Modal */}
+      {showSettingsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl flex flex-col animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-zinc-800 bg-zinc-900 shrink-0">
+              <div className="flex items-center gap-2">
+                <Settings className="w-5 h-5 text-sky-400" />
+                <h2 className="text-base font-semibold text-zinc-100">Settings</h2>
+              </div>
+              <button
+                onClick={() => setShowSettingsModal(false)}
+                className="p-1 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer focus:outline-none"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-5 space-y-4">
+              <div className="space-y-2">
+                <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  Picker Results
+                </label>
+                <p className="text-xs text-zinc-500">
+                  Select how many sneaker options are generated when you spin the wheel to choose your daily wear.
+                </p>
+                <div className="grid grid-cols-3 gap-2 mt-3">
+                  {([1, 3, 5] as const).map((num) => (
+                    <button
+                      key={num}
+                      onClick={() => setPickerResultCount(num)}
+                      className={`py-2.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer focus:outline-none ${
+                        pickerResultCount === num
+                          ? 'bg-sky-500/10 text-sky-400 border-sky-500/40 shadow-sm shadow-sky-500/5'
+                          : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-zinc-300'
+                      }`}
+                    >
+                      {num === 1 ? '1 Option' : `${num} Options`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-zinc-950/40 border-t border-zinc-800/60 flex justify-end">
+              <button
+                onClick={() => setShowSettingsModal(false)}
+                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white text-xs font-semibold rounded-xl transition-all cursor-pointer focus:outline-none"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {sneakerToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl flex flex-col animate-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3 p-4 sm:p-5 border-b border-zinc-800 bg-zinc-900 shrink-0">
+              <div className="p-2 bg-red-500/10 rounded-xl text-red-500 shrink-0">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-semibold text-zinc-100">Delete Sneaker</h2>
+                <p className="text-xs text-zinc-500 mt-0.5">This action is permanent</p>
+              </div>
+            </div>
+            
+            <div className="p-5">
+              <p className="text-sm text-zinc-300 leading-relaxed">
+                Are you sure you want to delete <strong className="text-zinc-100 font-semibold">{sneakerToDelete.name || 'this unnamed sneaker'}</strong> from your locker?
+              </p>
+            </div>
+
+            <div className="p-4 bg-zinc-950/40 border-t border-zinc-800/60 flex items-center justify-end gap-2.5">
+              <button
+                onClick={() => setSneakerToDelete(null)}
+                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xs font-semibold rounded-xl transition-all cursor-pointer focus:outline-none"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-red-600/10 hover:shadow-red-500/20 transition-all cursor-pointer focus:outline-none"
+              >
+                Delete Sneaker
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Back to Top Button */}
+      <AnimatePresence>
+        {showScrollTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 15 }}
+            onClick={scrollToTop}
+            className="fixed bottom-6 right-6 z-50 p-3.5 rounded-full bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 border border-rose-500/20 hover:border-rose-500/45 shadow-xl transition-all cursor-pointer focus:outline-none flex items-center justify-center group"
+            title="Back to Top"
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.92 }}
+          >
+            <ChevronUp className="w-5 h-5 text-rose-400 group-hover:text-rose-300 transition-colors" />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

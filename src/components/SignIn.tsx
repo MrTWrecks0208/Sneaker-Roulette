@@ -24,6 +24,7 @@ export default function SignIn({ onSuccess }: SignInProps) {
     try {
       const res = await signInAsGuest();
       if (res.success) {
+        sessionStorage.setItem('just_signed_in', 'true');
         onSuccess?.();
       } else {
         setValidationError('Failed to sign in as guest.');
@@ -57,6 +58,7 @@ export default function SignIn({ onSuccess }: SignInProps) {
       if (isSignUp) {
         const res = await signUp(email, password, username);
         if (res.success) {
+          sessionStorage.setItem('just_signed_in', 'true');
           onSuccess?.();
         } else {
           setValidationError(res.error || 'Failed to create account.');
@@ -64,6 +66,7 @@ export default function SignIn({ onSuccess }: SignInProps) {
       } else {
         const res = await signIn(email, password);
         if (res.success) {
+          sessionStorage.setItem('just_signed_in', 'true');
           onSuccess?.();
         } else {
           setValidationError(res.error || 'Invalid email or password.');
@@ -83,6 +86,7 @@ export default function SignIn({ onSuccess }: SignInProps) {
     try {
       const res = await signInWithGoogle();
       if (res?.success) {
+        sessionStorage.setItem('just_signed_in', 'true');
         onSuccess?.();
       } else if (res?.error) {
         setValidationError(res.error);

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Sneaker, SneakerInsert, BRANDS, HEIGHTS, STYLES, COLORS, buildName } from '../lib/supabase';
 import { X, Upload, Loader2, Camera, Sparkles } from 'lucide-react';
 import multicolorImg from '../assets/images/multicolor_swatch_1783883698636.jpg';
-import iridescentImg from '../assets/images/iridescent_color_1783660705612.jpg';
+import iridescentImg from '../assets/images/iridescent.png';
 
 const COLOR_GLOW: Record<string, { bg: string; text: string; border: string; shadow: string }> = {
   'White':            { bg: 'rgba(255,255,255,.80)', text: '#000000', border: 'rgba(255,255,255,.80)' },
@@ -39,9 +39,9 @@ const COLOR_GLOW: Record<string, { bg: string; text: string; border: string; sha
   'Magenta':          { bg: 'rgba(216,0,115,.80)',   text: '#ffffff', border: 'rgba(216,0,115,.80)' },
   'Pink':             { bg: 'rgba(236,72,153,.80)',  text: '#000000', border: 'rgba(236,72,153,.80)' },
   'Hot Pink':         { bg: 'rgba(255,0,110,.80)',   text: '#ffffff', border: 'rgba(255,0,110,.80)' },
-  'Gold':             { bg: 'rgba(255,215,0,.80)',   text: '#000000', border: 'rgba(255,215,0,.80)' },
+  'Gold':             { bg: 'rgba(239,191,4,.80)',   text: '#000000', border: 'rgba(255,215,0,.80)' },
   'Silver':           { bg: 'rgba(192,192,192,.80)', text: '#000000', border: 'rgba(192,192,192,.80)' },
-  'Reflective Silver':{ bg: 'rgba(200,210,220,.80)', text: '#000000', border: 'rgba(200,210,220,.80)' },
+  'Reflective':{ bg: 'rgba(200,210,220,.80)', text: '#000000', border: 'rgba(200,210,220,.80)' },
   'Glow':             { bg: 'rgba(0,255,128,.80)',   text: '#000000', border: 'rgba(0,255,128,.80)' },
   'Iridescent':       { bg: 'rgba(180,160,255,.80)', text: '#ffffff', border: 'rgba(180,160,255,.80)' },
   'Ice':              { bg: 'rgba(160,230,255,.80)', text: '#000000', border: 'rgba(160,230,255,.80)' },
@@ -161,24 +161,73 @@ function parseSneakerName(name: string): ParsedName {
   const variantTokens: string[] = [];
   let colorwayTokens: string[] = [];
 
-  let phase: 'model' | 'variant' | 'colorway' = 'model';
-  for (const t of filteredTokens) {
-    const tLower = t.toLowerCase();
-    if (phase === 'model' && STRUCTURAL_KEYWORDS.includes(tLower)) {
-      phase = 'variant';
-    }
-    if (phase === 'model') {
-      modelTokens.push(t);
-    } else if (phase === 'variant') {
-      if (STRUCTURAL_KEYWORDS.includes(tLower) || ['og','v2','v3'].includes(tLower)) {
-        variantTokens.push(t);
+  const hasStructural = filteredTokens.some(t => 
+    STRUCTURAL_KEYWORDS.includes(t.toLowerCase()) || ['og','v2','v3'].includes(t.toLowerCase())
+  );
+
+  if (hasStructural) {
+    let phase: 'model' | 'variant' | 'colorway' = 'model';
+    for (const t of filteredTokens) {
+      const tLower = t.toLowerCase();
+      if (phase === 'model' && STRUCTURAL_KEYWORDS.includes(tLower)) {
+        phase = 'variant';
+      }
+      if (phase === 'model') {
+        modelTokens.push(t);
+      } else if (phase === 'variant') {
+        if (STRUCTURAL_KEYWORDS.includes(tLower) || ['og','v2','v3'].includes(tLower)) {
+          variantTokens.push(t);
+        } else {
+          phase = 'colorway';
+          colorwayTokens.push(t);
+        }
       } else {
-        phase = 'colorway';
         colorwayTokens.push(t);
       }
-    } else {
-      colorwayTokens.push(t);
     }
+  } else {
+    // Smart split when there are no structural keywords
+    let splitIndex = -1;
+
+    // Rule 1: Find a token in the first 3 tokens that contains a digit (e.g. "1", "350", "990v5")
+    const limit = Math.min(3, filteredTokens.length);
+    for (let i = 0; i < limit; i++) {
+      if (/\d/.test(filteredTokens[i])) {
+        splitIndex = i + 1; // Split after this token
+        break;
+      }
+    }
+
+    // Rule 2: Find a known color token (at index >= 1) to split before it
+    if (splitIndex === -1) {
+      const knownColors = new Set([
+        'white', 'ivory', 'black', 'gunmetal', 'dark gray', 'gray', 'grey', 'light gray', 'dark brown', 'brown', 'tan',
+        'beige', 'red', 'crimson', 'orange', 'light yellow', 'yellow', 'mint', 'lime green',
+        'green', 'forest green', 'olive', 'teal', 'turquoise', 'light blue', 'aqua', 'blue', 'navy', 'indigo',
+        'purple', 'maroon', 'burgundy', 'magenta', 'pink', 'hot pink', 'gold', 'silver', 'reflective silver',
+        'glow', 'iridescent', 'ice', 'multicolor', 'carolina blue'
+      ]);
+      for (let i = 1; i < filteredTokens.length; i++) {
+        if (knownColors.has(filteredTokens[i].toLowerCase())) {
+          splitIndex = i; // Split before this token
+          break;
+        }
+      }
+    }
+
+    // Rule 3: Fallback split based on length
+    if (splitIndex === -1) {
+      if (filteredTokens.length <= 1) {
+        splitIndex = filteredTokens.length;
+      } else if (filteredTokens.length === 2) {
+        splitIndex = 1;
+      } else {
+        splitIndex = 2;
+      }
+    }
+
+    modelTokens = filteredTokens.slice(0, splitIndex);
+    colorwayTokens = filteredTokens.slice(splitIndex);
   }
 
   // If model is too long (4+ tokens), keep first 2 as model and push rest to colorway
@@ -487,7 +536,7 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
                   key={s}
                   type="button"
                   onClick={() => toggleMultiSelect(style, s, setStyle)}
-                  className={'px-3 pt-3 pb-1.5 rounded-2xl text-xs font-medium transition-colors border ' + (style.includes(s) ? 'bg-amber-600/20 text-amber-400 border-amber-500/40' : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-zinc-500')}
+                  className={'px-3 pt-1.5 pb-1.5 rounded-2xl text-xs font-medium transition-colors border ' + (style.includes(s) ? 'bg-amber-600/20 text-amber-400 border-amber-500/40' : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-zinc-500')}
                 >
                   {s}
                 </button>
