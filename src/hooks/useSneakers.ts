@@ -15,6 +15,7 @@ const DEFAULT_SNEAKERS: Sneaker[] = [
     color: ['White', 'Red', 'Black'],
     worn: 12,
     image_url: '/icons/sportshoe.png',
+    last_worn: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(),
     created_at: new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString(),
   },
@@ -30,6 +31,7 @@ const DEFAULT_SNEAKERS: Sneaker[] = [
     color: ['White', 'Black'],
     worn: 5,
     image_url: '/icons/sportshoe-white.png',
+    last_worn: new Date(Date.now() - 10 * 24 * 3600 * 1000).toISOString(),
     created_at: new Date(Date.now() - 15 * 24 * 3600 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 15 * 24 * 3600 * 1000).toISOString(),
   },
@@ -45,6 +47,7 @@ const DEFAULT_SNEAKERS: Sneaker[] = [
     color: ['Black', 'White'],
     worn: 24,
     image_url: '/icons/sportshoe.png',
+    last_worn: new Date(Date.now() - 1 * 24 * 3600 * 1000).toISOString(),
     created_at: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString(),
   },
@@ -330,7 +333,10 @@ export function useSneakers(userId?: string) {
   const incrementWorn = async (id: string) => {
     const sneaker = sneakers.find(s => s.id === id);
     if (!sneaker) return null;
-    return updateSneaker(id, { worn: sneaker.worn + 1 });
+    return updateSneaker(id, { 
+      worn: sneaker.worn + 1,
+      last_worn: new Date().toISOString()
+    });
   };
 
   return {

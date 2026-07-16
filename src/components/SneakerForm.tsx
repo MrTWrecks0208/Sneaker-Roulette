@@ -262,6 +262,7 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
   const [style, setStyle] = useState<string[]>(sneaker?.style || []);
   const [color, setColor] = useState<string[]>(sneaker?.color || []);
   const [worn, setWorn] = useState(sneaker?.worn || 0);
+  const [lastWornAt, setLastWornAt] = useState<string>(sneaker?.last_worn || '');
   const [imageUrl, setImageUrl] = useState(sneaker?.image_url || '');
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -284,6 +285,7 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
       setStyle(sneaker.style);
       setColor(sneaker.color);
       setWorn(sneaker.worn);
+      setLastWornAt(sneaker.last_worn || '');
       setImageUrl(sneaker.image_url);
     }
   }, [sneaker]);
@@ -393,6 +395,7 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
       style,
       color,
       worn,
+      last_worn: lastWornAt ? new Date(lastWornAt).toISOString() : null,
       image_url: imageUrl,
     });
     setSaving(false);
@@ -587,16 +590,30 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
             </div>
           </div>
 
-          {/* Worn */}
-          <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Times Worn</label>
-            <input
-              type="number"
-              min="0"
-              value={worn}
-              onChange={e => setWorn(parseInt(e.target.value) || 0)}
-              className="w-32 bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors"
-            />
+          {/* Worn and Last Worn Date */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Times Worn</label>
+              <input
+                type="number"
+                min="0"
+                value={worn}
+                onChange={e => setWorn(parseInt(e.target.value) || 0)}
+                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Last Worn Date</label>
+              <input
+                type="date"
+                value={lastWornAt ? lastWornAt.split('T')[0] : ''}
+                onChange={e => {
+                  const val = e.target.value;
+                  setLastWornAt(val ? new Date(val).toISOString() : '');
+                }}
+                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors [color-scheme:dark]"
+              />
+            </div>
           </div>
 
           {/* Image Upload */}

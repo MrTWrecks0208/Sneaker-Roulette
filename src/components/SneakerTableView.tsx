@@ -28,6 +28,7 @@ export default function SneakerTableView({
               <th scope="col" className="py-4 px-5 text-xs font-bold text-zinc-400 uppercase tracking-widest">Styles</th>
               <th scope="col" className="py-4 px-5 text-xs font-bold text-zinc-400 uppercase tracking-widest">Colors</th>
               <th scope="col" className="py-4 px-5 text-xs font-bold text-zinc-400 uppercase tracking-widest text-center">Wears</th>
+              <th scope="col" className="py-4 px-5 text-xs font-bold text-zinc-400 uppercase tracking-widest text-center">Last Worn</th>
               <th scope="col" className="py-4 px-5 text-xs font-bold text-zinc-400 uppercase tracking-widest text-right">Actions</th>
             </tr>
           </thead>
@@ -123,6 +124,13 @@ export default function SneakerTableView({
                   </div>
                 </td>
 
+                {/* Last Worn */}
+                <td className="py-3 px-5 text-center whitespace-nowrap text-xs text-zinc-400">
+                  <span className="bg-zinc-900 px-2 py-1 rounded border border-zinc-800 text-zinc-300 font-semibold">
+                    {formatLastWorn(sneaker.last_worn)}
+                  </span>
+                </td>
+
                 {/* 7. Action Buttons */}
                 <td className="py-3 px-5 text-right whitespace-nowrap">
                   <div className="flex items-center justify-end gap-1.5">
@@ -150,3 +158,34 @@ export default function SneakerTableView({
     </div>
   );
 }
+
+const formatLastWorn = (dateString?: string | null) => {
+  if (!dateString) return 'Never';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Never';
+    const now = new Date();
+    
+    // Check if it's today
+    if (date.toDateString() === now.toDateString()) {
+      return 'Today';
+    }
+    
+    // Check if it's yesterday
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    if (date.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    }
+    
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays < 7) {
+      return `${diffDays} days ago`;
+    }
+    
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch {
+    return 'Never';
+  }
+};

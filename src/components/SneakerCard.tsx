@@ -24,11 +24,15 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
           <Footprints className="w-12 h-12 text-gray-300" />
         )}
 
-        {/* Brand Logo in Upper Right Corner (fades out on hover to show action buttons) */}
+        {/* Brand Logo in Upper Right Corner */}
         {sneaker.brand && (
-          <div className={`absolute z-10 transition-opacity duration-200 group-hover:opacity-0 pointer-events-none ${
+          <div className={`absolute z-10 transition-opacity duration-200 pointer-events-none ${
             sneaker.brand.toLowerCase().trim().includes('nike')
               ? 'top-[38px] right-[27px]'
+              : sneaker.brand.toLowerCase().trim().includes('jordan')
+              ? 'top-[23px] right-[32px]'
+              : sneaker.brand.toLowerCase().trim().includes('adidas')
+              ? 'top-[21px] right-[32px]'
               : 'top-[28px] right-[42px]'
           }`}>
             <BrandLogo brand={sneaker.brand} />
@@ -90,7 +94,46 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
             })}
           </div>
         )}
+
+        {/* Last Worn Footer */}
+        <div className="pt-2 border-t border-gray-100 mt-2 flex items-center justify-between text-[10px] text-gray-500 font-medium">
+          <span>Last Worn:</span>
+          <span className="text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded-md font-semibold">
+            {formatLastWorn(sneaker.last_worn)}
+          </span>
+        </div>
       </div>
     </div>
   );
 }
+
+const formatLastWorn = (dateString?: string | null) => {
+  if (!dateString) return 'Never';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Never';
+    const now = new Date();
+    
+    // Check if it's today
+    if (date.toDateString() === now.toDateString()) {
+      return 'Today';
+    }
+    
+    // Check if it's yesterday
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    if (date.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    }
+    
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays < 7) {
+      return `${diffDays} days ago`;
+    }
+    
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch {
+    return 'Never';
+  }
+};

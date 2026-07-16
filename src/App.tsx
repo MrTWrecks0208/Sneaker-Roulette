@@ -10,6 +10,7 @@ import SneakerCard from './components/SneakerCard';
 import SneakerForm from './components/SneakerForm';
 import FileUpload from './components/FileUpload';
 import SneakerPicker from './components/SneakerPicker';
+import RouletteAnimation from './components/RouletteAnimation';
 import SneakerListView from './components/SneakerListView';
 import SneakerTableView from './components/SneakerTableView';
 import {
@@ -40,6 +41,7 @@ function App() {
   const [sneakerToDelete, setSneakerToDelete] = useState<Sneaker | null>(null);
   const [showImport, setShowImport] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
+  const [showRoulette, setShowRoulette] = useState(false);
   const [showSqlGuide, setShowSqlGuide] = useState(false);
   const [copiedSql, setCopiedSql] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -257,7 +259,7 @@ function App() {
 
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setShowPicker(true)}
+                onClick={() => setShowRoulette(true)}
                 className="hidden sm:flex items-center gap-2 px-4 py-2 bg-emerald-600/10 text-emerald-400 hover:animate-spin text-sm font-medium rounded-2xl border border-emerald-500/20 hover:bg-emerald-600/20 transition-colors cursor-pointer"
               >
                 <LifeBuoy className="w-5 h-5 text-emerald-400" />
@@ -430,6 +432,7 @@ function App() {
   color text[] DEFAULT '{}',
   worn integer NOT NULL DEFAULT 0,
   image_url text DEFAULT '',
+  last_worn timestamptz DEFAULT NULL,
   user_id uuid REFERENCES auth.users(id),
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
@@ -494,6 +497,7 @@ CREATE POLICY "Users can delete own sneakers"
   color text[] DEFAULT '{}',
   worn integer NOT NULL DEFAULT 0,
   image_url text DEFAULT '',
+  last_worn timestamptz DEFAULT NULL,
   user_id uuid REFERENCES auth.users(id),
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
@@ -534,7 +538,7 @@ CREATE POLICY "Users can delete own sneakers"
         {/* Mobile action buttons */}
         <div className="flex sm:hidden gap-2">
           <button
-            onClick={() => setShowPicker(true)}
+            onClick={() => setShowRoulette(true)}
             className="flex-1 flex items-center justify-center gap-2 py-3 bg-emerald-600/10 text-emerald-400 text-sm font-medium rounded-xl border border-emerald-500/20"
           >
             <LifeBuoy className="w-6 h-6 text-emerald-400" /> Spin the Wheel
@@ -844,6 +848,15 @@ CREATE POLICY "Users can delete own sneakers"
         <FileUpload
           onImport={handleImport}
           onClose={() => setShowImport(false)}
+        />
+      )}
+
+      {showRoulette && (
+        <RouletteAnimation
+          onComplete={() => {
+            setShowRoulette(false);
+            setShowPicker(true);
+          }}
         />
       )}
 
