@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { isSupabaseConfigured } from './useSneakers';
+import { safeLocalStorage } from '../lib/utils';
 
 export interface UserProfile {
   id: string;
@@ -18,7 +19,7 @@ export function useAuth() {
 
   useEffect(() => {
     const handleMockAuthChange = () => {
-      const savedMock = localStorage.getItem('sneakers_mock_user');
+      const savedMock = safeLocalStorage.getItem('sneakers_mock_user');
       if (savedMock) {
         setUser(JSON.parse(savedMock));
       } else {
@@ -30,7 +31,7 @@ export function useAuth() {
     window.addEventListener('mock-auth-change', handleMockAuthChange);
 
     // Check if there is a local mock/guest user first
-    const savedMock = localStorage.getItem('sneakers_mock_user');
+    const savedMock = safeLocalStorage.getItem('sneakers_mock_user');
     if (savedMock) {
       const parsed = JSON.parse(savedMock);
       if (parsed.id === 'guest-user-bypass' || !isSupabaseConfigured) {
@@ -41,7 +42,7 @@ export function useAuth() {
         };
       } else {
         // Clear mock user that is not a guest bypass if Supabase is configured
-        localStorage.removeItem('sneakers_mock_user');
+        safeLocalStorage.removeItem('sneakers_mock_user');
       }
     }
 
@@ -64,24 +65,42 @@ export function useAuth() {
         setUser(null);
       }
       setLoading(false);
-    });
-
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser({
-          id: session.user.id,
-          email: session.user.email || '',
-          user_metadata: session.user.user_metadata,
-        });
+    }).catch(err => {
+      console.warn('Failed to fetch session from Supabase:', err);
+      // Fallback to mock session if any exists
+      const savedMock = safeLocalStorage.getItem('sneakers_mock_user');
+      if (savedMock) {
+        setUser(JSON.parse(savedMock));
       } else {
         setUser(null);
       }
       setLoading(false);
     });
 
+    // Listen for auth state changes
+    let subscription: { unsubscribe: () => void } | null = null;
+    try {
+      const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (session?.user) {
+          setUser({
+            id: session.user.id,
+            email: session.user.email || '',
+            user_metadata: session.user.user_metadata,
+          });
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      });
+      subscription = data?.subscription || null;
+    } catch (err) {
+      console.warn('Failed to subscribe to auth state changes:', err);
+    }
+
     return () => {
-      subscription.unsubscribe();
+      if (subscription) {
+        subscription.unsubscribe();
+      }
       window.removeEventListener('mock-auth-change', handleMockAuthChange);
     };
   }, []);
@@ -102,7 +121,7 @@ export function useAuth() {
           avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(username || email)}`,
         },
       };
-      localStorage.setItem('sneakers_mock_user', JSON.stringify(mockUser));
+      safeLocalStorage.setItem('sneakers_mock_user', JSON.stringify(mockUser));
       window.dispatchEvent(new Event('mock-auth-change'));
       setUser(mockUser);
       setLoading(false);
@@ -147,7 +166,7 @@ export function useAuth() {
           avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(email)}`,
         },
       };
-      localStorage.setItem('sneakers_mock_user', JSON.stringify(mockUser));
+      safeLocalStorage.setItem('sneakers_mock_user', JSON.stringify(mockUser));
       window.dispatchEvent(new Event('mock-auth-change'));
       setUser(mockUser);
       setLoading(false);
@@ -187,7 +206,7 @@ export function useAuth() {
           avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces',
         },
       };
-      localStorage.setItem('sneakers_mock_user', JSON.stringify(mockUser));
+      safeLocalStorage.setItem('sneakers_mock_user', JSON.stringify(mockUser));
       window.dispatchEvent(new Event('mock-auth-change'));
       setUser(mockUser);
       setLoading(false);
@@ -224,7 +243,7 @@ export function useAuth() {
         avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=guest-collector`,
       },
     };
-    localStorage.setItem('sneakers_mock_user', JSON.stringify(mockUser));
+    safeLocalStorage.setItem('sneakers_mock_user', JSON.stringify(mockUser));
     window.dispatchEvent(new Event('mock-auth-change'));
     setUser(mockUser);
     setLoading(false);
@@ -233,7 +252,7 @@ export function useAuth() {
 
   const signOut = async () => {
     setLoading(true);
-    localStorage.removeItem('sneakers_mock_user');
+    safeLocalStorage.removeItem('sneakers_mock_user');
     window.dispatchEvent(new Event('mock-auth-change'));
     
     if (!isSupabaseConfigured) {

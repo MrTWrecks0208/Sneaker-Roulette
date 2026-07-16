@@ -52,6 +52,131 @@ export function BrandLogo({ brand }: { brand: string }) {
     );
   }
 
+  if (bLower.includes('champion')) {
+    return (
+      <div title="Champion" className="flex items-center justify-center">
+        <svg viewBox="0 0 240 200" className="w-[72px] h-[72px] text-black fill-current">
+          {/* Left Crescent */}
+          <path d="M 130 30 C 70 30, 30 60, 30 100 C 30 140, 70 170, 130 170 L 130 138.5 C 95 138.5, 90 120, 90 100 C 90 80, 95 61.5, 130 61.5 Z" />
+          {/* Right C-Shape */}
+          <path d="M 142 31.1 L 142 168.9 C 170 168.9, 190 155, 210 135 C 202 133.5, 192 124.5, 180 120 L 180 80 C 192 75.5, 202 66.5, 210 65 C 190 45, 170 31.1, 142 31.1 Z" />
+        </svg>
+      </div>
+    );
+  }
+
+  if (bLower.includes('crocs') || bLower === 'croc') {
+    return (
+      <div title="Crocs" className="flex items-center justify-center">
+        <svg viewBox="0 0 200 200" className="w-[52px] h-[52px] text-black fill-current">
+          {/* Black circle background */}
+          <circle cx="100" cy="100" r="92" className="fill-black" />
+          
+          {/* White concentric border */}
+          <circle cx="100" cy="100" r="83" fill="none" stroke="white" strokeWidth="4.5" />
+          
+          {/* Main White Crocodile Mascot Silhouette */}
+          <path
+            d="M 28 92 
+               C 16 88, 14 74, 25 68 
+               C 32 64, 45 54, 55 52 
+               C 65 50, 78 45, 82 32 
+               C 84 25, 96 23, 98 32 
+               C 100 36, 102 36, 105 32 
+               C 107 28, 114 26, 116 33 
+               C 118 40, 119 50, 126 56 
+               C 131 60, 133 65, 128 72 
+               C 132 75, 134 82, 128 88 
+               C 132 91, 134 98, 128 104 
+               C 132 107, 142 110, 146 118 
+               C 150 125, 145 133, 134 132 
+               C 126 131, 122 126, 118 124 
+               C 116 129, 114 136, 106 136 
+               C 98 136, 96 128, 95 122 
+               L 78 122 
+               C 75 128, 73 136, 65 136 
+               C 57 136, 55 128, 54 122 
+               C 48 122, 38 126, 33 122 
+               C 28 118, 30 110, 38 106 
+               C 44 103, 52 107, 55 109 
+               C 56 109, 56 104, 51 102 
+               C 45 100, 36 100, 29 98 
+               Z"
+            fill="white"
+          />
+          
+          {/* Left Eye */}
+          <ellipse cx="88" cy="45" rx="11" ry="15" fill="white" stroke="black" strokeWidth="3" />
+          <ellipse cx="91" cy="46" rx="5" ry="8" fill="black" />
+          <circle cx="92" cy="43" r="1.5" fill="white" />
+
+          {/* Right Eye */}
+          <ellipse cx="108" cy="45" rx="11" ry="15" fill="white" stroke="black" strokeWidth="3" />
+          <ellipse cx="111" cy="46" rx="5" ry="8" fill="black" />
+          <circle cx="112" cy="43" r="1.5" fill="white" />
+          
+          {/* Nostrils */}
+          <circle cx="42" cy="74" r="2.5" fill="black" />
+          <circle cx="50" cy="71" r="2.5" fill="black" />
+          
+          {/* Open smiling mouth (black gap) */}
+          <path d="M 45 88 C 55 94, 68 94, 76 86 C 73 84, 70 82, 68 82 C 60 84, 52 86, 45 88 Z" fill="black" />
+          
+          {/* Cheek fold/crease line */}
+          <path d="M 76 84 C 79 81, 80 75, 77 71" fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round" />
+          
+          {/* Neck Segment Lines */}
+          <path d="M 88 104 C 98 108, 110 108, 120 104" fill="none" stroke="black" strokeWidth="3" strokeLinecap="round" />
+          <path d="M 86 112 C 98 117, 112 117, 122 112" fill="none" stroke="black" strokeWidth="3" strokeLinecap="round" />
+          <path d="M 84 120 C 98 126, 114 126, 124 120" fill="none" stroke="black" strokeWidth="3" strokeLinecap="round" />
+          
+          {/* Left Hand Claw dividers */}
+          <path d="M 52 116 C 50 122, 45 128, 38 130" fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round" />
+          <path d="M 54 116 C 54 124, 52 132, 46 136" fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round" />
+          <path d="M 56 116 C 58 124, 60 132, 54 138" fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round" />
+
+          {/* Right Hand Claw dividers */}
+          <path d="M 112 118 C 110 124, 108 132, 102 136" fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round" />
+          <path d="M 114 118 C 116 124, 118 132, 112 138" fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round" />
+          <path d="M 116 118 C 120 124, 124 128, 122 132" fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round" />
+        </svg>
+      </div>
+    );
+  }
+
+  if (bLower === 'dc' || bLower.includes('dc shoes') || bLower.includes('dc shoe') || bLower.startsWith('dc ') || bLower.startsWith('dc-')) {
+    return (
+      <div title="DC Shoes" className="flex items-center justify-center">
+        <svg viewBox="15 15 165 140" className="w-[52px] h-[52px] text-black fill-current">
+          {/* Interlocking D-C shape */}
+          <path d="M20.626 22.132h26.825c11.77 0 17.244 0 33.119 4.379 16.013 4.38 15.192 7.118 15.192 7.118s10.127-5.064 16.286-6.706c6.158-1.506 14.779-4.791 31.613-4.791h26.963v36.815h-26.963V46.629s-10.537-1.094-19.707 1.232c-9.305 2.326-7.664 3.01-7.664 3.01s12.592 13.96 12.729 34.353c.273 20.528-12.043 32.709-12.043 32.709s5.336 3.285 14.096 3.559c8.621.137 12.59 0 12.59 0v-15.74h26.963v41.881h-26.963c-7.801 0-24.359-1.369-32.16-4.381-7.801-3.01-15.739-7.664-15.739-7.664s-7.938 4.654-19.298 8.35c-11.359 3.695-29.014 3.695-29.014 3.695H20.626v-41.881h26.825v16.973s4.926.82 12.317.135c7.39-.684 15.19-3.557 15.19-3.557s-13.138-12.455-12.864-34.9c.137-22.582 11.633-32.572 11.633-32.572s-3.147-2.874-11.906-3.969c-8.622-1.095-14.37-.411-14.37-.411v43.385l-26.825-.274v-68.43zm75.137 44.342c-1.096 1.095-5.886 7.801-6.022 17.245-.137 9.307 6.022 18.887 6.022 18.887s5.61-7.527 5.883-17.519c.139-9.853-5.609-18.066-5.883-18.613z" />
+          {/* 7-pointed star next to C */}
+          <path d="M157.486 65.653l3.422 10.129 9.99-3.697-5.884 8.897 9.168 5.61-10.674.959 1.506 10.539-7.528-7.666-7.39 7.666 1.506-10.539-10.676-.959 9.17-5.61-5.885-8.897 9.99 3.697 3.285-10.129z" />
+        </svg>
+      </div>
+    );
+  }
+
+  if (bLower.includes('etnies')) {
+    return (
+      <div title="Etnies" className="flex items-center justify-center">
+        <svg viewBox="0 0 192.756 192.756" className="w-[52px] h-[52px] text-black fill-current">
+          {/* Main left stylized hook */}
+          <path d="M36.853 40.315h27.143L48.313 71.078s.603 11.46 10.254 11.46h60.921v27.747h-62.73s-12.063 3.619-6.032 15.079l12.667 25.333h-28.35L8.504 97.015l28.349-56.7z" />
+          {/* Top and bottom horizontal bars */}
+          <path d="M79.292 42.699h39.597v23.758H68.073l11.219-23.758zM78.056 150.96h39.321v-22.895H66.915l11.141 22.895z" />
+          {/* Main right arrow */}
+          <path d="M128.74 43.19h28.348l27.164 54.331-27.756 54.919H128.74V43.19z" />
+          {/* White letters inside the right arrow for readability of 'etnies' name */}
+          <path d="M156.727 65.319s-.42 5.331-5.473 5.542h-6.102v-8.418h-5.895s-1.684.631-1.893 1.474h-3.578s.211-4.42 4.84-5.893h12.418s5.471.842 5.682 6.103h-3.998s.631-1.052-1.475-1.473h-3.998v3.999h4.209s1.123-.21 1.158-1.298l4.105-.036z" fill="white" />
+          <path d="M137.215 65.319s-.377 1.438 1.412 1.543h3.473v3.999h-3.156s-5.631-.5-5.184-5.551l3.455.009zM152.025 75.561h-15.152s-2.664.281-2.805 1.403 0 4.63 0 4.63 2.244-.982 3.086-.982h14.871v2.525h3.93v-2.385h5.051l-1.684-4.771h-3.227v-2.946h-4.209l.139 2.526zM156.096 101.518v4.769h-21.889v-4.63l21.889-.139zM157.779 101.657v4.63h4.35v-4.63h-4.35zM156.543 116.092s-.422 5.331-5.473 5.542h-6.104v-8.419h-5.893s-1.684.632-1.895 1.474h-3.576s.209-4.42 4.84-5.894h12.416s5.473.843 5.684 6.104h-3.998s.631-1.052-1.475-1.473h-3.998v3.998h4.209s1.123-.21 1.156-1.298l4.107-.034z" fill="white" />
+          <path d="M137.031 116.092s-.377 1.438 1.412 1.543h3.473v3.999h-3.156s-5.631-.5-5.184-5.551l3.455.009zM156.621 85.47v4.349h-22.414v-4.221l22.414-.128zM154.412 90.854h-3.158s1.58.526 1.369 2.104c0 0 .285 1.234-1.582 1.448a4.09 4.09 0 0 1-.312.024c-2.211.105-16.627 0-16.627 0v4.946h18.1s4.105.315 4.42-4.104c-.001.001.21-3.997-2.21-4.418zM152.676 131.156s.684 2.104-2.264 2.104v3.578s6.104 1.157 6.104-5.683h-3.84v.001zM137.838 130.073s-.684-2.105 2.264-2.105v-3.577s-6.104-1.157-6.104 5.683h3.84v-.001z" fill="white" />
+          <path d="M156.307 130.104s.525-5.683-4.631-5.788h-2.842s-4.629 1.053-4.734 4.21c0 0-1.895 3.893-3.158 3.998 0 0-3.367 1.158-3.471-1.578h-3.473s-.842 6.313 6.104 6.209l1.893-.106s3.158-.525 5.262-5.155c0 0 .736-2.315 2.631-2.842 0 0 2.736-.736 2.631 1.053h3.788v-.001z" fill="white" />
+        </svg>
+      </div>
+    );
+  }
+
   if (bLower.includes('off-white')) {
     return (
       <div title="Off-White" className="flex items-center justify-center">
@@ -103,6 +228,20 @@ export function BrandLogo({ brand }: { brand: string }) {
     );
   }
 
+  if (bLower.includes('fila')) {
+    return (
+      <div title="Fila" className="flex items-center justify-center">
+        <svg viewBox="0 0 120 120" className="w-[44px] h-[44px] text-black fill-current">
+          <rect x="8" y="8" width="104" height="104" fill="none" stroke="currentColor" strokeWidth="8" />
+          <g transform="translate(15, 12)">
+            <path d="M75.011,2.83671c7.43302,0 13.45966,6.02434 13.45966,13.45814c0,7.43524 -6.02663,13.45967 -13.45966,13.45967H13.45966c-7.43375,0 -13.45967,-6.02443 -13.45967,-13.45967c0,-7.4338 6.02592,-13.45814 13.45967,-13.45814h61.55133z" />
+            <path d="M68.82455,38.10375c7.43375,0 13.45962,6.02514 13.45962,13.45964c0,7.43303 -6.02587,13.45819 -13.45962,13.45819H33.79119c-2.98761,0.0109 -5.43377,2.37428 -5.54811,5.33212v17.54212c0,7.43301 -6.02589,13.45819 -13.45739,13.45819c-7.43381,0 -13.45967,-6.02518 -13.45967,-13.45819V58.03155c0,-11.01143 8.92685,-19.93958 19.93866,-19.93958h47.55987z" />
+          </g>
+        </svg>
+      </div>
+    );
+  }
+
   if (bLower.includes('puma')) {
     return (
       <div title="Puma" className="flex items-center justify-center">
@@ -123,10 +262,211 @@ export function BrandLogo({ brand }: { brand: string }) {
     );
   }
 
+  if (bLower.includes('under armour') || bLower === 'ua') {
+    return (
+      <div title="Under Armour" className="flex items-center justify-center">
+        <svg viewBox="0 0 24 24" className="w-24 h-12 text-black fill-current">
+          <path d="M15.954 12c-.089.066-.195.142-.324.233-.826.585-2.023.985-3.58.985h-.104c-1.556 0-2.755-.4-3.58-.985A36.43 36.43 0 018.042 12c.09-.067.196-.143.324-.234.825-.584 2.024-.985 3.58-.985h.104c1.557 0 2.756.401 3.58.985.129.09.235.167.325.234M24 7.181s-.709-.541-2.95-1.365c-1.968-.721-3.452-.883-3.452-.883l.006 4.243c0 .598-.162 1.143-.618 1.765-1.672-.61-3.254-.985-4.981-.985-1.728 0-3.308.375-4.98.985-.457-.619-.62-1.168-.62-1.765l.007-4.243s-1.494.16-3.463.883C.709 6.642 0 7.181 0 7.181c.093 1.926 1.78 3.638 4.435 4.82C1.777 13.18.09 14.887 0 16.818c0 0 .709.54 2.949 1.365 1.968.721 3.453.883 3.453.883l-.007-4.244c0-.597.164-1.143.619-1.764 1.672.61 3.252.983 4.98.983 1.727 0 3.309-.374 4.98-.983.457.62.62 1.167.62 1.764l-.006 4.244s1.484-.16 3.452-.883c2.241-.826 2.95-1.365 2.95-1.365-.093-1.927-1.78-3.64-4.435-4.819 2.657-1.182 4.343-2.888 4.435-4.82" />
+        </svg>
+      </div>
+    );
+  }
+
   if (bLower.includes('vans')) {
     return (
       <div title="Vans" className="flex items-center justify-center">
         <span className="font-sans font-black tracking-tight text-4xl text-black uppercase leading-none">VANS</span>
+      </div>
+    );
+  }
+
+  if (bLower.includes('airwalk')) {
+    return (
+      <div title="Airwalk" className="flex items-center justify-center">
+        <svg viewBox="0 0 200 200" className="w-[52px] h-[52px] text-black fill-current">
+          {/* Black circle background */}
+          <circle cx="100" cy="100" r="92" className="fill-black" />
+          {/* White arrowhead path with arch cutout */}
+          <path
+            d="M 100,22 L 175,144 L 112,144 L 112,112 A 12,12 0 0,0 88,112 L 88,144 L 25,144 Z"
+            fill="white"
+          />
+        </svg>
+      </div>
+    );
+  }
+
+  if (bLower.includes('topo')) {
+    return (
+      <div title="Topo Athletic" className="flex items-center justify-center">
+        <svg viewBox="0 0 200 200" className="w-[52px] h-[52px] text-black fill-current">
+          {/* Outer crescent */}
+          <path
+            d="M 132,44 A 86,86 0 1,0 184,116 A 76,76 0 1,1 132,44 Z"
+          />
+          {/* Middle crescent */}
+          <path
+            d="M 148,64 A 58,58 0 1,0 186,118 A 48,48 0 1,1 148,64 Z"
+          />
+          {/* Inner crescent */}
+          <path
+            d="M 158,82 A 30,30 0 1,0 180,114 A 22,22 0 1,1 158,82 Z"
+          />
+        </svg>
+      </div>
+    );
+  }
+
+  if (bLower.includes('prada')) {
+    return (
+      <div title="Prada" className="flex items-center justify-center">
+        <svg viewBox="0 0 300 200" className="w-[84px] h-[56px] text-black">
+          {/* Thick outer black rounded triangle */}
+          <path
+            d="M 45,20 L 255,20 A 25 25 0 0 1 280,45 L 165,170 A 20 20 0 0 1 135,170 L 20,45 A 25 25 0 0 1 45,20 Z"
+            fill="black"
+          />
+          {/* Inner white space with thin black contour line inside it */}
+          <path
+            d="M 49,24 L 251,24 A 21 21 0 0 1 272,45 L 162,166 A 16 16 0 0 1 138,166 L 28,45 A 21 21 0 0 1 49,24 Z"
+            fill="white"
+          />
+          {/* Inner thin black triangle */}
+          <path
+            d="M 60,36 L 240,36 A 16 16 0 0 1 260,56 L 160,150 A 12 12 0 0 1 140,150 L 40,56 A 16 16 0 0 1 60,36 Z"
+            fill="none"
+            stroke="black"
+            strokeWidth="2"
+          />
+          {/* "PRADA" Text - utilizing elegant display serif typography */}
+          <text
+            x="150"
+            y="76"
+            fontFamily="Garamond, Georgia, 'Times New Roman', serif"
+            fontWeight="bold"
+            fontSize="26"
+            letterSpacing="5"
+            textAnchor="middle"
+            fill="black"
+          >
+            PRADA
+          </text>
+          {/* "MILANO" Text */}
+          <text
+            x="150"
+            y="96"
+            fontFamily="Inter, 'Helvetica Neue', Arial, sans-serif"
+            fontWeight="700"
+            fontSize="10"
+            letterSpacing="4"
+            textAnchor="middle"
+            fill="black"
+          >
+            MILANO
+          </text>
+          {/* Ribbon/Banner for DAL 1913 */}
+          {/* Left tail */}
+          <path
+            d="M 115,114 L 98,110 L 103,120 L 118,125 L 115,114"
+            fill="white"
+            stroke="black"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+          {/* Right tail */}
+          <path
+            d="M 185,114 L 202,110 L 197,120 L 182,125 L 185,114"
+            fill="white"
+            stroke="black"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+          {/* Center Banner section */}
+          <path
+            d="M 115,114 L 185,114 L 180,125 L 120,125 Z"
+            fill="white"
+            stroke="black"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+          {/* "DAL 1913" text */}
+          <text
+            x="150"
+            y="122"
+            fontFamily="Georgia, serif"
+            fontWeight="bold"
+            fontSize="7"
+            letterSpacing="1"
+            textAnchor="middle"
+            fill="black"
+          >
+            DAL 1913
+          </text>
+          {/* Coat of arms - Crown */}
+          <path
+            d="M 142,134 L 140,131 L 145,133 L 150,129 L 155,133 L 160,131 L 158,134 Z"
+            fill="black"
+          />
+          <line x1="141" y1="135" x2="159" y2="135" stroke="black" strokeWidth="1" />
+          {/* Shield/Seal */}
+          <path
+            d="M 144,137 L 156,137 L 156,144 C 156,149 150,153 150,153 C 150,153 144,149 144,144 Z"
+            fill="none"
+            stroke="black"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+          {/* Inner line for shield detail */}
+          <path
+            d="M 150,137 L 150,153"
+            stroke="black"
+            strokeWidth="1"
+          />
+        </svg>
+      </div>
+    );
+  }
+
+  if (bLower.includes('armani')) {
+    return (
+      <div title="Armani" className="flex items-center justify-center">
+        <svg viewBox="0 0 200 200" className="w-[52px] h-[52px] text-black fill-current">
+          {/* Giorgio Armani Monogram (GA) with perfect geometric symmetry */}
+          {/* Left half - "G" */}
+          <path
+            fillRule="evenodd"
+            d="M 96,10 A 90,90 0 1,0 96,190 L 96,10 M 96,32 A 68,68 0 0,0 33.1,88 L 96,88 Z M 33.1,112 A 68,68 0 0,0 76,163.6 L 76,112 Z"
+          />
+          {/* Right half - "A" */}
+          <path
+            fillRule="evenodd"
+            d="M 104,10 A 90,90 0 1,1 104,190 L 104,10 M 124,36.4 A 68,68 0 0,1 166.9,88 L 124,88 Z M 166.9,112 A 68,68 0 0,1 104,168 L 104,112 Z"
+          />
+        </svg>
+      </div>
+    );
+  }
+
+  if (bLower.includes('361')) {
+    return (
+      <div title="361°" className="flex items-center justify-center">
+        <svg viewBox="0 0 310 210" className="w-[84px] h-[56px] text-black fill-current animate-fade-in">
+          {/* Custom geometric vector path for 361 Degrees logo */}
+          {/* '3' Path */}
+          <path d="M 14,65 L 82,65 L 46,116 C 56,116 88,122 88,148 C 88,172 65,178 38,178 C 20,178 12,166 12,148 L 26,148 C 26,158 36,164 45,164 C 60,164 74,158 74,148 C 74,136 60,130 46,130 L 74,79 L 14,79 Z" />
+          
+          {/* '6' Path with inner cutout using evenodd fill rule */}
+          <path 
+            fillRule="evenodd" 
+            d="M 178,65 L 154,65 C 122,90 100,122 100,146 C 100,168 118,178 142,178 C 170,178 184,162 184,132 C 184,106 156,112 138,112 C 148,100 162,85 178,65 Z M 124,142 C 124,124 138,122 148,122 C 158,122 162,128 162,142 C 162,156 154,164 142,164 C 130,164 124,156 124,142 Z" 
+          />
+          
+          {/* '1' Path */}
+          <path d="M 202,74 L 240,65 V 178 H 214 V 84 L 202,74 Z" />
+          
+          {/* '°' Degree Circle */}
+          <circle cx="275" cy="68" r="14" stroke="currentColor" strokeWidth="6" fill="none" />
+        </svg>
       </div>
     );
   }

@@ -5,6 +5,7 @@ import { useAuth } from './hooks/useAuth';
 import SignIn from './components/SignIn';
 import LoadingScreen from './components/LoadingScreen';
 import { SneakerInsert, Sneaker } from './lib/supabase';
+import { safeLocalStorage } from './lib/utils';
 import SneakerCard from './components/SneakerCard';
 import SneakerForm from './components/SneakerForm';
 import FileUpload from './components/FileUpload';
@@ -52,13 +53,13 @@ function App() {
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const [viewMode, setViewMode] = useState<'cards' | 'list' | 'table'>(() => {
-    const saved = localStorage.getItem('sneaker_view_mode');
+    const saved = safeLocalStorage.getItem('sneaker_view_mode');
     return (saved === 'cards' || saved === 'list' || saved === 'table') ? saved : 'cards';
   });
 
   const handleSetViewMode = (mode: 'cards' | 'list' | 'table') => {
     setViewMode(mode);
-    localStorage.setItem('sneaker_view_mode', mode);
+    safeLocalStorage.setItem('sneaker_view_mode', mode);
   };
 
   const [showSortDropdown, setShowSortDropdown] = useState(false);
@@ -88,7 +89,7 @@ function App() {
   const currentSortOption = sortOptions.find(opt => opt.field === sortBy && opt.order === sortOrder) || sortOptions[0];
 
   const [pickerResultCount, setPickerResultCount] = useState<number>(() => {
-    const saved = localStorage.getItem('picker_result_count');
+    const saved = safeLocalStorage.getItem('picker_result_count');
     if (saved) {
       const parsed = parseInt(saved, 10);
       if ([1, 3, 5].includes(parsed)) return parsed;
@@ -116,7 +117,7 @@ function App() {
   };
 
   useEffect(() => {
-    localStorage.setItem('picker_result_count', pickerResultCount.toString());
+    safeLocalStorage.setItem('picker_result_count', pickerResultCount.toString());
   }, [pickerResultCount]);
 
   useEffect(() => {

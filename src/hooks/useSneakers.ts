@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase, Sneaker, SneakerInsert, buildName } from '../lib/supabase';
+import { safeLocalStorage } from '../lib/utils';
 
 const DEFAULT_SNEAKERS: Sneaker[] = [
   {
@@ -51,9 +52,19 @@ const DEFAULT_SNEAKERS: Sneaker[] = [
 
 export const isSupabaseConfigured = !!(
   import.meta.env.VITE_SUPABASE_URL &&
+  import.meta.env.VITE_SUPABASE_URL.trim() !== '' &&
   import.meta.env.VITE_SUPABASE_URL !== 'https://placeholder.supabase.co' &&
+  !import.meta.env.VITE_SUPABASE_URL.includes('<') &&
+  !import.meta.env.VITE_SUPABASE_URL.includes('[') &&
+  !import.meta.env.VITE_SUPABASE_URL.includes('your-') &&
+  !import.meta.env.VITE_SUPABASE_URL.includes('your_') &&
   import.meta.env.VITE_SUPABASE_ANON_KEY &&
-  import.meta.env.VITE_SUPABASE_ANON_KEY !== 'placeholder'
+  import.meta.env.VITE_SUPABASE_ANON_KEY.trim() !== '' &&
+  import.meta.env.VITE_SUPABASE_ANON_KEY !== 'placeholder' &&
+  !import.meta.env.VITE_SUPABASE_ANON_KEY.includes('<') &&
+  !import.meta.env.VITE_SUPABASE_ANON_KEY.includes('[') &&
+  !import.meta.env.VITE_SUPABASE_ANON_KEY.includes('your-') &&
+  !import.meta.env.VITE_SUPABASE_ANON_KEY.includes('your_')
 );
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -86,12 +97,12 @@ export function useSneakers(userId?: string) {
       // Scoped local storage keys by userId to isolate user accounts locally!
       try {
         const storageKey = `sneakers_inventory_${userId}`;
-        const stored = localStorage.getItem(storageKey);
+        const stored = safeLocalStorage.getItem(storageKey);
         if (stored) {
           setSneakers(JSON.parse(stored));
         } else {
           // Put default sneakers in first time
-          localStorage.setItem(storageKey, JSON.stringify(DEFAULT_SNEAKERS));
+          safeLocalStorage.setItem(storageKey, JSON.stringify(DEFAULT_SNEAKERS));
           setSneakers(DEFAULT_SNEAKERS);
         }
       } catch (e) {
@@ -123,7 +134,7 @@ export function useSneakers(userId?: string) {
       // Scoped local storage fallback
       try {
         const storageKey = `sneakers_inventory_${userId}`;
-        const stored = localStorage.getItem(storageKey);
+        const stored = safeLocalStorage.getItem(storageKey);
         setSneakers(stored ? JSON.parse(stored) : DEFAULT_SNEAKERS);
       } catch {
         // Fallback silently if localStorage fails or is empty
@@ -139,7 +150,7 @@ export function useSneakers(userId?: string) {
 
   const saveToStorage = (updated: Sneaker[]) => {
     if (userId) {
-      localStorage.setItem(`sneakers_inventory_${userId}`, JSON.stringify(updated));
+      safeLocalStorage.setItem(`sneakers_inventory_${userId}`, JSON.stringify(updated));
     }
     setSneakers(updated);
   };
