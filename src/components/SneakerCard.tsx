@@ -25,9 +25,11 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
         )}
 
         {/* Brand Logo in Upper Right Corner */}
-        {sneaker.brand && (
+        {(sneaker.brand || sneaker.name?.toLowerCase().includes('adidas yeezy')) && (
           <div className={`absolute z-10 transition-opacity duration-200 pointer-events-none ${
-            sneaker.brand.toLowerCase().trim().includes('nike')
+            sneaker.name?.toLowerCase().includes('adidas yeezy')
+              ? 'top-[21px] right-[48px]'
+              : sneaker.brand.toLowerCase().trim().includes('nike')
               ? 'top-[38px] right-[27px]'
               : sneaker.brand.toLowerCase().trim().includes('jordan')
               ? 'top-[23px] right-[32px]'
@@ -35,7 +37,7 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
               ? 'top-[21px] right-[32px]'
               : 'top-[28px] right-[42px]'
           }`}>
-            <BrandLogo brand={sneaker.brand} />
+            <BrandLogo brand={sneaker.name?.toLowerCase().includes('adidas yeezy') ? 'adidas yeezy' : sneaker.brand} />
           </div>
         )}
 

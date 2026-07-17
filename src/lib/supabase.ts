@@ -46,8 +46,9 @@ export const COLORS = [
   'White', 'Ivory', 'Black', 'Gunmetal', 'Dark Gray', 'Gray', 'Light Gray', 'Dark Brown', 'Brown', 'Tan',
   'Beige', 'Red', 'Crimson', 'Orange', 'Light Yellow', 'Yellow', 'Mint', 'Lime Green',
   'Green', 'Forest Green', 'Olive', 'Teal', 'Turquoise', 'Light Blue', 'Aqua', 'Blue', 'Navy', 'Indigo',
-  'Purple', 'Maroon', 'Burgundy', 'Magenta', 'Pink', 'Hot Pink', 'Gold', 'Silver', 'Reflective Silver',
-  'Glow', 'Iridescent', 'Ice', 'Multicolor',
+  'Purple', 'Maroon', 'Burgundy', 'Magenta', 'Pink', 'Hot Pink', 'Gold', 'Silver', 'Reflective',
+  'Glow', 'Iridescent', 'Ice', 'Multicolor', 'Paua', 'Light Green', 'Cyan Blue', 'Citrus', 'Gum',
+  'Green Cyan', 'Carolina Blue', 'Platinum',
 ] as const;
 
 export function buildName(brand: string, model: string, variant: string, colorway: string): string {

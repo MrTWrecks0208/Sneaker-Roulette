@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Sneaker } from '../lib/supabase';
 import { Shuffle, Check, X, Filter, Footprints, Sparkles, Paintbrush } from 'lucide-react';
+import RouletteAnimation from './RouletteAnimation';
 
 const HighTopSneaker = ({ className }: { className?: string }) => (
   <svg
@@ -45,7 +46,8 @@ export default function SneakerPicker({ sneakers, onWear, onClose, resultCount }
   const [logicOperator, setLogicOperator] = useState<'AND' | 'OR'>('OR');
   const [selectedSneakers, setSelectedSneakers] = useState<Sneaker[]>([]);
   const [activeSelectedIndex, setActiveSelectedIndex] = useState<number>(0);
-  const [picking, setPicking] = useState(false);
+  const [showRoulette, setShowRoulette] = useState(false);
+  const [pendingSelection, setPendingSelection] = useState<Sneaker[]>([]);
 
   const allStyles = [...new Set(sneakers.flatMap(s => s.style))].sort();
   const allColors = [...new Set(sneakers.flatMap(s => s.color))].sort();
@@ -97,40 +99,26 @@ export default function SneakerPicker({ sneakers, onWear, onClose, resultCount }
       return;
     }
 
-    setPicking(true);
-    setActiveSelectedIndex(0);
-
     const targetCount = Math.min(resultCount, pool.length);
+    const finalPool = [...pool];
+    const finalSelection: Sneaker[] = [];
+    for (let i = 0; i < targetCount; i++) {
+      if (finalPool.length === 0) break;
+      const idx = Math.floor(Math.random() * finalPool.length);
+      finalSelection.push(finalPool[idx]);
+      finalPool.splice(idx, 1);
+    }
 
-    // Animation: cycle through a few options before landing
-    let cycles = 0;
-    const maxCycles = 12;
-    const interval = setInterval(() => {
-      const tempPool = [...pool];
-      const selection: Sneaker[] = [];
-      for (let i = 0; i < targetCount; i++) {
-        if (tempPool.length === 0) break;
-        const idx = Math.floor(Math.random() * tempPool.length);
-        selection.push(tempPool[idx]);
-        tempPool.splice(idx, 1);
-      }
-      setSelectedSneakers(selection);
-      cycles++;
-      if (cycles >= maxCycles) {
-        clearInterval(interval);
-        const finalPool = [...pool];
-        const finalSelection: Sneaker[] = [];
-        for (let i = 0; i < targetCount; i++) {
-          if (finalPool.length === 0) break;
-          const idx = Math.floor(Math.random() * finalPool.length);
-          finalSelection.push(finalPool[idx]);
-          finalPool.splice(idx, 1);
-        }
-        setSelectedSneakers(finalSelection);
-        setPicking(false);
-      }
-    }, 120);
+    setPendingSelection(finalSelection);
+    setShowRoulette(true);
   }, [sneakers, filter, styleFilters, colorFilters, logicOperator, resultCount]);
+
+  const handleRouletteComplete = useCallback(() => {
+    setShowRoulette(false);
+    setSelectedSneakers(pendingSelection);
+    setPendingSelection([]);
+    setActiveSelectedIndex(0);
+  }, [pendingSelection]);
 
   const handleWear = async () => {
     if (!selected) return;
@@ -149,7 +137,7 @@ export default function SneakerPicker({ sneakers, onWear, onClose, resultCount }
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-amber-400 animate-pulse" />
             <h2 className="text-base font-semibold text-zinc-100">
-              {selected || picking ? "The Selection" : "What to Wear Today"}
+              {selected ? "The Selection" : "What to Wear Today"}
             </h2>
           </div>
           <button onClick={onClose} className="p-1 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer focus:outline-none">
@@ -158,27 +146,10 @@ export default function SneakerPicker({ sneakers, onWear, onClose, resultCount }
         </div>
 
         <div className="p-4 sm:p-5 space-y-4 overflow-y-auto">
-          {selected || picking ? (
+          {selected ? (
             /* Result Screen */
             <div className="space-y-4">
-              {picking ? (
-                /* Dynamic cycling card during picker animation */
-                <div className="bg-zinc-950 rounded-xl border border-zinc-800 overflow-hidden transition-all opacity-75 scale-[0.98]">
-                  <div className="aspect-square sm:aspect-video bg-zinc-950 relative overflow-hidden flex items-center justify-center p-2">
-                    {selected?.image_url ? (
-                      <img src={selected.image_url} alt={selected.name} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Footprints className="w-16 h-16 text-zinc-700 animate-pulse" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex flex-col items-center justify-center gap-2">
-                      <Shuffle className="w-8 h-8 text-blue-500 animate-spin" />
-                      <span className="text-xs font-semibold text-blue-400 tracking-wider uppercase">Choosing...</span>
-                    </div>
-                  </div>
-                </div>
-              ) : selectedSneakers.length > 1 ? (
+              {selectedSneakers.length > 1 ? (
                 /* List of results if we picked multiple */
                 <div className="space-y-3">
                   <span className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">
@@ -421,7 +392,7 @@ export default function SneakerPicker({ sneakers, onWear, onClose, resultCount }
               {/* Pick Button */}
               <button
                 onClick={pickSneaker}
-                disabled={picking || sneakers.length === 0 || (filter === 'style' && styleFilters.length === 0) || (filter === 'color' && colorFilters.length === 0)}
+                disabled={showRoulette || sneakers.length === 0 || (filter === 'style' && styleFilters.length === 0) || (filter === 'color' && colorFilters.length === 0)}
                 className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold rounded-xl hover:from-blue-500 hover:to-blue-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none"
               >
                 <Shuffle className="w-5 h-5" />
@@ -439,6 +410,9 @@ export default function SneakerPicker({ sneakers, onWear, onClose, resultCount }
           )}
         </div>
       </div>
+      {showRoulette && (
+        <RouletteAnimation onComplete={handleRouletteComplete} />
+      )}
     </div>
   );
 }

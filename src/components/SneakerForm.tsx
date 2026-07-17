@@ -41,11 +41,19 @@ const COLOR_GLOW: Record<string, { bg: string; text: string; border: string; sha
   'Hot Pink':         { bg: 'rgba(255,0,110,.80)',   text: '#ffffff', border: 'rgba(255,0,110,.80)' },
   'Gold':             { bg: 'rgba(239,191,4,.80)',   text: '#000000', border: 'rgba(255,215,0,.80)' },
   'Silver':           { bg: 'rgba(192,192,192,.80)', text: '#000000', border: 'rgba(192,192,192,.80)' },
-  'Reflective':{ bg: 'rgba(200,210,220,.80)', text: '#000000', border: 'rgba(200,210,220,.80)' },
-  'Glow':             { bg: 'rgba(0,255,128,.80)',   text: '#000000', border: 'rgba(0,255,128,.80)' },
+  'Reflective':       { bg: 'rgba(200,210,220,.80)', text: '#000000', border: 'rgba(200,210,220,.80)' },
+  'Glow':             { bg: 'rgba(190,253,183,.80)', text: '#000000', border: 'rgba(190,253,183,.80)' },
   'Iridescent':       { bg: 'rgba(180,160,255,.80)', text: '#ffffff', border: 'rgba(180,160,255,.80)' },
   'Ice':              { bg: 'rgba(160,230,255,.80)', text: '#000000', border: 'rgba(160,230,255,.80)' },
   'Multicolor':       { bg: 'rgba(200,150,255,.80)', text: '#000000', border: 'rgba(200,150,255,.80)' },
+  'Paua':             { bg: 'rgba(67,59,112,.80)',   text: '#ffffff', border: 'rgba(67,59,112,.80)' },
+  'Light Green':      { bg: 'rgba(144,219,194,.80)', text: '#000000', border: 'rgba(144,219,194,.80)' },
+  'Cyan Blue':        { bg: 'rgba(11,184,235,.80)',  text: '#ffffff', border: 'rgba(11,184,235,.80)' },
+  'Citrus':           { bg: 'rgba(235,154,0,.80)',   text: '#000000', border: 'rgba(235,154,0,.80)' },
+  'Gum':              { bg: 'rgba(133,103,75,.80)',  text: '#ffffff', border: 'rgba(133,103,75,.80)' },
+  'Green Cyan':       { bg: 'rgba(124,206,175,.80)', text: '#000000', border: 'rgba(124,206,175,.80)' },
+  'Carolina Blue':    { bg: 'rgba(114,172,214,.80)', text: '#000000', border: 'rgba(114,172,214,.80)' },
+  'Platinum':         { bg: 'rgba(217,217,217,.80)', text: '#000000', border: 'rgba(217,217,217,.80)' },
 };
 
 interface SneakerFormProps {
@@ -204,8 +212,9 @@ function parseSneakerName(name: string): ParsedName {
         'white', 'ivory', 'black', 'gunmetal', 'dark gray', 'gray', 'grey', 'light gray', 'dark brown', 'brown', 'tan',
         'beige', 'red', 'crimson', 'orange', 'light yellow', 'yellow', 'mint', 'lime green',
         'green', 'forest green', 'olive', 'teal', 'turquoise', 'light blue', 'aqua', 'blue', 'navy', 'indigo',
-        'purple', 'maroon', 'burgundy', 'magenta', 'pink', 'hot pink', 'gold', 'silver', 'reflective silver',
-        'glow', 'iridescent', 'ice', 'multicolor', 'carolina blue'
+        'purple', 'maroon', 'burgundy', 'magenta', 'pink', 'hot pink', 'gold', 'silver', 'reflective',
+        'glow', 'iridescent', 'ice', 'multicolor', 'carolina blue', 'paua', 'light green', 'cyan blue',
+        'citrus', 'gum', 'green cyan', 'platinum'
       ]);
       for (let i = 1; i < filteredTokens.length; i++) {
         if (knownColors.has(filteredTokens[i].toLowerCase())) {

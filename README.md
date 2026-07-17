@@ -1,1 +1,3 @@
-<img src="https://github.com/user-attachments/assets/513cae59-85d5-422b-9587-b1d957f0ebea" style="width: 100%;height: auto">
+# Sneaker-Roulette
+
+[![Open in Bolt](https://bolt.new/static/open-in-bolt.svg)](https://bolt.new/~/sb1-7rvcrfnj)

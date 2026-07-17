@@ -11,7 +11,7 @@ export const COLOR_HEX: Record<string, string> = {
   'Blue': '#0000ff', 'Navy': '#202a44', 'Indigo': '#330099', 'Purple': '#4b0082',
   'Maroon': '#800000', 'Burgundy': '#800020', 'Magenta': '#ff00ff', 'Pink': '#ffc0cb',
   'Hot Pink': '#ff1493', 'Gold': '#efbf04', 'Silver': '#c0c0c0', 'Reflective': '#e8e8e8',
-  'Glow': '#0edd84', 'Iridescent': iridescentImg, 'Ice': '#b2e9f3', 'Multicolor': multicolorImg, 'Paua': '#433b70',
+  'Glow': '#BEFDB7', 'Iridescent': iridescentImg, 'Ice': '#b2e9f3', 'Multicolor': multicolorImg, 'Paua': '#433b70',
   'Light Green': '#90dbc2', 'Cyan Blue': '#0bb8eb', 'Citrus': '#eb9a00', 'Gum': '#85674b', 'Green Cyan': '#7cceaf',
-  'Carolina Blue': '#72acd6',
+  'Carolina Blue': '#72acd6', 'Platinum': '#d9d9d9',
 };
