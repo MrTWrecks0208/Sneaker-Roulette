@@ -30,7 +30,7 @@ export const BRANDS = [
 'Brooks', 'Clarks', 'Cole Haan', 'Common Projects', 'Converse', 'Crocs', 'DC', 'ECCO', 'Etnies', 'Etonic', 'Ewing', 'Fila',
 'Gucci', 'Hoka', 'Jordan', 'K-Swiss', 'KangaROOS', 'Karhu', 'Keds', 'Li-Ning', 'Louis Vuitton', 'Maison Margiela', 'Merrell', 'Mizuno',
 'Moonstar', 'New Balance', 'Nike', 'Off-White', 'On Running', 'Osiris', 'Other', 'Peak', 'Pony', 'Prada', 'Puma', 'Qiaodan',
-'Reebok', 'Rick Owens', 'Rigorer', 'Ryka', 'Salomon', 'Saucony', 'SeaVees', 'Skechers', 'Speedland', "Sperry's", 'Supra', 'Timberland', 'Topo Athletics', 
+'Reebok', 'Rick Owens', 'Rigorer', 'Ryka', 'Salomon', 'Saucony', 'SeaVees', 'Skechers', 'Speedland', "Sperry's", 'Supra', 'Timberland', 'Toms', 'Topo Athletics', 
 'Tracksmith', 'UGG', 'Under Armour','Vans', 'Versace', 'Wolverine',
 ] as const;
 
