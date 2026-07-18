@@ -5,4 +5,4 @@ Retrieved 2026-06-15, License - CC BY-SA 4.0
 */
 
 @import "tailwindcss";
-@tailwindcss "tw-animate-css";
+@import "../node_modules/tw-animate-css/dist/tw-animate.css";

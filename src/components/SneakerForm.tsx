@@ -4,7 +4,7 @@ import { X, Upload, Loader2, Camera, Sparkles } from 'lucide-react';
 import multicolorImg from '../assets/images/multicolor_swatch_1783883698636.jpg';
 import iridescentImg from '../assets/images/iridescent.png';
 
-const COLOR_GLOW: Record<string, { bg: string; text: string; border: string; shadow: string }> = {
+const COLOR_GLOW: Record<string, { bg: string; text: string; border: string; shadow?: string }> = {
   'White':            { bg: 'rgba(255,255,255,.80)', text: '#000000', border: 'rgba(255,255,255,.80)' },
   'Ivory':            { bg: 'rgba(255,255,240,.80)', text: '#000000', border: 'rgba(255,255,240,.80)' },
   'Black':            { bg: 'rgba(0,0,0,.80)'      , text: '#ffffff', border: 'rgba(0,0,0,0.80)' },
@@ -95,7 +95,7 @@ interface ParsedName {
 
 function parseSneakerName(name: string): ParsedName {
   const tokens = name.trim().split(/\s+/).filter(Boolean);
-  if (!tokens.length) return { brand: '', model: '', colorway: '', height: '' };
+  if (!tokens.length) return { brand: '', model: '', variant: '', colorway: '', height: '' };
 
   // 1. Extract brand
   let brand = '';
@@ -262,7 +262,7 @@ function parseSneakerName(name: string): ParsedName {
 // ─── Component ─────────────────────────────────────────────────────────────────
 
 export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormProps) {
-  const [nameInput, setNameInput] = useState(sneaker ? buildName(sneaker.brand, sneaker.model, sneaker.height, sneaker.colorway, sneaker.variant) : '');
+  const [nameInput, setNameInput] = useState(sneaker ? buildName(sneaker.brand, sneaker.model, sneaker.variant || '', sneaker.colorway) : '');
   const [brand, setBrand] = useState(sneaker?.brand || '');
   const [model, setModel] = useState(sneaker?.model || '');
   const [height, setHeight] = useState(sneaker?.height || '');

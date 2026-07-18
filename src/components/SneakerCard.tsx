@@ -28,7 +28,7 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
         {(sneaker.brand || sneaker.name?.toLowerCase().includes('adidas yeezy')) && (
           <div className={`absolute z-10 transition-opacity duration-200 pointer-events-none ${
             sneaker.name?.toLowerCase().includes('adidas yeezy')
-              ? 'top-[21px] right-[48px]'
+              ? 'top-[21px] right-[32px]'
               : sneaker.brand.toLowerCase().trim().includes('nike')
               ? 'top-[38px] right-[27px]'
               : sneaker.brand.toLowerCase().trim().includes('jordan')

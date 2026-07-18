@@ -9,6 +9,7 @@ export interface UserProfile {
   user_metadata?: {
     avatar_url?: string;
     full_name?: string;
+    username?: string;
   };
 }
 

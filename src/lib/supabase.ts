@@ -27,7 +27,7 @@ export type SneakerInsert = Omit<Sneaker, 'id' | 'created_at' | 'updated_at'>;
 
 export const BRANDS = [
 '361', 'A Bathing Ape', 'Adidas', 'Alexander McQueen', 'Airwalk', 'Allbirds', 'And 1', 'Anta', 'ASICS', 'Avia', 'Balenciaga', 'Bata', 'Birkenstock', 'Champion',
-'Brooks', 'Clarks', 'Cole Haan', 'Common Projects', 'Converse', 'Crocs', 'DC', 'ECCO', 'Etnies', 'Etonic', 'Ewing', 'Fila',
+'Brooks', 'Clarks', 'Cole Haan', 'Columbia', 'Common Projects', 'Converse', 'Crocs', 'DC', 'ECCO', 'Etnies', 'Etonic', 'Ewing', 'Fila',
 'Gucci', 'Hoka', 'Jordan', 'K-Swiss', 'KangaROOS', 'Karhu', 'Keds', 'Li-Ning', 'Louis Vuitton', 'Maison Margiela', 'Merrell', 'Mizuno',
 'Moonstar', 'New Balance', 'Nike', 'Off-White', 'On Running', 'Osiris', 'Other', 'Peak', 'Pony', 'Prada', 'Puma', 'Qiaodan',
 'Reebok', 'Rick Owens', 'Rigorer', 'Ryka', 'Salomon', 'Saucony', 'SeaVees', 'Skechers', 'Speedland', "Sperry's", 'Supra', 'Timberland', 'Toms', 'Topo Athletics', 
