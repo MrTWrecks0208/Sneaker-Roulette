@@ -39,6 +39,7 @@ if (typeof window !== 'undefined') {
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
+import '../node_modules/tw-animate-css/dist/tw-animate.css';
 import './index.css';
 
 // Gracefully catch and handle network-related errors and unhandled promise rejections

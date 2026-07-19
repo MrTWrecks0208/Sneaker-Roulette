@@ -258,21 +258,21 @@ function App() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowPicker(true)}
-                className="hidden sm:flex items-center gap-2 px-4 py-2 bg-emerald-600/10 text-emerald-400 hover:animate-spin text-sm font-medium rounded-2xl border border-emerald-500/20 hover:bg-emerald-600/20 transition-colors cursor-pointer"
+                className="hidden sm:flex items-center gap-2 px-4 pt-1.5 py-2 bg-emerald-600/10 text-emerald-400 hover:animate-spin text-sm font-medium rounded-2xl border border-emerald-500/20 hover:bg-emerald-600/20 transition-colors cursor-pointer"
               >
                 <LifeBuoy className="w-5 h-5 text-emerald-400" />
                 Spin the Wheel
               </button>
               <button
                 onClick={() => setShowImport(true)}
-                className="hidden sm:flex items-center gap-2 px-4 py-2 bg-sky-600/10 text-sky-400 text-sm font-medium rounded-2xl border border-sky-700/20 hover:bg-blue-600/20 transition-colors cursor-pointer"
+                className="hidden sm:flex items-center gap-2 px-4 pt-1.5 pb-2 bg-sky-600/10 text-sky-400 text-sm font-medium rounded-2xl border border-sky-700/20 hover:bg-blue-600/20 transition-colors cursor-pointer"
               >
                 <Upload className="w-4 h-4" />
                 Import
               </button>
               <button
                 onClick={() => setShowForm(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-rose-600/10 text-rose-400 text-sm font-medium rounded-2xl border border-rose-700/20 hover:bg-rose-600/20 transition-colors cursor-pointer"
+                className="flex items-center gap-2 px-4 pt-1.5 pb-2 bg-rose-600/10 text-rose-400 text-sm font-medium rounded-2xl border border-rose-700/20 hover:bg-rose-600/20 transition-colors cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 <span className="hidden sm:inline">Add Sneaker</span>
