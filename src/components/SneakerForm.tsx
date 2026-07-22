@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Sneaker, SneakerInsert, BRANDS, HEIGHTS, STYLES, COLORS, buildName } from '../lib/supabase';
-import { X, Upload, Loader2, Camera, Sparkles } from 'lucide-react';
+import { Sneaker, SneakerInsert, BRANDS, BRAND_CATEGORIES, HEIGHTS, STYLES, COLORS, CONDITIONS, buildName } from '../lib/supabase';
+import { X, Upload, Loader2, Camera, Sparkles, HelpCircle } from 'lucide-react';
 import multicolorImg from '../assets/images/multicolor_swatch_1783883698636.jpg';
 import iridescentImg from '../assets/images/iridescent.png';
 
@@ -60,6 +60,7 @@ interface SneakerFormProps {
   sneaker?: Sneaker | null;
   onSave: (data: SneakerInsert) => Promise<Sneaker | null>;
   onCancel: () => void;
+  onOpenFaq?: () => void;
 }
 
 // ─── Local name parser ────────────────────────────────────────────────────────
@@ -261,7 +262,7 @@ function parseSneakerName(name: string): ParsedName {
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 
-export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormProps) {
+export default function SneakerForm({ sneaker, onSave, onCancel, onOpenFaq }: SneakerFormProps) {
   const [nameInput, setNameInput] = useState(sneaker ? buildName(sneaker.brand, sneaker.model, sneaker.variant || '', sneaker.colorway) : '');
   const [brand, setBrand] = useState(sneaker?.brand || '');
   const [model, setModel] = useState(sneaker?.model || '');
@@ -273,6 +274,8 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
   const [worn, setWorn] = useState(sneaker?.worn || 0);
   const [lastWornAt, setLastWornAt] = useState<string>(sneaker?.last_worn || '');
   const [imageUrl, setImageUrl] = useState(sneaker?.image_url || '');
+  const [condition, setCondition] = useState<string>(sneaker?.condition || '');
+  const [galleryImages, setGalleryImages] = useState<string[]>(sneaker?.gallery_images || []);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [lookingUp, setLookingUp] = useState(false);
@@ -296,6 +299,8 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
       setWorn(sneaker.worn);
       setLastWornAt(sneaker.last_worn || '');
       setImageUrl(sneaker.image_url);
+      setCondition(sneaker.condition || '');
+      setGalleryImages(sneaker.gallery_images || []);
     }
   }, [sneaker]);
 
@@ -406,6 +411,9 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
       worn,
       last_worn: lastWornAt ? new Date(lastWornAt).toISOString() : null,
       image_url: imageUrl,
+      condition: condition || null,
+      gallery_images: galleryImages,
+      dates_worn: sneaker?.dates_worn || [],
     });
     setSaving(false);
   };
@@ -414,10 +422,23 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/70 backdrop-blur-sm">
       <div className="bg-zinc-900 border border-zinc-800 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl">
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-zinc-800 sticky top-0 bg-zinc-900 z-10">
-          <h2 className="text-lg font-semibold text-zinc-100">
-            {sneaker ? 'Edit Sneaker' : 'Add Sneaker'}
-          </h2>
-          <button onClick={onCancel} className="p-1 text-zinc-400 hover:text-zinc-200 transition-colors">
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-semibold text-zinc-100">
+              {sneaker ? 'Edit Sneaker' : 'Add Sneaker'}
+            </h2>
+            {onOpenFaq && (
+              <button
+                type="button"
+                onClick={onOpenFaq}
+                className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 px-2.5 py-1 rounded-lg border border-blue-500/20 transition-colors cursor-pointer"
+                title="View Photo Guide & FAQ"
+              >
+                <HelpCircle className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">FAQ &amp; Photo Guide</span>
+              </button>
+            )}
+          </div>
+          <button onClick={onCancel} className="p-1 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -493,7 +514,15 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
               className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors"
             >
               <option value="">Select brand</option>
-              {BRANDS.map(b => <option key={b} value={b}>{b}</option>)}
+              {BRAND_CATEGORIES.map(group => (
+                <optgroup key={group.category} label={group.category} className="bg-zinc-900 text-zinc-400 font-semibold tracking-wider">
+                  {group.brands.map(b => (
+                    <option key={b} value={b} className="bg-zinc-900 text-zinc-200 font-normal">
+                      {b}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
             </select>
           </div>
 
@@ -599,8 +628,21 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
             </div>
           </div>
 
-          {/* Worn and Last Worn Date */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Condition, Worn, and Last Worn Date */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Condition</label>
+              <select
+                value={condition}
+                onChange={e => setCondition(e.target.value)}
+                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors"
+              >
+                <option value="">Select Condition...</option>
+                {CONDITIONS.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Times Worn</label>
               <input
@@ -627,7 +669,20 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
 
           {/* Image Upload */}
           <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Image</label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-medium text-zinc-400 uppercase tracking-wider">Image</label>
+              {onOpenFaq && (
+                <button
+                  type="button"
+                  onClick={onOpenFaq}
+                  className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 font-medium cursor-pointer"
+                  title="How to get the best sneaker photos"
+                >
+                  <HelpCircle className="w-3.5 h-3.5" />
+                  <span>How to get best photos?</span>
+                </button>
+              )}
+            </div>
             <div className="flex flex-col gap-3">
               {imageUrl && (
                 <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-zinc-700">

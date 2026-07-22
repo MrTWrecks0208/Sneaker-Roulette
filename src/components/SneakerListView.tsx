@@ -62,12 +62,10 @@ export default function SneakerListView({
 
                 <div className="flex items-center gap-2 flex-wrap text-xs text-zinc-400">
                   {/* Brand Display */}
-                  {(sneaker.brand || sneaker.name?.toLowerCase().includes('adidas yeezy')) && (
-                    <div className="flex items-center max-h-5 scale-75 origin-left -my-1">
-                      <BrandLogo brand={sneaker.name?.toLowerCase().includes('adidas yeezy') ? 'adidas yeezy' : sneaker.brand} />
-                    </div>
-                  )}
-                  {(sneaker.brand || sneaker.name?.toLowerCase().includes('adidas yeezy')) && <span className="text-zinc-600">•</span>}
+                  <div className="flex items-center max-h-5 scale-75 origin-left -my-1">
+                    <BrandLogo brand={sneaker.brand} sneakerName={sneaker.name} />
+                  </div>
+                  <span className="text-zinc-600">•</span>
                   {/* Styles */}
                   {sneaker.style.length > 0 ? (
                     <span className="truncate max-w-[150px] md:max-w-[250px]">{sneaker.style.join(', ')}</span>

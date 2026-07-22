@@ -57,13 +57,9 @@ export default function SneakerTableView({
 
                 {/* 2. Brand */}
                 <td className="py-3 px-5">
-                  {(sneaker.brand || sneaker.name?.toLowerCase().includes('adidas yeezy')) ? (
-                    <div className="flex items-center max-h-5 scale-75 origin-left">
-                      <BrandLogo brand={sneaker.name?.toLowerCase().includes('adidas yeezy') ? 'adidas yeezy' : sneaker.brand} />
-                    </div>
-                  ) : (
-                    <span className="text-zinc-600 italic text-xs">None</span>
-                  )}
+                  <div className="flex items-center max-h-5 scale-75 origin-left">
+                    <BrandLogo brand={sneaker.brand} sneakerName={sneaker.name} />
+                  </div>
                 </td>
 
                 {/* 3. Height */}

@@ -19,22 +19,72 @@ export interface Sneaker {
   image_url: string;
   last_worn?: string | null;
   user_id?: string;
+  condition?: string | null;
+  gallery_images?: string[] | null;
+  dates_worn?: string[] | null;
   created_at: string;
   updated_at: string;
 }
 
 export type SneakerInsert = Omit<Sneaker, 'id' | 'created_at' | 'updated_at'>;
 
-export const BRANDS = [
-'361', 'A Bathing Ape', 'Adidas', 'Alexander McQueen', 'Airwalk', 'Allbirds', 'And 1', 'Anta', 'ASICS', 'Avia', 'Balenciaga', 'Bata', 'Birkenstock', 'Champion',
-'Brooks', 'Clarks', 'Cole Haan', 'Columbia', 'Common Projects', 'Converse', 'Crocs', 'DC', 'ECCO', 'Etnies', 'Etonic', 'Ewing', 'Fila',
-'Gucci', 'Hoka', 'Jordan', 'K-Swiss', 'KangaROOS', 'Karhu', 'Keds', 'Li-Ning', 'Louis Vuitton', 'Maison Margiela', 'Merrell', 'Mizuno',
-'Moonstar', 'New Balance', 'Nike', 'Off-White', 'On Running', 'Osiris', 'Other', 'Peak', 'Pony', 'Prada', 'Puma', 'Qiaodan',
-'Reebok', 'Rick Owens', 'Rigorer', 'Ryka', 'Salomon', 'Saucony', 'SeaVees', 'Skechers', 'Speedland', "Sperry's", 'Supra', 'Timberland', 'Toms', 'Topo Athletics', 
-'Tracksmith', 'UGG', 'Under Armour','Vans', 'Versace', 'Wolverine',
+export const BRAND_CATEGORIES = [
+  {
+    category: 'ATHLETIC',
+    brands: [
+      '361°', 'Adidas', 'AKTR', 'Altra', 'And1', 'ANTA', 'Avia', 'Champion',
+      'Columbia', 'Etonic', 'Ewing', 'Fila', 'Fitville', 'Hoka', 'Jordan',
+      'Karhu', 'Li-Ning', 'Lotto', 'Merrell', 'Mizuno', 'Nike', 'On Running',
+      'Peak', 'Pony', 'Qiaodan', 'Reebok', 'Rigorer', 'Ryka', 'Salomon',
+      'Speedland', 'Topo Athletics', 'Tracksmith', 'Under Armour',
+    ],
+  },
+  {
+    category: 'DESIGNER/LUXURY',
+    brands: [
+      'A Bathing Ape', 'Alexander McQueen', 'Alohas', 'Amiri', 'Ann Demeulemeester', 'AUTRY', 'Axel Arigato', 'Balenciaga',
+      'Balmain', 'Bottega Veneta', 'Burberry', 'Brooks', 'Christian Louboutin',
+      'Coach', 'Cole Haan', 'Diadora', 'Dior', 'Dries Van Noten', 'Fear of God', 'Fendi',
+      'Ferragamo', 'Givenchy', 'Golden Goose', 'Gucci', 'Hermés', 'Jacquemus',
+      'Jimmy Choo', 'Kate Spade', 'Kenneth Cole', 'Lanvin', 'Louis Vuitton',
+      'Maison Margiela', 'Maison Mihara Yasuhiro', 'Michael Kors', 'Moncler', 'Off-White', 'Onitsuka Tiger',
+      'Other', 'Prada', 'Raf Simons', 'Rick Owens', 'Tom Ford', 'Tory Burch',
+      'Versace', 'Saint Laurent (YSL)',
+    ],
+  },
+  {
+    category: 'SKATE',
+    brands: [
+      'Adio', 'Airwalk', 'Axion', 'Circa', 'DC', 'DVS', 'Element', 'éS', 'Emerica', 'Etnies', 'Fallen', 'Globe',
+      'Lakai', 'Nike SB', 'Osiris', 'Supra', 'Vans',
+    ],
+  },
+  {
+    category: 'CASUAL/LIFESTYLE',
+    brands: [
+      'Allbirds', 'ASICS', 'Bata', 'Birkenstock', 'Cariuma',
+      'Common Projects', 'Converse', 'Crocs', 'ECCO', 'Filling Pieces', 'K-Swiss',
+      'KangaROOS', 'Keds', 'Moonstar', 'New Balance', 'Nothing New', 'OOfos',
+      'Puma', "Rothy's", 'Saucony', 'SeaVees', 'Skechers', "Sperry's",
+      'Thousand Fell', 'Toms', 'Tretorn', 'Zegna',
+    ],
+  },
+  {
+    category: 'BOOTS',
+    brands: [
+      'August Special', 'Blundstone', 'Chippewa', 'Clarks', 'Danner',
+      'Dr. Martens', 'Meermin', 'Oak Street Bootmakers', 'Parkhurst',
+      'Red Wing', 'Thorogood', 'Thursday', 'Timberland', 'UGG', 'Viberg',
+      'Wolverine',
+    ],
+  },
 ] as const;
 
+export const BRANDS = BRAND_CATEGORIES.flatMap(c => c.brands);
+
 export const HEIGHTS = ['Low', 'Mid', 'High'] as const;
+
+export const CONDITIONS = ['DS', 'VNDS', 'Excellent', 'Good', 'Fair', 'Beat'] as const;
 
 export const STYLES = [
   'Athletic', 'Basketball', 'Boat', 'Boot', 'Canvas', 'Casual', 

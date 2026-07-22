@@ -12,11 +12,12 @@ import FileUpload from './components/FileUpload';
 import SneakerPicker from './components/SneakerPicker';
 import SneakerListView from './components/SneakerListView';
 import SneakerTableView from './components/SneakerTableView';
+import FaqModal from './components/FaqModal';
 import {
   Plus, Upload, Search, Footprints,
   SlidersHorizontal, X, AlertCircle, CheckCircle2, Database, LogOut,
   ChevronDown, ChevronUp, Copy, Terminal, Check, LifeBuoy, Settings, ArrowUpDown,
-  LayoutGrid, List, Table
+  LayoutGrid, List, Table, HelpCircle
 } from 'lucide-react';
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
   const [sneakerToDelete, setSneakerToDelete] = useState<Sneaker | null>(null);
   const [showImport, setShowImport] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
+  const [showFaq, setShowFaq] = useState(false);
   const [showSqlGuide, setShowSqlGuide] = useState(false);
   const [copiedSql, setCopiedSql] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -271,6 +273,14 @@ function App() {
                 Import
               </button>
               <button
+                onClick={() => setShowFaq(true)}
+                className="hidden sm:flex items-center gap-2 px-3.5 pt-1.5 pb-2 bg-blue-600/10 text-blue-400 text-sm font-medium rounded-2xl border border-blue-700/20 hover:bg-blue-600/20 transition-colors cursor-pointer"
+                title="Frequently Asked Questions & Image Guide"
+              >
+                <HelpCircle className="w-4 h-4 text-blue-400" />
+                FAQ
+              </button>
+              <button
                 onClick={() => setShowForm(true)}
                 className="flex items-center gap-2 px-4 pt-1.5 pb-2 bg-rose-600/10 text-rose-400 text-sm font-medium rounded-2xl border border-rose-700/20 hover:bg-rose-600/20 transition-colors cursor-pointer"
               >
@@ -304,16 +314,22 @@ function App() {
                   </button>
 
                   {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl py-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-100">
+                    <div className="absolute right-0 mt-2 w-52 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl py-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-100">
+                      <div className="px-4 py-2 border-b border-zinc-800/80">
+                        <p className="text-xs font-semibold text-white truncate">
+                          {user.user_metadata?.username || user.user_metadata?.full_name || 'Account'}
+                        </p>
+                        <p className="text-[10px] text-zinc-400 truncate">{user.email}</p>
+                      </div>
                       <button
                         onClick={() => {
                           setShowUserMenu(false);
-                          setShowSettingsModal(true);
+                          setShowFaq(true);
                         }}
-                        className="w-full px-4 py-2.5 text-left text-xs font-medium text-zinc-300 hover:text-white hover:bg-zinc-800/80 transition-colors flex items-center gap-2 cursor-pointer focus:outline-none"
+                        className="w-full px-4 py-2.5 text-left text-xs font-medium text-zinc-200 hover:text-white hover:bg-zinc-800/80 transition-colors flex items-center gap-2.5 cursor-pointer focus:outline-none"
                       >
-                        <Settings className="w-4 h-4 text-zinc-400" />
-                        Settings
+                        <HelpCircle className="w-4 h-4 text-blue-400" />
+                        <span>FAQ Page</span>
                       </button>
                       <div className="h-px bg-zinc-800/60 my-1" />
                       <button
@@ -321,27 +337,13 @@ function App() {
                           setShowUserMenu(false);
                           signOut();
                         }}
-                        className="w-full px-4 py-2.5 text-left text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors flex items-center gap-2 cursor-pointer focus:outline-none"
+                        className="w-full px-4 py-2.5 text-left text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors flex items-center gap-2.5 cursor-pointer focus:outline-none"
                       >
                         <LogOut className="w-4 h-4" />
-                        Sign Out
+                        <span>Sign Out</span>
                       </button>
                     </div>
                   )}
-                </div>
-                {/* Connection status under the avatar */}
-                <div className="flex items-center gap-1.5 ml-1">
-                  {isLive ? (
-                    <span className="flex h-1.5 w-1.5 relative" title="Connected to Supabase Live">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                    </span>
-                  ) : (
-                    <span className="flex h-1.5 w-1.5 rounded-full bg-amber-500" title="Running in Local Sandbox Mode"></span>
-                  )}
-                  <span className="text-[9px] px-1.5 py-0.5 bg-zinc-900 text-zinc-400 border border-zinc-800/80 rounded tracking-wider leading-none">
-                    {isLive ? 'Connected' : (isGuest ? 'Guest Sandbox' : 'Local Sandbox')}
-                  </span>
                 </div>
               </div>
             </div>
@@ -831,6 +833,7 @@ CREATE POLICY "Users can delete own sneakers"
         <SneakerForm
           onSave={handleSave}
           onCancel={() => { setShowForm(false); setEditSneaker(null); }}
+          onOpenFaq={() => setShowFaq(true)}
         />
       )}
 
@@ -839,6 +842,7 @@ CREATE POLICY "Users can delete own sneakers"
           sneaker={editSneaker}
           onSave={handleSave}
           onCancel={() => setEditSneaker(null)}
+          onOpenFaq={() => setShowFaq(true)}
         />
       )}
 
@@ -951,6 +955,9 @@ CREATE POLICY "Users can delete own sneakers"
         </div>
       )}
 
+      {/* Faq Modal */}
+      <FaqModal isOpen={showFaq} onClose={() => setShowFaq(false)} />
+
       {/* Back to Top Button */}
       <AnimatePresence>
         {showScrollTop && (
@@ -959,7 +966,7 @@ CREATE POLICY "Users can delete own sneakers"
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 15 }}
             onClick={scrollToTop}
-            className="fixed bottom-6 right-6 z-50 p-3.5 rounded-full bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 border border-rose-500/20 hover:border-rose-500/45 shadow-xl transition-all cursor-pointer focus:outline-none flex items-center justify-center group"
+            className="fixed bottom-6 right-6 z-50 p-3.5 rounded-full bg-rose-600/20 hover:bg-rose-600/30 text-rose-500 border border-rose-700/20 hover:border-rose-600/45 shadow-xl transition-all cursor-pointer focus:outline-none flex items-center justify-center group"
             title="Back to Top"
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
