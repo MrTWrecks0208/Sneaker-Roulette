@@ -3,6 +3,7 @@ import { Sneaker } from '../lib/supabase';
 import { Trash2, Edit3, Footprints, ChevronLeft, ChevronRight, X, Calendar, Activity, Eye, Maximize2 } from 'lucide-react';
 import { COLOR_HEX } from '../lib/colors';
 import { BrandLogo } from './BrandLogo';
+import { parseDatesWorn } from '../lib/utils';
 
 interface SneakerCardProps {
   sneaker: Sneaker;
@@ -19,7 +20,7 @@ export interface WearStats {
 }
 
 export function calculateWearStats(
-  datesWorn?: string[] | null,
+  datesWorn?: unknown,
   totalWornCount: number = 0,
   lastWornDateStr?: string | null,
   createdAtStr?: string | null
@@ -31,16 +32,10 @@ export function calculateWearStats(
   const ms6m = 180 * 24 * 60 * 60 * 1000;
   const ms12m = 365 * 24 * 60 * 60 * 1000;
 
-  const validTimes: number[] = [];
-  if (datesWorn && Array.isArray(datesWorn)) {
-    for (const d of datesWorn) {
-      if (!d) continue;
-      const t = new Date(d).getTime();
-      if (!isNaN(t)) {
-        validTimes.push(t);
-      }
-    }
-  }
+  const parsedIsoDates = parseDatesWorn(datesWorn);
+  const validTimes: number[] = parsedIsoDates.map(d => new Date(d).getTime()).filter(t => !isNaN(t));
+
+  const totalWears = Math.max(totalWornCount, validTimes.length);
 
   let l1 = 0;
   let l3 = 0;
@@ -50,28 +45,27 @@ export function calculateWearStats(
   if (validTimes.length > 0) {
     validTimes.forEach(t => {
       const diff = nowMs - t;
-      if (diff >= 0) {
+      if (diff >= -86400000) { // allow 1 day tolerance for timezones
         if (diff <= ms1m) l1++;
         if (diff <= ms3m) l3++;
         if (diff <= ms6m) l6++;
         if (diff <= ms12m) l12++;
       }
     });
-  } else if (totalWornCount > 0) {
+  } else if (totalWears > 0) {
     if (lastWornDateStr) {
       const lwTime = new Date(lastWornDateStr).getTime();
       if (!isNaN(lwTime)) {
         const diff = nowMs - lwTime;
-        if (diff <= ms1m) l1 = Math.min(totalWornCount, 1);
-        if (diff <= ms3m) l3 = Math.min(totalWornCount, 1);
-        if (diff <= ms6m) l6 = Math.min(totalWornCount, 1);
-        if (diff <= ms12m) l12 = Math.min(totalWornCount, 1);
+        if (diff <= ms1m) l1 = Math.min(totalWears, 1);
+        if (diff <= ms3m) l3 = Math.min(totalWears, 1);
+        if (diff <= ms6m) l6 = Math.min(totalWears, 1);
+        if (diff <= ms12m) l12 = Math.min(totalWears, 1);
       }
     }
   }
 
   let frequencyText = 'Never worn';
-  const totalWears = validTimes.length > 0 ? validTimes.length : totalWornCount;
 
   if (totalWears > 0) {
     let earliestTime = validTimes.length > 0 ? Math.min(...validTimes) : 0;
@@ -87,7 +81,7 @@ export function calculateWearStats(
       : 30;
 
     const avgDaysBetween = Math.max(1, Math.round(daysSpan / totalWears));
-    const wearsPerMonthVal = totalWears / (daysSpan / 30);
+    const wearsPerMonthVal = totalWears / Math.max(0.1, (daysSpan / 30));
     const wearsPerMonth = wearsPerMonthVal >= 10 ? Math.round(wearsPerMonthVal) : parseFloat(wearsPerMonthVal.toFixed(1));
 
     if (avgDaysBetween === 1) {
@@ -179,55 +173,10 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
                 <BrandLogo brand={sneaker.brand} sneakerName={sneaker.name} />
               </div>
 
-              {/* Hover action buttons + Enlarge icon */}
-              <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsEnlarged(true);
-                    setIsEnlargedFlipped(false);
-                  }}
-                  className="p-1.5 bg-white/90 backdrop-blur-sm rounded-lg border border-gray-200 text-gray-700 hover:text-blue-600 hover:bg-white transition-colors"
-                  title="Enlarge card view"
-                >
-                  <Maximize2 className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(sneaker);
-                  }}
-                  className="p-1.5 bg-white/90 backdrop-blur-sm rounded-lg border border-gray-200 text-gray-700 hover:text-gray-900 hover:bg-white transition-colors"
-                  title="Edit sneaker"
-                >
-                  <Edit3 className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(sneaker.id);
-                  }}
-                  className="p-1.5 bg-white/90 backdrop-blur-sm rounded-lg border border-gray-200 text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                  title="Delete sneaker"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {/* Worn count badge */}
-              {sneaker.worn > 0 && (
-                <div className="absolute bottom-2 left-2 px-2 pt-0.5 pb-1 bg-black/70 backdrop-blur-sm rounded-md text-[10px] text-white font-medium">
-                  Worn {sneaker.worn}x
-                </div>
-              )}
-
-              {/* Expand Hint Overlay on Bottom Right */}
-              <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-blue-600/90 text-white rounded-md text-[9px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 shadow-sm">
-                <Maximize2 className="w-2.5 h-2.5" />
-                <span>Expand</span>
+              {/* Flip Hint Overlay on Bottom Right */}
+              <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-zinc-900/80 text-white rounded-md text-[9px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 shadow-sm">
+                <Activity className="w-2.5 h-2.5 text-blue-400" />
+                <span>Details & Actions</span>
               </div>
             </div>
 
@@ -277,12 +226,51 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
 
           {/* ================= BACK SIDE ================= */}
           <div className="absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white border border-gray-200 rounded-xl p-3.5 shadow-xl flex flex-col justify-between overflow-hidden text-gray-900">
-            {/* Top Bar with Name */}
-            <div className="border-b border-gray-100 pb-2">
-              <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block">Sneaker Details</span>
-              <h4 className="text-xs font-bold text-gray-900 truncate" title={sneaker.name}>
-                {sneaker.name}
-              </h4>
+            {/* Top Bar with Name & Actions */}
+            <div className="border-b border-gray-100 pb-2 flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block">Sneaker Details</span>
+                <h4 className="text-xs font-bold text-gray-900 truncate" title={sneaker.name}>
+                  {sneaker.name}
+                </h4>
+              </div>
+
+              {/* Card Action Buttons (Edit, Delete, Enlarge) */}
+              <div className="flex items-center gap-1 shrink-0 z-20">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsEnlarged(true);
+                  }}
+                  className="p-1.5 bg-gray-100 hover:bg-blue-50 text-gray-600 hover:text-blue-600 rounded-lg transition-colors border border-gray-200 cursor-pointer"
+                  title="Enlarge details"
+                >
+                  <Maximize2 className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(sneaker);
+                  }}
+                  className="p-1.5 bg-gray-100 hover:bg-zinc-200 text-gray-700 hover:text-black rounded-lg transition-colors border border-gray-200 cursor-pointer"
+                  title="Edit sneaker"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(sneaker.id);
+                  }}
+                  className="p-1.5 bg-gray-100 hover:bg-red-50 text-red-500 hover:text-red-700 rounded-lg transition-colors border border-gray-200 cursor-pointer"
+                  title="Delete sneaker"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
 
             {/* Gallery (Max 5 images) */}

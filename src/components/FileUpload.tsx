@@ -3,6 +3,7 @@ import { SneakerInsert, HEIGHTS, buildName } from '../lib/supabase';
 import { Upload, FileText, X, AlertCircle, CheckCircle2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import Papa from 'papaparse';
+import { parseDatesWorn, reconcileSneakerWearData } from '../lib/utils';
 
 interface FileUploadProps {
   onImport: (sneakers: SneakerInsert[]) => Promise<unknown>;
@@ -23,6 +24,9 @@ function normalizeField(rawKey: string): string {
     imageurl: 'image_url', image: 'image_url', img: 'image_url',
     sneakerbrand: 'brand', sneakermodel: 'model', shoename: 'name',
     shoebrand: 'brand', shoemodel: 'model', sneaker: 'name',
+    datesworn: 'dates_worn', dates: 'dates_worn', wearhistory: 'dates_worn',
+    history: 'dates_worn', wears: 'dates_worn', weardates: 'dates_worn',
+    lastworn: 'last_worn', lastwornat: 'last_worn', last_worn: 'last_worn',
   };
   return map[key] || key;
 }
@@ -58,7 +62,16 @@ function parseRow(row: Record<string, unknown>): SneakerInsert | null {
 
   if (!brand || !model) return null;
 
-  return {
+  const rawDates = normalized.dates_worn || normalized.dates || normalized.wearhistory || normalized.history || normalized.weardates;
+  const dates_worn = parseDatesWorn(rawDates);
+  const rawWorn = Number(normalized.worn) || 0;
+  const effectiveWorn = Math.max(rawWorn, dates_worn.length);
+  let last_worn = getString(normalized.last_worn) || null;
+  if (!last_worn && dates_worn.length > 0) {
+    last_worn = dates_worn[0];
+  }
+
+  return reconcileSneakerWearData({
     name: buildName(brand, model, getString(normalized.variant), colorway),
     brand,
     model,
@@ -68,9 +81,11 @@ function parseRow(row: Record<string, unknown>): SneakerInsert | null {
       ? getString(normalized.height) : 'Low',
     style: parseArrayField(normalized.style),
     color: parseArrayField(normalized.color),
-    worn: Number(normalized.worn) || 0,
+    worn: effectiveWorn,
+    dates_worn,
+    last_worn,
     image_url: getString(normalized.image_url),
-  };
+  });
 }
 
 export default function FileUpload({ onImport, onClose }: FileUploadProps) {

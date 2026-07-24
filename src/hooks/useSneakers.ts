@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase, Sneaker, SneakerInsert, buildName } from '../lib/supabase';
-import { safeLocalStorage } from '../lib/utils';
+import { safeLocalStorage, parseDatesWorn, reconcileSneakerWearData } from '../lib/utils';
 
 const DEFAULT_SNEAKERS: Sneaker[] = [
   {
@@ -130,11 +130,13 @@ export function useSneakers(userId?: string) {
         const storageKey = `sneakers_inventory_${userId}`;
         const stored = safeLocalStorage.getItem(storageKey);
         if (stored) {
-          setSneakers(JSON.parse(stored));
+          const parsed = JSON.parse(stored) as Sneaker[];
+          setSneakers(parsed.map(s => reconcileSneakerWearData(s)));
         } else {
           // Put default sneakers in first time
-          safeLocalStorage.setItem(storageKey, JSON.stringify(DEFAULT_SNEAKERS));
-          setSneakers(DEFAULT_SNEAKERS);
+          const defaultReconciled = DEFAULT_SNEAKERS.map(s => reconcileSneakerWearData(s));
+          safeLocalStorage.setItem(storageKey, JSON.stringify(defaultReconciled));
+          setSneakers(defaultReconciled);
         }
       } catch (e) {
         console.error('Error fetching sneakers from localStorage:', e);
@@ -155,7 +157,7 @@ export function useSneakers(userId?: string) {
         throw error;
       }
 
-      setSneakers(data || []);
+      setSneakers((data || []).map(s => reconcileSneakerWearData(s)));
       setUsingLocalStorageFallback(false);
     } catch (e: unknown) {
       const err = e as Error;
@@ -166,7 +168,8 @@ export function useSneakers(userId?: string) {
       try {
         const storageKey = `sneakers_inventory_${userId}`;
         const stored = safeLocalStorage.getItem(storageKey);
-        setSneakers(stored ? JSON.parse(stored) : DEFAULT_SNEAKERS);
+        const parsed = stored ? (JSON.parse(stored) as Sneaker[]) : DEFAULT_SNEAKERS;
+        setSneakers(parsed.map(s => reconcileSneakerWearData(s)));
       } catch {
         // Fallback silently if localStorage fails or is empty
       }
@@ -180,25 +183,30 @@ export function useSneakers(userId?: string) {
   }, [fetchSneakers]);
 
   const saveToStorage = (updated: Sneaker[]) => {
+    const reconciled = updated.map(s => reconcileSneakerWearData(s));
     if (userId) {
-      safeLocalStorage.setItem(`sneakers_inventory_${userId}`, JSON.stringify(updated));
+      safeLocalStorage.setItem(`sneakers_inventory_${userId}`, JSON.stringify(reconciled));
     }
-    setSneakers(updated);
+    setSneakers(reconciled);
   };
 
   const addSneaker = async (sneaker: SneakerInsert) => {
     if (!userId) return null;
     const name = buildName(sneaker.brand, sneaker.model, sneaker.variant || '', sneaker.colorway);
     
+    const reconciledInsert = reconcileSneakerWearData({
+      ...sneaker,
+      name,
+      variant: sneaker.variant || '',
+      user_id: userId,
+    });
+
     const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass' && isValidUuid(userId) && !usingLocalStorageFallback;
 
     if (!isLiveMode) {
       const newSneaker: Sneaker = {
-        ...sneaker,
+        ...reconciledInsert,
         id: crypto.randomUUID?.() || Math.random().toString(36).substring(2, 11),
-        name,
-        variant: sneaker.variant || '',
-        user_id: userId,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -210,18 +218,14 @@ export function useSneakers(userId?: string) {
     try {
       const { data, error } = await supabase
         .from('sneakers')
-        .insert({
-          ...sneaker,
-          name,
-          variant: sneaker.variant || '',
-          user_id: userId,
-        })
+        .insert(reconciledInsert)
         .select()
         .single();
 
       if (error) throw error;
-      setSneakers(prev => [data, ...prev]);
-      return data;
+      const result = reconcileSneakerWearData(data);
+      setSneakers(prev => [result, ...prev]);
+      return result;
     } catch (e) {
       console.warn('Supabase addSneaker error:', e);
       return null;
@@ -231,42 +235,40 @@ export function useSneakers(userId?: string) {
   const addSneakersBatch = async (sneakersData: SneakerInsert[]) => {
     if (!userId) return null;
     
+    const reconciledBatch = sneakersData.map(s => {
+      const name = buildName(s.brand, s.model, s.variant || '', s.colorway);
+      return reconcileSneakerWearData({
+        ...s,
+        name,
+        variant: s.variant || '',
+        user_id: userId,
+      });
+    });
+
     const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass' && isValidUuid(userId) && !usingLocalStorageFallback;
 
     if (!isLiveMode) {
-      const withNames: Sneaker[] = sneakersData.map(s => {
-        const name = buildName(s.brand, s.model, s.variant || '', s.colorway);
-        return {
-          ...s,
-          id: crypto.randomUUID?.() || Math.random().toString(36).substring(2, 11),
-          name,
-          variant: s.variant || '',
-          user_id: userId,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-      });
+      const withNames: Sneaker[] = reconciledBatch.map(s => ({
+        ...s,
+        id: crypto.randomUUID?.() || Math.random().toString(36).substring(2, 11),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }));
       const updated = [...withNames, ...sneakers];
       saveToStorage(updated);
       return withNames;
     }
 
     try {
-      const formatted = sneakersData.map(s => ({
-        ...s,
-        name: buildName(s.brand, s.model, s.variant || '', s.colorway),
-        variant: s.variant || '',
-        user_id: userId,
-      }));
-
       const { data, error } = await supabase
         .from('sneakers')
-        .insert(formatted)
+        .insert(reconciledBatch)
         .select();
 
       if (error) throw error;
-      setSneakers(prev => [...(data || []), ...prev]);
-      return data || [];
+      const results = (data || []).map(s => reconcileSneakerWearData(s));
+      setSneakers(prev => [...results, ...prev]);
+      return results;
     } catch (e) {
       console.warn('Supabase addSneakersBatch error:', e);
       return null;
@@ -276,45 +278,36 @@ export function useSneakers(userId?: string) {
   const updateSneaker = async (id: string, updates: Partial<SneakerInsert>) => {
     if (!userId) return null;
 
+    const current = sneakers.find(s => s.id === id);
+    if (!current) return null;
+
+    const b = updates.brand !== undefined ? updates.brand : current.brand;
+    const m = updates.model !== undefined ? updates.model : current.model;
+    const v = updates.variant !== undefined ? updates.variant : current.variant;
+    const c = updates.colorway !== undefined ? updates.colorway : current.colorway;
+    const name = buildName(b, m, v, c);
+
+    const merged = reconcileSneakerWearData({
+      ...current,
+      ...updates,
+      name,
+      variant: v || '',
+      updated_at: new Date().toISOString(),
+    });
+
     const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass' && isValidUuid(userId) && !usingLocalStorageFallback;
 
     if (!isLiveMode) {
-      const current = sneakers.find(s => s.id === id);
-      if (!current) return null;
-
-      const b = updates.brand !== undefined ? updates.brand : current.brand;
-      const m = updates.model !== undefined ? updates.model : current.model;
-      const v = updates.variant !== undefined ? updates.variant : current.variant;
-      const c = updates.colorway !== undefined ? updates.colorway : current.colorway;
-      const name = buildName(b, m, v, c);
-
-      const updatedSneaker: Sneaker = {
-        ...current,
-        ...updates,
-        variant: v || '',
-        name,
-        updated_at: new Date().toISOString(),
-      };
-
-      const updatedList = sneakers.map(s => s.id === id ? updatedSneaker : s);
+      const updatedList = sneakers.map(s => s.id === id ? merged : s);
       saveToStorage(updatedList);
-      return updatedSneaker;
+      return merged;
     }
 
     try {
-      const current = sneakers.find(s => s.id === id);
-      const b = updates.brand !== undefined ? updates.brand : current?.brand || '';
-      const m = updates.model !== undefined ? updates.model : current?.model || '';
-      const v = updates.variant !== undefined ? updates.variant : current?.variant || '';
-      const c = updates.colorway !== undefined ? updates.colorway : current?.colorway || '';
-      const name = buildName(b, m, v, c);
-
       const { data, error } = await supabase
         .from('sneakers')
         .update({
-          ...updates,
-          name,
-          variant: v,
+          ...merged,
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)
@@ -323,8 +316,9 @@ export function useSneakers(userId?: string) {
         .single();
 
       if (error) throw error;
-      setSneakers(prev => prev.map(s => s.id === id ? data : s));
-      return data;
+      const result = reconcileSneakerWearData(data);
+      setSneakers(prev => prev.map(s => s.id === id ? result : s));
+      return result;
     } catch (e) {
       console.warn('Supabase updateSneaker error:', e);
       return null;
@@ -362,11 +356,12 @@ export function useSneakers(userId?: string) {
     const sneaker = sneakers.find(s => s.id === id);
     if (!sneaker) return null;
     const nowIso = new Date().toISOString();
-    const existingDates = Array.isArray(sneaker.dates_worn) ? sneaker.dates_worn : [];
+    const existingDates = parseDatesWorn(sneaker.dates_worn);
+    const updatedDates = [nowIso, ...existingDates];
     return updateSneaker(id, { 
-      worn: (sneaker.worn || 0) + 1,
+      worn: Math.max((sneaker.worn || 0) + 1, updatedDates.length),
       last_worn: nowIso,
-      dates_worn: [nowIso, ...existingDates],
+      dates_worn: updatedDates,
     });
   };
 
