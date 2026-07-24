@@ -272,14 +272,7 @@ function App() {
                 <Upload className="w-4 h-4" />
                 Import
               </button>
-              <button
-                onClick={() => setShowFaq(true)}
-                className="hidden sm:flex items-center gap-2 px-3.5 pt-1.5 pb-2 bg-blue-600/10 text-blue-400 text-sm font-medium rounded-2xl border border-blue-700/20 hover:bg-blue-600/20 transition-colors cursor-pointer"
-                title="Frequently Asked Questions & Image Guide"
-              >
-                <HelpCircle className="w-4 h-4 text-blue-400" />
-                FAQ
-              </button>
+
               <button
                 onClick={() => setShowForm(true)}
                 className="flex items-center gap-2 px-4 pt-1.5 pb-2 bg-rose-600/10 text-rose-400 text-sm font-medium rounded-2xl border border-rose-700/20 hover:bg-rose-600/20 transition-colors cursor-pointer"

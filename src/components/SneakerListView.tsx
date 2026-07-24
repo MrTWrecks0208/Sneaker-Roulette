@@ -2,6 +2,7 @@ import { Sneaker } from '../lib/supabase';
 import { Trash2, Edit3, Footprints, Plus, Calendar } from 'lucide-react';
 import { COLOR_HEX } from '../lib/colors';
 import { BrandLogo } from './BrandLogo';
+import { formatLastWorn, formatDateYMD } from '../lib/utils';
 
 interface SneakerListViewProps {
   sneakers: Sneaker[];
@@ -19,13 +20,7 @@ export default function SneakerListView({
   return (
     <div className="space-y-3 w-full mt-8">
       {sneakers.map(sneaker => {
-        const formattedDate = sneaker.created_at
-          ? new Date(sneaker.created_at).toLocaleDateString(undefined, {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric'
-            })
-          : null;
+        const formattedDate = sneaker.created_at ? formatDateYMD(sneaker.created_at) : null;
 
         return (
           <div
@@ -148,33 +143,3 @@ export default function SneakerListView({
   );
 }
 
-const formatLastWorn = (dateString?: string | null) => {
-  if (!dateString) return 'Never';
-  try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'Never';
-    const now = new Date();
-    
-    // Check if it's today
-    if (date.toDateString() === now.toDateString()) {
-      return 'Today';
-    }
-    
-    // Check if it's yesterday
-    const yesterday = new Date(now);
-    yesterday.setDate(now.getDate() - 1);
-    if (date.toDateString() === yesterday.toDateString()) {
-      return 'Yesterday';
-    }
-    
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    if (diffDays < 7) {
-      return `${diffDays} days ago`;
-    }
-    
-    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-  } catch {
-    return 'Never';
-  }
-};

@@ -116,3 +116,42 @@ export function reconcileSneakerWearData<T extends { worn?: number; dates_worn?:
   };
 }
 
+export function formatDateYMD(dateString?: string | null): string {
+  if (!dateString) return 'Never';
+  const d = new Date(dateString);
+  if (isNaN(d.getTime())) return 'Never';
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}/${month}/${day}`;
+}
+
+export function formatLastWorn(dateString?: string | null): string {
+  if (!dateString) return 'Never';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Never';
+    const now = new Date();
+
+    if (date.toDateString() === now.toDateString()) {
+      return 'Today';
+    }
+
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    if (date.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    }
+
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays < 7) {
+      return `${diffDays} days ago`;
+    }
+
+    return formatDateYMD(dateString);
+  } catch {
+    return 'Never';
+  }
+}
+

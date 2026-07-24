@@ -3,7 +3,7 @@ import { Sneaker } from '../lib/supabase';
 import { Trash2, Edit3, Footprints, ChevronLeft, ChevronRight, X, Calendar, Activity, Eye, Maximize2 } from 'lucide-react';
 import { COLOR_HEX } from '../lib/colors';
 import { BrandLogo } from './BrandLogo';
-import { parseDatesWorn } from '../lib/utils';
+import { parseDatesWorn, formatLastWorn } from '../lib/utils';
 
 interface SneakerCardProps {
   sneaker: Sneaker;
@@ -663,31 +663,3 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
   );
 }
 
-const formatLastWorn = (dateString?: string | null) => {
-  if (!dateString) return 'Never';
-  try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'Never';
-    const now = new Date();
-
-    if (date.toDateString() === now.toDateString()) {
-      return 'Today';
-    }
-
-    const yesterday = new Date(now);
-    yesterday.setDate(now.getDate() - 1);
-    if (date.toDateString() === yesterday.toDateString()) {
-      return 'Yesterday';
-    }
-
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    if (diffDays < 7) {
-      return `${diffDays} days ago`;
-    }
-
-    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-  } catch {
-    return 'Never';
-  }
-};
