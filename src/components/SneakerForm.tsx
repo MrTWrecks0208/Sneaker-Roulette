@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Sneaker, SneakerInsert, BRANDS, BRAND_CATEGORIES, HEIGHTS, STYLES, COLORS, CONDITIONS, buildName } from '../lib/supabase';
-import { X, Upload, Loader2, Camera, Sparkles, HelpCircle, GripVertical, Star, Calendar, Plus, ListFilter } from 'lucide-react';
+import { X, Upload, Loader2, Camera, Sparkles, HelpCircle, GripVertical, Star, Calendar, Plus, ListFilter, Link as LinkIcon } from 'lucide-react';
 import multicolorImg from '../assets/images/multicolor_swatch_1783883698636.jpg';
 import iridescentImg from '../assets/images/iridescent.png';
-import { parseDatesWorn, formatDateYMD } from '../lib/utils';
+import { parseDatesWorn, formatDateYMD, parseGalleryImages } from '../lib/utils';
 
 const COLOR_GLOW: Record<string, { bg: string; text: string; border: string; shadow?: string }> = {
   'White':            { bg: 'rgba(255,255,255,.80)', text: '#000000', border: 'rgba(255,255,255,.80)' },
@@ -283,14 +283,13 @@ export default function SneakerForm({ sneaker, onSave, onCancel, onOpenFaq }: Sn
   // Multi-image list state
   const [images, setImages] = useState<string[]>(() => {
     if (sneaker) {
-      const list = [sneaker.image_url, ...(sneaker.gallery_images || [])].filter(Boolean);
-      const unique: string[] = [];
-      list.forEach(item => { if (!unique.includes(item)) unique.push(item); });
-      return unique;
+      return parseGalleryImages(sneaker.gallery_images, sneaker.image_url);
     }
     return [];
   });
 
+  const [imageUrlInput, setImageUrlInput] = useState<string>('');
+  const [showUrlInput, setShowUrlInput] = useState<boolean>(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [isDraggingFiles, setIsDraggingFiles] = useState(false);
@@ -319,11 +318,7 @@ export default function SneakerForm({ sneaker, onSave, onCancel, onOpenFaq }: Sn
       setLastWornAt(sneaker.last_worn || '');
       setCondition(sneaker.condition || '');
       setDatesWornList(parseDatesWorn(sneaker.dates_worn));
-
-      const list = [sneaker.image_url, ...(sneaker.gallery_images || [])].filter(Boolean);
-      const unique: string[] = [];
-      list.forEach(item => { if (!unique.includes(item)) unique.push(item); });
-      setImages(unique);
+      setImages(parseGalleryImages(sneaker.gallery_images, sneaker.image_url));
     }
   }, [sneaker]);
 
@@ -451,6 +446,17 @@ export default function SneakerForm({ sneaker, onSave, onCancel, onOpenFaq }: Sn
 
   const removeImage = (index: number) => {
     setImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddUrl = () => {
+    const trimmed = imageUrlInput.trim();
+    if (!trimmed) return;
+    setImages(prev => {
+      if (prev.includes(trimmed)) return prev;
+      return [...prev, trimmed];
+    });
+    setImageUrlInput('');
+    setShowUrlInput(false);
   };
 
   const handleLookup = async () => {
@@ -1040,7 +1046,35 @@ export default function SneakerForm({ sneaker, onSave, onCancel, onOpenFaq }: Sn
                   <Camera className="w-3.5 h-3.5 text-emerald-400" />
                   <span>Take Photo</span>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setShowUrlInput(!showUrlInput)}
+                  className="px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded-lg border border-zinc-700 transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <LinkIcon className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Paste Image URL</span>
+                </button>
               </div>
+
+              {showUrlInput && (
+                <div className="flex gap-2 w-full pt-2 max-w-md mx-auto">
+                  <input
+                    type="url"
+                    placeholder="Paste image URL (https://...)"
+                    value={imageUrlInput}
+                    onChange={(e) => setImageUrlInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddUrl(); } }}
+                    className="flex-1 px-3 py-1.5 bg-zinc-900 border border-zinc-700 rounded-lg text-xs text-zinc-100 focus:outline-none focus:border-purple-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddUrl}
+                    className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium rounded-lg transition-colors cursor-pointer"
+                  >
+                    Add
+                  </button>
+                </div>
+              )}
 
               <input
                 ref={fileInputRef}

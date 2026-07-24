@@ -42,14 +42,14 @@ export const BRAND_CATEGORIES = [
   {
     category: 'DESIGNER/LUXURY',
     brands: [
-      'A Bathing Ape', 'Alexander McQueen', 'Alohas', 'Amiri', 'Ann Demeulemeester', 'AUTRY', 'Axel Arigato', 'Balenciaga',
-      'Balmain', 'Bottega Veneta', 'Burberry', 'Brooks', 'Christian Louboutin',
-      'Coach', 'Cole Haan', 'Diadora', 'Dior', 'Dries Van Noten', 'Fear of God', 'Fendi',
+      'A Bathing Ape', 'Alexander McQueen', 'Alohas', 'Amiri', 'Ann Demeulemeester', 'Autry', 'Axel Arigato', 'Balenciaga',
+      'Balmain', 'Bottega Veneta', 'Burberry', 'Brooks', 'Christian Louboutin', 'Clae', 'Clearweather',
+      'Coach', 'Cole Haan', 'Diadora', 'Dior', 'Dries Van Noten', 'Eytys', 'Fear of God', 'Fendi',
       'Ferragamo', 'Givenchy', 'Golden Goose', 'Gucci', 'Hermés', 'Jacquemus',
       'Jimmy Choo', 'Kate Spade', 'Kenneth Cole', 'Lanvin', 'Louis Vuitton',
-      'Maison Margiela', 'Maison Mihara Yasuhiro', 'Michael Kors', 'Moncler', 'Off-White', 'Onitsuka Tiger',
-      'Other', 'Prada', 'Raf Simons', 'Rick Owens', 'Tom Ford', 'Tory Burch',
-      'Versace', 'Saint Laurent (YSL)',
+      'Maison Margiela', 'Maison Mihara Yasuhiro', 'Michael Kors', 'Moncler', 'Native', 'No One', 'Off-White', 'Onitsuka Tiger',
+      'Other', 'Ouder', 'Prada', 'Raf Simons', 'Rick Owens', 'Stepney Workers Club', 'Tom Ford', 'Tory Burch',
+      'Versace','Saint Laurent (YSL)',
     ],
   },
   {
@@ -64,7 +64,7 @@ export const BRAND_CATEGORIES = [
     brands: [
       'Allbirds', 'ASICS', 'Bata', 'Birkenstock', 'Cariuma',
       'Common Projects', 'Converse', 'Crocs', 'ECCO', 'Filling Pieces', 'K-Swiss',
-      'KangaROOS', 'Keds', 'Moonstar', 'New Balance', 'Nothing New', 'OOfos',
+      'KangaROOS', 'Keds', 'Moonstar', 'New Balance', 'Nothing New', 'Oofos',
       'Puma', "Rothy's", 'Saucony', 'SeaVees', 'Skechers', "Sperry's",
       'Thousand Fell', 'Toms', 'Tretorn', 'Zegna',
     ],

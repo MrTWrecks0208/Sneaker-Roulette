@@ -3,7 +3,7 @@ import { Sneaker } from '../lib/supabase';
 import { Trash2, Edit3, Footprints, ChevronLeft, ChevronRight, X, Calendar, Activity, Eye, Maximize2 } from 'lucide-react';
 import { COLOR_HEX } from '../lib/colors';
 import { BrandLogo } from './BrandLogo';
-import { parseDatesWorn, formatLastWorn } from '../lib/utils';
+import { parseDatesWorn, formatLastWorn, parseGalleryImages } from '../lib/utils';
 
 interface SneakerCardProps {
   sneaker: Sneaker;
@@ -33,7 +33,10 @@ export function calculateWearStats(
   const ms12m = 365 * 24 * 60 * 60 * 1000;
 
   const parsedIsoDates = parseDatesWorn(datesWorn);
-  const validTimes: number[] = parsedIsoDates.map(d => new Date(d).getTime()).filter(t => !isNaN(t));
+  const validTimes: number[] = parsedIsoDates
+    .map(d => new Date(d).getTime())
+    .filter(t => !isNaN(t))
+    .sort((a, b) => a - b);
 
   const totalWears = Math.max(totalWornCount, validTimes.length);
 
@@ -68,31 +71,59 @@ export function calculateWearStats(
   let frequencyText = 'Never worn';
 
   if (totalWears > 0) {
-    let earliestTime = validTimes.length > 0 ? Math.min(...validTimes) : 0;
-    if (!earliestTime && createdAtStr) {
-      earliestTime = new Date(createdAtStr).getTime();
-    }
-    if (!earliestTime && lastWornDateStr) {
-      earliestTime = new Date(lastWornDateStr).getTime();
-    }
+    let avgGapDays = 0;
 
-    const daysSpan = earliestTime && !isNaN(earliestTime)
-      ? Math.max(1, Math.ceil((nowMs - earliestTime) / (24 * 60 * 60 * 1000)))
-      : 30;
+    if (validTimes.length >= 2) {
+      const tFirst = validTimes[0];
+      const tLast = validTimes[validTimes.length - 1];
+      const daysBetweenWears = (tLast - tFirst) / (24 * 60 * 60 * 1000);
+      const gaps = validTimes.length - 1;
 
-    const avgDaysBetween = Math.max(1, Math.round(daysSpan / totalWears));
-    const wearsPerMonthVal = totalWears / Math.max(0.1, (daysSpan / 30));
-    const wearsPerMonth = wearsPerMonthVal >= 10 ? Math.round(wearsPerMonthVal) : parseFloat(wearsPerMonthVal.toFixed(1));
+      const gapFromWears = gaps > 0 ? daysBetweenWears / gaps : 0;
+      const daysFromFirstToNow = Math.max(0, (nowMs - tFirst) / (24 * 60 * 60 * 1000));
+      const overallAvgSpan = daysFromFirstToNow / validTimes.length;
 
-    if (avgDaysBetween === 1) {
-      frequencyText = 'Every day (~30x / mo)';
-    } else if (avgDaysBetween < 7) {
-      frequencyText = `Every ~${avgDaysBetween} days (~${wearsPerMonth}x / mo)`;
-    } else if (avgDaysBetween <= 30) {
-      frequencyText = `Every ~${avgDaysBetween} days (~${wearsPerMonth}x / mo)`;
+      if (gapFromWears <= 0) {
+        avgGapDays = overallAvgSpan;
+      } else if (daysFromFirstToNow > daysBetweenWears + gapFromWears) {
+        avgGapDays = Math.max(gapFromWears, overallAvgSpan);
+      } else {
+        avgGapDays = gapFromWears;
+      }
+    } else if (validTimes.length === 1) {
+      const tWear = validTimes[0];
+      const tCreated = createdAtStr ? new Date(createdAtStr).getTime() : NaN;
+      const tReference = !isNaN(tCreated) ? Math.min(tCreated, tWear) : tWear;
+      const daysSpan = Math.max(1, (nowMs - tReference) / (24 * 60 * 60 * 1000));
+      avgGapDays = daysSpan / totalWears;
     } else {
-      const months = Math.round(avgDaysBetween / 30);
-      frequencyText = months <= 1 ? 'About 1x / month' : `Once every ~${months} months`;
+      const tCreated = createdAtStr ? new Date(createdAtStr).getTime() : NaN;
+      const tLast = lastWornDateStr ? new Date(lastWornDateStr).getTime() : NaN;
+      let tRef = NaN;
+      if (!isNaN(tCreated) && !isNaN(tLast)) tRef = Math.min(tCreated, tLast);
+      else if (!isNaN(tCreated)) tRef = tCreated;
+      else if (!isNaN(tLast)) tRef = tLast;
+
+      const daysSpan = !isNaN(tRef) ? Math.max(1, (nowMs - tRef) / (24 * 60 * 60 * 1000)) : 30;
+      avgGapDays = daysSpan / totalWears;
+    }
+
+    if (avgGapDays < 1.5 && totalWears >= 5) {
+      frequencyText = 'Every day (~30x / mo)';
+    } else if (avgGapDays < 25) {
+      const roundedDays = Math.round(avgGapDays);
+      const wearsPerMonthVal = 30 / Math.max(0.5, avgGapDays);
+      const wearsPerMonth = wearsPerMonthVal >= 10 ? Math.round(wearsPerMonthVal) : parseFloat(wearsPerMonthVal.toFixed(1));
+      if (roundedDays <= 1) {
+        frequencyText = `Every ~1 day (~${wearsPerMonth}x / mo)`;
+      } else {
+        frequencyText = `Every ~${roundedDays} days (~${wearsPerMonth}x / mo)`;
+      }
+    } else if (avgGapDays <= 45) {
+      frequencyText = '1x / month';
+    } else {
+      const months = Math.round(avgGapDays / 30);
+      frequencyText = months <= 1 ? '1x / month' : `Once every ~${months} months`;
     }
   }
 
@@ -116,14 +147,9 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
     sneaker.created_at
   );
 
-  // Gallery (max 5)
-  const gallery: string[] = [];
-  if (Array.isArray(sneaker.gallery_images) && sneaker.gallery_images.length > 0) {
-    gallery.push(...sneaker.gallery_images.filter(Boolean).slice(0, 5));
-  }
-  if (gallery.length === 0 && sneaker.image_url) {
-    gallery.push(sneaker.image_url);
-  }
+  // Gallery (all photos: main + gallery)
+  const gallery = parseGalleryImages(sneaker.gallery_images, sneaker.image_url);
+  const [activeImgIdx, setActiveImgIdx] = useState(0);
 
   const getConditionBadgeStyle = (cond?: string | null) => {
     if (!cond) return 'bg-zinc-100 text-zinc-600 border-zinc-200';
@@ -158,9 +184,9 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
           <div className="absolute inset-0 w-full h-full backface-hidden bg-white rounded-xl overflow-hidden shadow-md group-hover:shadow-2xl ring-1 ring-black/5 transition-all duration-300 flex flex-col justify-between">
             {/* Image Container */}
             <div className="relative p-4 bg-gradient-to-br from-gray-50 to-gray-100 aspect-square flex items-center justify-center overflow-hidden">
-              {sneaker.image_url ? (
+              {gallery.length > 0 ? (
                 <img
-                  src={sneaker.image_url}
+                  src={gallery[activeImgIdx] || sneaker.image_url}
                   alt={sneaker.name}
                   className="w-full h-full p-6 object-contain transition-transform duration-300 group-hover:scale-105"
                 />
@@ -173,10 +199,38 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
                 <BrandLogo brand={sneaker.brand} sneakerName={sneaker.name} />
               </div>
 
+              {/* Multi-Photo Carousel Controls on Front if >1 photo */}
+              {gallery.length > 1 && (
+                <div 
+                  className="absolute bottom-2 left-2 flex items-center gap-1 z-20"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setActiveImgIdx((activeImgIdx - 1 + gallery.length) % gallery.length)}
+                    className="p-1 bg-black/60 hover:bg-black text-white rounded-md backdrop-blur-xs transition-colors"
+                    title="Previous photo"
+                  >
+                    <ChevronLeft className="w-3 h-3" />
+                  </button>
+                  <span className="px-1.5 py-0.5 bg-black/70 text-white rounded-md text-[9px] font-bold backdrop-blur-xs">
+                    {activeImgIdx + 1}/{gallery.length}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveImgIdx((activeImgIdx + 1) % gallery.length)}
+                    className="p-1 bg-black/60 hover:bg-black text-white rounded-md backdrop-blur-xs transition-colors"
+                    title="Next photo"
+                  >
+                    <ChevronRight className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+
               {/* Flip Hint Overlay on Bottom Right */}
               <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-zinc-900/80 text-white rounded-md text-[9px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 shadow-sm">
                 <Activity className="w-2.5 h-2.5 text-blue-400" />
-                <span>Details & Actions</span>
+                <span>Details &amp; Actions</span>
               </div>
             </div>
 
@@ -273,23 +327,23 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
               </div>
             </div>
 
-            {/* Gallery (Max 5 images) */}
+            {/* Gallery */}
             <div className="space-y-1">
               <div className="flex items-center justify-between text-[10px] text-gray-500 font-medium">
-                <span>Gallery ({gallery.length}/5)</span>
+                <span>Gallery ({gallery.length})</span>
                 <span className="text-[9px] text-gray-400">Click image to enlarge</span>
               </div>
 
-              <div className="grid grid-cols-5 gap-1.5 bg-gray-50 p-1.5 rounded-lg border border-gray-100 h-16 items-center">
+              <div className="grid grid-cols-5 gap-1.5 bg-gray-50 p-1.5 rounded-lg border border-gray-100 min-h-[64px] max-h-28 overflow-y-auto items-center">
                 {gallery.map((imgUrl, idx) => (
                   <button
-                    key={`${imgUrl}-${idx}`}
+                    key={`${imgUrl.slice(0, 30)}-${idx}`}
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       setLightboxIndex(idx);
                     }}
-                    className="relative group/thumb w-full h-12 rounded-md overflow-hidden bg-white border border-gray-200 hover:border-blue-500 hover:shadow-sm transition-all focus:outline-none"
+                    className="relative group/thumb w-full h-12 rounded-md overflow-hidden bg-white border border-gray-200 hover:border-blue-500 hover:shadow-sm transition-all focus:outline-none cursor-pointer"
                     title={`View photo ${idx + 1}`}
                   >
                     <img src={imgUrl} alt={`Gallery ${idx + 1}`} className="w-full h-full object-contain p-0.5" />
@@ -299,8 +353,8 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
                   </button>
                 ))}
 
-                {/* Fill empty slots up to 5 */}
-                {Array.from({ length: Math.max(0, 5 - gallery.length) }).map((_, idx) => (
+                {/* Fill empty slots if less than 5 */}
+                {gallery.length < 5 && Array.from({ length: 5 - gallery.length }).map((_, idx) => (
                   <div
                     key={`empty-${idx}`}
                     className="w-full h-12 rounded-md border border-dashed border-gray-200 bg-gray-100/50 flex items-center justify-center text-gray-300 text-[10px]"
@@ -507,23 +561,23 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
                   </h4>
                 </div>
 
-                {/* Photo Gallery (Max 5) */}
+                {/* Photo Gallery */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-xs font-bold text-gray-700">
-                    <span>Photo Gallery ({gallery.length}/5)</span>
+                    <span>Photo Gallery ({gallery.length})</span>
                     <span className="text-[10px] text-gray-400 font-normal">Click image to inspect full screen</span>
                   </div>
 
-                  <div className="grid grid-cols-5 gap-2 bg-gray-50 p-2 rounded-xl border border-gray-100 items-center">
+                  <div className="grid grid-cols-5 gap-2 bg-gray-50 p-2 rounded-xl border border-gray-100 max-h-36 overflow-y-auto items-center">
                     {gallery.map((imgUrl, idx) => (
                       <button
-                        key={`${imgUrl}-${idx}`}
+                        key={`${imgUrl.slice(0, 30)}-${idx}`}
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           setLightboxIndex(idx);
                         }}
-                        className="relative group/thumb w-full h-16 rounded-lg overflow-hidden bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all focus:outline-none"
+                        className="relative group/thumb w-full h-16 rounded-lg overflow-hidden bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all focus:outline-none cursor-pointer"
                         title={`View photo ${idx + 1}`}
                       >
                         <img src={imgUrl} alt={`Gallery ${idx + 1}`} className="w-full h-full object-contain p-1" />
@@ -534,7 +588,7 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
                     ))}
 
                     {/* Empty slots */}
-                    {Array.from({ length: Math.max(0, 5 - gallery.length) }).map((_, idx) => (
+                    {gallery.length < 5 && Array.from({ length: 5 - gallery.length }).map((_, idx) => (
                       <div
                         key={`empty-enlarge-${idx}`}
                         className="w-full h-16 rounded-lg border border-dashed border-gray-200 bg-gray-100/50 flex items-center justify-center text-gray-300 text-xs"

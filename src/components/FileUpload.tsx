@@ -22,6 +22,7 @@ function normalizeField(rawKey: string): string {
     colorway: 'colorway', height: 'height', style: 'style', styles: 'style',
     color: 'color', colors: 'color', worn: 'worn',
     imageurl: 'image_url', image: 'image_url', img: 'image_url',
+    galleryimages: 'gallery_images', gallery: 'gallery_images', galleryimage: 'gallery_images',
     sneakerbrand: 'brand', sneakermodel: 'model', shoename: 'name',
     shoebrand: 'brand', shoemodel: 'model', sneaker: 'name',
     datesworn: 'dates_worn', dates: 'dates_worn', wearhistory: 'dates_worn',
@@ -85,6 +86,7 @@ function parseRow(row: Record<string, unknown>): SneakerInsert | null {
     dates_worn,
     last_worn,
     image_url: getString(normalized.image_url),
+    gallery_images: parseArrayField(normalized.gallery_images),
   });
 }
 

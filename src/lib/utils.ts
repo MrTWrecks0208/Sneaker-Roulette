@@ -91,7 +91,58 @@ export function parseDatesWorn(datesWorn: unknown): string[] {
   return validIsoDates.sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 }
 
-export function reconcileSneakerWearData<T extends { worn?: number; dates_worn?: unknown; last_worn?: string | null }>(sneaker: T): T & { worn: number; dates_worn: string[]; last_worn: string | null } {
+export function parseGalleryImages(galleryImages: unknown, mainImageUrl?: string | null): string[] {
+  const result: string[] = [];
+
+  if (mainImageUrl && typeof mainImageUrl === 'string' && mainImageUrl.trim()) {
+    result.push(mainImageUrl.trim());
+  }
+
+  if (galleryImages) {
+    let list: unknown[] = [];
+    if (Array.isArray(galleryImages)) {
+      list = galleryImages;
+    } else if (typeof galleryImages === 'string') {
+      const trimmed = galleryImages.trim();
+      if (trimmed) {
+        if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) {
+              list = parsed;
+            } else {
+              list = [trimmed];
+            }
+          } catch {
+            list = trimmed.split(/[,;\n]+/);
+          }
+        } else {
+          list = trimmed.split(/[,;\n]+/);
+        }
+      }
+    }
+
+    for (const item of list) {
+      if (typeof item === 'string' && item.trim()) {
+        result.push(item.trim());
+      }
+    }
+  }
+
+  // Deduplicate while preserving order
+  const unique: string[] = [];
+  for (const url of result) {
+    if (!unique.includes(url)) {
+      unique.push(url);
+    }
+  }
+
+  return unique;
+}
+
+export function reconcileSneakerWearData<T extends { worn?: number; dates_worn?: unknown; last_worn?: string | null; image_url?: string; gallery_images?: unknown }>(
+  sneaker: T
+): T & { worn: number; dates_worn: string[]; last_worn: string | null; gallery_images?: string[] } {
   const dates = parseDatesWorn(sneaker.dates_worn);
   const rawWorn = Number(sneaker.worn) || 0;
   const effectiveWorn = Math.max(rawWorn, dates.length);
@@ -108,11 +159,15 @@ export function reconcileSneakerWearData<T extends { worn?: number; dates_worn?:
     }
   }
 
+  // Ensure gallery_images is cleanly parsed array
+  const cleanGallery = parseGalleryImages(sneaker.gallery_images, null);
+
   return {
     ...sneaker,
     worn: effectiveWorn,
     dates_worn: dates,
     last_worn: effectiveLastWorn,
+    gallery_images: cleanGallery,
   };
 }
 
