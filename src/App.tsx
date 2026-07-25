@@ -766,7 +766,7 @@ CREATE POLICY "Users can delete own sneakers"
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={() => setShowForm(true)}
-                  className="px-5 py-2.5 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-500 transition-colors"
+                  className="px-5 py-2.5 bg-rose-600 text-white text-sm font-medium rounded-xl hover:bg-rose-500 transition-colors"
                 >
                   Add Sneaker
                 </button>
