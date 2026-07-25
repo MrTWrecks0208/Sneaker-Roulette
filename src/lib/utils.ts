@@ -145,12 +145,17 @@ export function reconcileSneakerWearData<T extends { worn?: number; dates_worn?:
 ): T & { worn: number; dates_worn: string[]; last_worn: string | null; gallery_images?: string[] } {
   const dates = parseDatesWorn(sneaker.dates_worn);
   const rawWorn = Number(sneaker.worn) || 0;
-  const effectiveWorn = Math.max(rawWorn, dates.length);
 
-  let effectiveLastWorn = sneaker.last_worn ? new Date(sneaker.last_worn).toISOString() : null;
-  if (isNaN(new Date(effectiveLastWorn || '').getTime())) {
-    effectiveLastWorn = null;
+  let effectiveLastWorn: string | null = null;
+  if (sneaker.last_worn && sneaker.last_worn.toLowerCase() !== 'never') {
+    const parsedTime = new Date(sneaker.last_worn).getTime();
+    if (!isNaN(parsedTime)) {
+      effectiveLastWorn = new Date(parsedTime).toISOString();
+    }
   }
+
+  // Ensure sneaker worn count respects the explicit worn count from database or local state, or the dates_worn array length
+  const effectiveWorn = Math.max(rawWorn, dates.length);
 
   if (dates.length > 0) {
     const newestDateIso = dates[0]; // sorted desc
@@ -181,11 +186,13 @@ export function formatDateYMD(dateString?: string | null): string {
   return `${year}/${month}/${day}`;
 }
 
-export function formatLastWorn(dateString?: string | null): string {
-  if (!dateString) return 'Never';
+export function formatLastWorn(dateString?: string | null, totalWornCount: number = 0): string {
+  if (!dateString || dateString.trim().toLowerCase() === 'never') {
+    return totalWornCount > 0 ? 'Not logged' : 'Never';
+  }
   try {
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'Never';
+    if (isNaN(date.getTime())) return totalWornCount > 0 ? 'Not logged' : 'Never';
     const now = new Date();
 
     if (date.toDateString() === now.toDateString()) {
@@ -206,7 +213,7 @@ export function formatLastWorn(dateString?: string | null): string {
 
     return formatDateYMD(dateString);
   } catch {
-    return 'Never';
+    return totalWornCount > 0 ? 'Not logged' : 'Never';
   }
 }
 

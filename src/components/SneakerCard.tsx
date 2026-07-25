@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sneaker } from '../lib/supabase';
 import { Trash2, Edit3, Footprints, ChevronLeft, ChevronRight, X, Calendar, Activity, Eye, Maximize2 } from 'lucide-react';
 import { COLOR_HEX } from '../lib/colors';
@@ -13,19 +13,34 @@ interface SneakerCardProps {
 }
 
 export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardProps) {
-  const [isEnlarged, setIsEnlarged] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const stats = calculateWearStats(
     sneaker.dates_worn,
     sneaker.worn,
-    sneaker.last_worn,
-    sneaker.created_at
+    sneaker.last_worn
   );
 
   // Gallery (all photos: main + gallery)
   const gallery = parseGalleryImages(sneaker.gallery_images, sneaker.image_url);
   const [activeImgIdx, setActiveImgIdx] = useState(0);
+
+  // Keyboard navigation for Lightbox Carousel
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setLightboxIndex(null);
+      } else if (e.key === 'ArrowLeft') {
+        setLightboxIndex((prev) => (prev !== null ? (prev - 1 + gallery.length) % gallery.length : 0));
+      } else if (e.key === 'ArrowRight') {
+        setLightboxIndex((prev) => (prev !== null ? (prev + 1) % gallery.length : 0));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxIndex, gallery.length]);
 
   const getConditionBadgeStyle = (cond?: string | null) => {
     if (!cond) return 'bg-zinc-100 text-zinc-600 border-zinc-200';
@@ -40,21 +55,27 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
-    // Open enlarged view when clicking card
     e.stopPropagation();
-    setIsEnlarged(true);
+    setIsFlipped(!isFlipped);
+  };
+
+  const openLightbox = (e: React.MouseEvent, index: number = activeImgIdx) => {
+    e.stopPropagation();
+    setLightboxIndex(index);
   };
 
   return (
     <>
-      {/* ================= GRID CARD ================= */}
+      {/* ================= SNEAKER CARD ================= */}
       <div 
         onClick={handleCardClick}
         className="group relative w-full max-w-[288px] h-[395px] mx-auto perspective-1000 select-none cursor-pointer"
-        title="Click to enlarge details"
+        title="Click card to flip"
       >
         <div
-          className="relative w-full h-full transition-transform duration-700 transform-style-3d group-hover:rotate-y-180"
+          className={`relative w-full h-full transition-transform duration-700 transform-style-3d ${
+            isFlipped ? 'rotate-y-180' : ''
+          }`}
         >
           {/* ================= FRONT SIDE ================= */}
           <div className="absolute inset-0 w-full h-full backface-hidden bg-white rounded-xl overflow-hidden shadow-md group-hover:shadow-2xl ring-1 ring-black/5 transition-all duration-300 flex flex-col justify-between">
@@ -75,45 +96,48 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
                 <BrandLogo brand={sneaker.brand} sneakerName={sneaker.name} />
               </div>
 
-              {/* Multi-Photo Carousel Controls on Front if >1 photo */}
-              {gallery.length > 1 && (
-                <div 
-                  className="absolute bottom-2 right-2 flex items-center gap-1 z-20"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <button
-                    type="button"
-                    onClick={() => setActiveImgIdx((activeImgIdx - 1 + gallery.length) % gallery.length)}
-                    className="p-1 bg-black/60 hover:bg-black text-white rounded-md backdrop-blur-xs transition-colors"
-                    title="Previous photo"
-                  >
-                    <ChevronLeft className="w-3 h-3" />
-                  </button>
-                  <span className="px-1.5 py-0.5 bg-black/70 text-white rounded-md text-[9px] font-bold backdrop-blur-xs">
-                    {activeImgIdx + 1}/{gallery.length}
+              
+              {/* Height Pill & Photo Carousel Controls on Bottom Right */}
+              <div className="absolute bottom-2 right-2 z-10 flex items-center gap-1.5">
+                {sneaker.height && (
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold shadow-xs shrink-0 ${getHeightBadgeStyle(sneaker.height)}`}>
+                    {sneaker.height}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setActiveImgIdx((activeImgIdx + 1) % gallery.length)}
-                    className="p-1 bg-black/60 hover:bg-black text-white rounded-md backdrop-blur-xs transition-colors"
-                    title="Next photo"
-                  >
-                    <ChevronRight className="w-3 h-3" />
-                  </button>
-                </div>
-              )}
+                )}
 
-              {/* Worn Count Badge on Bottom Left of Image Container */}
-              <div className="absolute bottom-2 left-2 z-10 flex items-center gap-1">
-                <div className="px-2 py-0.5 bg-black/60 text-white rounded-md text-[10px] font-semibold shadow-sm backdrop-blur-xs">
-                  <span>worn {sneaker.worn || 0}{(sneaker.worn || 0) === 1 ? 'x' : 'x'}</span>
-                </div>
+                {gallery.length > 1 && (
+                  <div 
+                    className="flex items-center gap-1 z-20"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setActiveImgIdx((activeImgIdx - 1 + gallery.length) % gallery.length)}
+                      className="p-1 bg-black/60 hover:bg-black text-white rounded-md backdrop-blur-xs transition-colors cursor-pointer"
+                      title="Previous photo"
+                    >
+                      <ChevronLeft className="w-3 h-3" />
+                    </button>
+                    <span className="px-1.5 py-0.5 bg-black/70 text-white rounded-md text-[9px] font-bold backdrop-blur-xs">
+                      {activeImgIdx + 1}/{gallery.length}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveImgIdx((activeImgIdx + 1) % gallery.length)}
+                      className="p-1 bg-black/60 hover:bg-black text-white rounded-md backdrop-blur-xs transition-colors cursor-pointer"
+                      title="Next photo"
+                    >
+                      <ChevronRight className="w-3 h-3" />
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {/* Flip Hint Overlay on Top Left on Hover */}
-              <div className="absolute top-2 left-2 z-10 px-2 py-0.5 bg-zinc-900/80 text-white rounded-md text-[9px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 shadow-sm border border-zinc-700/40 pointer-events-none">
-                <Activity className="w-2.5 h-2.5 text-blue-400" />
-                <span>Details &amp; Actions</span>
+              {/* Worn Count Badge on Bottom Left */}
+              <div className="absolute bottom-2 left-2 z-10 flex items-center gap-1">
+                <div className="px-2 py-0.5 bg-black/60 text-white rounded-md text-[10px] font-semibold shadow-sm backdrop-blur-xs">
+                  <span>worn {sneaker.worn || 0}x</span>
+                </div>
               </div>
             </div>
 
@@ -124,22 +148,14 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
                   {sneaker.name || 'Unnamed Sneaker'}
                 </h3>
 
-                {/* Styles on Left, Height Pill on Right */}
-                <div className="flex items-center justify-between gap-2 mt-1">
-                  <div className="flex-1 min-w-0">
-                    {sneaker.style && sneaker.style.length > 0 ? (
-                      <p className="text-xs text-gray-600 truncate" title={sneaker.style.join(', ')}>
-                        {sneaker.style.join(', ')}
-                      </p>
-                    ) : (
-                      <span className="text-xs text-gray-400 italic">No style specified</span>
-                    )}
-                  </div>
-
-                  {sneaker.height && (
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold border shadow-2xs shrink-0 ${getHeightBadgeStyle(sneaker.height)}`}>
-                      {sneaker.height.toLowerCase().includes('top') ? sneaker.height : `${sneaker.height} Top`}
-                    </span>
+                {/* Styles */}
+                <div className="mt-1">
+                  {sneaker.style && sneaker.style.length > 0 ? (
+                    <p className="text-xs text-gray-600 truncate" title={sneaker.style.join(', ')}>
+                      {sneaker.style.join(', ')}
+                    </p>
+                  ) : (
+                    <span className="text-xs text-gray-400 italic">No style specified</span>
                   )}
                 </div>
               </div>
@@ -167,7 +183,7 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
                 <div className="pt-2 border-t border-gray-100 mt-2 flex items-center justify-between text-[10px] text-gray-500 font-medium">
                   <span>Last Worn:</span>
                   <span className="text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded-md font-semibold">
-                    {formatLastWorn(sneaker.last_worn)}
+                    {formatLastWorn(sneaker.last_worn, sneaker.worn)}
                   </span>
                 </div>
               </div>
@@ -179,22 +195,18 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
             {/* Top Bar with Name & Actions */}
             <div className="border-b border-gray-100 pb-2 flex items-center justify-between gap-2">
               <div className="min-w-0 flex-1">
-                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block">Sneaker Details</span>
-                <h4 className="text-xs font-bold text-gray-900 truncate" title={sneaker.name}>
+                <h4 className="text-xs font-bold text-gray-900" title={sneaker.name}>
                   {sneaker.name}
                 </h4>
               </div>
 
-              {/* Card Action Buttons (Edit, Delete, Enlarge) */}
+              {/* Action Buttons (Edit, Delete, Enlarge) */}
               <div className="flex items-center gap-1 shrink-0 z-20">
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsEnlarged(true);
-                  }}
+                  onClick={(e) => openLightbox(e, activeImgIdx)}
                   className="p-1.5 bg-gray-100 hover:bg-blue-50 text-gray-600 hover:text-blue-600 rounded-lg transition-colors border border-gray-200 cursor-pointer"
-                  title="Enlarge details"
+                  title="Enlarge details & photos"
                 >
                   <Maximize2 className="w-3.5 h-3.5" />
                 </button>
@@ -223,11 +235,10 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
               </div>
             </div>
 
-            {/* Gallery */}
+            {/* Gallery Section */}
             <div className="space-y-1">
               <div className="flex items-center justify-between text-[10px] text-gray-500 font-medium">
                 <span>Gallery ({gallery.length})</span>
-                <span className="text-[9px] text-gray-400">Click image to enlarge</span>
               </div>
 
               <div className="grid grid-cols-5 gap-1.5 bg-gray-50 p-1.5 rounded-lg border border-gray-100 min-h-[64px] max-h-28 overflow-y-auto items-center">
@@ -235,12 +246,9 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
                   <button
                     key={`${imgUrl.slice(0, 30)}-${idx}`}
                     type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setLightboxIndex(idx);
-                    }}
+                    onClick={(e) => openLightbox(e, idx)}
                     className="relative group/thumb w-full h-12 rounded-md overflow-hidden bg-white border border-gray-200 hover:border-blue-500 hover:shadow-sm transition-all focus:outline-none cursor-pointer"
-                    title={`View photo ${idx + 1}`}
+                    title={`Enlarge photo ${idx + 1} in Lightbox Carousel`}
                   >
                     <img src={imgUrl} alt={`Gallery ${idx + 1}`} className="w-full h-full object-contain p-0.5" />
                     <div className="absolute inset-0 bg-black/30 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center">
@@ -262,7 +270,7 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
             </div>
 
             {/* Condition Section */}
-            <div className="flex items-center justify-between bg-gray-50 px-2.5 py-1.5 rounded-lg border border-gray-100">
+            <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold text-gray-600">Condition:</span>
               <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold border ${getConditionBadgeStyle(sneaker.condition)}`}>
                 {sneaker.condition || 'Not specified'}
@@ -309,232 +317,186 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
         </div>
       </div>
 
-      {/* ================= ENLARGED CARD LIGHTBOX MODAL ================= */}
-      {isEnlarged && (
+      {/* ================= ENLARGED LIGHTBOX & DETAILS MODAL ================= */}
+      {lightboxIndex !== null && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 sm:p-6 overflow-y-auto"
-          onClick={() => setIsEnlarged(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 overflow-y-auto"
+          onClick={() => setLightboxIndex(null)}
         >
           <div
-            className="relative w-full max-w-[460px] h-[610px] my-auto perspective-1000 select-none"
+            className="relative max-w-3xl w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-5 shadow-2xl my-auto text-white flex flex-col gap-4"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close Lightbox Button */}
-            <button
-              type="button"
-              onClick={() => setIsEnlarged(false)}
-              className="absolute -top-11 right-0 p-2 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors cursor-pointer z-50 flex items-center gap-1 text-xs font-medium"
-              title="Close expanded view"
-            >
-              <span>Close</span>
-              <X className="w-5 h-5" />
-            </button>
-
-            {/* Enlarged Card Container */}
-            <div className="relative w-full h-full bg-white rounded-2xl overflow-hidden shadow-2xl border border-gray-100 flex flex-col justify-between">
-              {/* === ENLARGED FRONT SIDE === */}
-              <div className="absolute inset-0 w-full h-full backface-hidden bg-white rounded-2xl overflow-hidden shadow-2xl border border-gray-100 flex flex-col justify-between">
-                {/* Big Image Section */}
-                <div className="relative p-6 bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 h-[360px] flex items-center justify-center overflow-hidden">
-                  {sneaker.image_url ? (
-                    <img
-                      src={sneaker.image_url}
-                      alt={sneaker.name}
-                      className="w-full h-full p-4 object-contain drop-shadow-md"
-                    />
-                  ) : (
-                    <Footprints className="w-20 h-20 text-gray-300" />
-                  )}
-
-                  {/* Brand Logo in Top Right */}
-                  <div className="absolute z-10 top-5 right-6 scale-125 origin-top-right">
-                    <BrandLogo brand={sneaker.brand} sneakerName={sneaker.name} />
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="absolute bottom-4 right-4 flex gap-2 z-20">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsEnlarged(false);
-                        onEdit(sneaker);
-                      }}
-                      className="px-3 py-1.5 bg-white/90 backdrop-blur-md rounded-xl border border-gray-200 text-gray-700 hover:text-gray-900 hover:bg-white transition-colors text-xs font-medium flex items-center gap-1.5 shadow-sm"
-                    >
-                      <Edit3 className="w-3.5 h-3.5 text-blue-600" />
-                      <span>Edit</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsEnlarged(false);
-                        onDelete(sneaker.id);
-                      }}
-                      className="px-3 py-1.5 bg-white/90 backdrop-blur-md rounded-xl border border-gray-200 text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors text-xs font-medium flex items-center gap-1.5 shadow-sm"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>Delete</span>
-                    </button>
-                  </div>
-       
-       {/* Worn count badge */}
-        {sneaker.worn > 0 && (
-          <div className="absolute bottom-3 left-3 px-2.5 pt-0.5 pb-1.5 bg-black/70 backdrop-blur-sm rounded-md text-xs text-white font-medium">
-            Worn {sneaker.worn}x
-          </div>
-        )}
-      </div>
-
-                {/* Content Section */}
-                <div className="p-5 flex-1 flex flex-col justify-between bg-white">
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold text-blue-600 uppercase tracking-widest">
-                        {sneaker.brand || 'Sneaker'}
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <div className="flex items-center gap-3">
+                <BrandLogo brand={sneaker.brand} sneakerName={sneaker.name} />
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-white leading-tight">
+                    {sneaker.name || 'Unnamed Sneaker'}
+                  </h3>
+                  <div className="flex items-center gap-2 mt-0.5 text-xs text-zinc-400">
+                    <span>{sneaker.brand || 'Sneaker'}</span>
+                    {sneaker.height && (
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${getHeightBadgeStyle(sneaker.height)}`}>
+                        {sneaker.height}
                       </span>
-                      {sneaker.height && (
-                        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${getHeightBadgeStyle(sneaker.height)}`}>
-                          {sneaker.height.toLowerCase().includes('top') ? sneaker.height : `${sneaker.height} Top`}
-                        </span>
-                      )}
-                    </div>
-                    <h3 className="font-extrabold text-xl text-gray-900 leading-snug">
-                      {sneaker.name || 'Unnamed Sneaker'}
-                    </h3>
-
-                    {sneaker.style.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-2">
-                        {sneaker.style.map((st, idx) => (
-                          <span key={idx} className="text-xs font-semibold px-2.5 py-0.5 bg-gray-100 text-gray-700 rounded-md">
-                            {st}
-                          </span>
-                        ))}
-                      </div>
                     )}
-                  </div>
-
-                  {/* Color Swatches & Footer */}
-                  <div className="pt-3 border-t border-gray-100 space-y-2">
-                    {sneaker.color.length > 0 && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-400 font-medium">Colorway:</span>
-                        <div className="flex items-center gap-2">
-                          {sneaker.color.map((c, idx) => {
-                            const val = COLOR_HEX[c] || (c.startsWith('#') ? c : '#cccccc');
-                            const isImage = val.startsWith('/') || val.startsWith('data:') || val.includes('assets/') || val.includes('blob:');
-                            return (
-                              <div key={`${c}-${idx}`} className="flex items-center gap-1">
-                                <div
-                                  className="w-4 h-4 rounded-full border border-gray-900 shadow-xs bg-center bg-cover"
-                                  style={isImage ? { backgroundImage: `url(${val})` } : { backgroundColor: val }}
-                                />
-                                <span className="text-xs text-gray-600 font-medium">{c}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between text-xs text-gray-500 font-medium">
-                      <span>Last Worn:</span>
-                      <span className="text-gray-900 bg-gray-100 px-2.5 py-1 rounded-lg font-bold">
-                        {formatLastWorn(sneaker.last_worn)}
-                      </span>
-                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* === ENLARGED BACK SIDE === */}
-              <div className="absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-white border border-gray-200 rounded-2xl p-5 shadow-2xl flex flex-col justify-between overflow-hidden text-gray-900">
-                {/* Header with Name */}
-                <div className="border-b border-gray-100 pb-3">
-                  <span className="text-[10px] font-extrabold text-blue-600 uppercase tracking-widest block">Collection Specs</span>
-                  <h4 className="text-base font-extrabold text-gray-900 truncate" title={sneaker.name}>
-                    {sneaker.name}
-                  </h4>
-                </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLightboxIndex(null);
+                    onEdit(sneaker);
+                  }}
+                  className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
+                  title="Edit sneaker"
+                >
+                  <Edit3 className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLightboxIndex(null)}
+                  className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
+                  title="Close viewer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
 
-                {/* Photo Gallery */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between text-xs font-bold text-gray-700">
-                    <span>Photo Gallery ({gallery.length})</span>
-                    <span className="text-[10px] text-gray-400 font-normal">Click image to inspect full screen</span>
+            {/* Main Lightbox Image Display */}
+            <div className="relative bg-zinc-950 border border-zinc-800 rounded-xl p-4 flex items-center justify-center min-h-[300px] sm:min-h-[380px] max-h-[50vh] overflow-hidden">
+              <img
+                src={gallery[lightboxIndex] || sneaker.image_url}
+                alt={`Sneaker photo ${lightboxIndex + 1}`}
+                className="max-h-[46vh] w-auto max-w-full object-contain rounded-lg"
+              />
+
+              {/* Prev / Next Arrows */}
+              {gallery.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setLightboxIndex((lightboxIndex - 1 + gallery.length) % gallery.length)}
+                    className="absolute left-3 p-2.5 rounded-full bg-black/60 hover:bg-black text-white transition-all cursor-pointer backdrop-blur-xs"
+                    title="Previous photo (Left Arrow)"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setLightboxIndex((lightboxIndex + 1) % gallery.length)}
+                    className="absolute right-3 p-2.5 rounded-full bg-black/60 hover:bg-black text-white transition-all cursor-pointer backdrop-blur-xs"
+                    title="Next photo (Right Arrow)"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+
+                  <div className="absolute bottom-3 px-3 py-1 bg-black/70 rounded-full text-xs font-semibold text-zinc-300 backdrop-blur-xs">
+                    Photo {lightboxIndex + 1} of {gallery.length}
                   </div>
+                </>
+              )}
+            </div>
 
-                  <div className="grid grid-cols-5 gap-2 bg-gray-50 p-2 rounded-xl border border-gray-100 max-h-36 overflow-y-auto items-center">
-                    {gallery.map((imgUrl, idx) => (
-                      <button
-                        key={`${imgUrl.slice(0, 30)}-${idx}`}
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setLightboxIndex(idx);
-                        }}
-                        className="relative group/thumb w-full h-16 rounded-lg overflow-hidden bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all focus:outline-none cursor-pointer"
-                        title={`View photo ${idx + 1}`}
-                      >
-                        <img src={imgUrl} alt={`Gallery ${idx + 1}`} className="w-full h-full object-contain p-1" />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center">
-                          <Eye className="w-4 h-4 text-white" />
-                        </div>
-                      </button>
-                    ))}
+            {/* Thumbnail Strip at Bottom of Lightbox */}
+            {gallery.length > 1 && (
+              <div className="flex items-center justify-center gap-2 overflow-x-auto py-1">
+                {gallery.map((imgUrl, idx) => (
+                  <button
+                    key={`lightbox-strip-${idx}`}
+                    type="button"
+                    onClick={() => setLightboxIndex(idx)}
+                    className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition-all cursor-pointer bg-zinc-950 shrink-0 ${
+                      lightboxIndex === idx ? 'border-blue-500 scale-105 shadow-md' : 'border-zinc-800 opacity-60 hover:opacity-100'
+                    }`}
+                  >
+                    <img src={imgUrl} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-contain p-0.5" />
+                  </button>
+                ))}
+              </div>
+            )}
 
-                    {/* Empty slots */}
-                    {gallery.length < 5 && Array.from({ length: 5 - gallery.length }).map((_, idx) => (
-                      <div
-                        key={`empty-enlarge-${idx}`}
-                        className="w-full h-16 rounded-lg border border-dashed border-gray-200 bg-gray-100/50 flex items-center justify-center text-gray-300 text-xs"
-                      >
-                        -
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Condition Section */}
-                <div className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-xl border border-gray-100">
-                  <span className="text-xs font-bold text-gray-700">Condition Rating:</span>
-                  <span className={`px-3 py-1 rounded-full text-xs font-extrabold border ${getConditionBadgeStyle(sneaker.condition)}`}>
-                    {sneaker.condition || 'Not specified'}
+            {/* Sneaker Details & Wear Metrics Section in Enlarged View */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-zinc-800 text-xs">
+              {/* Left Column: Style, Color, Condition */}
+              <div className="space-y-2 bg-zinc-950/60 p-3 rounded-xl border border-zinc-800">
+                <div>
+                  <span className="text-zinc-400 block font-medium">Style Tags:</span>
+                  <span className="text-zinc-200 font-semibold">
+                    {sneaker.style && sneaker.style.length > 0 ? sneaker.style.join(', ') : 'None'}
                   </span>
                 </div>
 
-                {/* Detailed Wear Metrics */}
                 <div>
-                  <div className="flex items-center gap-1.5 mb-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                    <Calendar className="w-3.5 h-3.5 text-blue-500" />
-                    <span>Wear History Metrics</span>
+                  <span className="text-zinc-400 block font-medium mb-1">Colorway:</span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {sneaker.color.map((c, idx) => {
+                      const val = COLOR_HEX[c] || (c.startsWith('#') ? c : '#cccccc');
+                      const isImage = val.startsWith('/') || val.startsWith('data:') || val.includes('assets/') || val.includes('blob:');
+                      return (
+                        <div key={`${c}-${idx}`} className="flex items-center gap-1 bg-zinc-800 px-2 py-0.5 rounded-md">
+                          <div
+                            className="w-3 h-3 rounded-full border border-zinc-600 bg-center bg-cover"
+                            style={isImage ? { backgroundImage: `url(${val})` } : { backgroundColor: val }}
+                          />
+                          <span className="text-zinc-300 text-[11px]">{c}</span>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div className="grid grid-cols-4 gap-2 text-center">
-                    <div className="bg-gray-50 border border-gray-100 p-2 rounded-xl">
-                      <span className="block text-[10px] text-gray-400 font-semibold">1 Month</span>
-                      <span className="text-base font-black text-gray-900">{stats.last1m}x</span>
+                </div>
+
+                <div className="flex items-center justify-between pt-1 border-t border-zinc-800">
+                  <span className="text-zinc-400 font-medium">Condition:</span>
+                  <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${getConditionBadgeStyle(sneaker.condition)}`}>
+                    {sneaker.condition || 'Not specified'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Right Column: Wear Counts & Frequency */}
+              <div className="space-y-2 bg-zinc-950/60 p-3 rounded-xl border border-zinc-800 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between text-zinc-400 mb-1.5 font-medium">
+                    <span>Wear History (Total: {sneaker.worn || 0}x)</span>
+                    <span className="text-[11px] text-zinc-400">
+                      Last: {formatLastWorn(sneaker.last_worn, sneaker.worn)}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-1.5 text-center">
+                    <div className="bg-zinc-900 border border-zinc-800 p-1.5 rounded-lg">
+                      <span className="block text-[9px] text-zinc-500 font-medium">1 Mo</span>
+                      <span className="text-xs font-bold text-zinc-200">{stats.last1m}x</span>
                     </div>
-                    <div className="bg-gray-50 border border-gray-100 p-2 rounded-xl">
-                      <span className="block text-[10px] text-gray-400 font-semibold">3 Months</span>
-                      <span className="text-base font-black text-gray-900">{stats.last3m}x</span>
+                    <div className="bg-zinc-900 border border-zinc-800 p-1.5 rounded-lg">
+                      <span className="block text-[9px] text-zinc-500 font-medium">3 Mo</span>
+                      <span className="text-xs font-bold text-zinc-200">{stats.last3m}x</span>
                     </div>
-                    <div className="bg-gray-50 border border-gray-100 p-2 rounded-xl">
-                      <span className="block text-[10px] text-gray-400 font-semibold">6 Months</span>
-                      <span className="text-base font-black text-gray-900">{stats.last6m}x</span>
+                    <div className="bg-zinc-900 border border-zinc-800 p-1.5 rounded-lg">
+                      <span className="block text-[9px] text-zinc-500 font-medium">6 Mo</span>
+                      <span className="text-xs font-bold text-zinc-200">{stats.last6m}x</span>
                     </div>
-                    <div className="bg-gray-50 border border-gray-100 p-2 rounded-xl">
-                      <span className="block text-[10px] text-gray-400 font-semibold">1 Year</span>
-                      <span className="text-base font-black text-gray-900">{stats.last12m}x</span>
+                    <div className="bg-zinc-900 border border-zinc-800 p-1.5 rounded-lg">
+                      <span className="block text-[9px] text-zinc-500 font-medium">12 Mo</span>
+                      <span className="text-xs font-bold text-zinc-200">{stats.last12m}x</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Wear Frequency */}
-                <div className="bg-blue-50/70 border border-blue-100 rounded-xl p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-blue-600" />
-                    <span className="text-xs font-extrabold text-blue-950">Average Wear Frequency:</span>
+                <div className="bg-blue-950/40 border border-blue-900/50 rounded-lg p-2 flex items-center justify-between mt-1">
+                  <div className="flex items-center gap-1.5 text-blue-300">
+                    <Activity className="w-3.5 h-3.5" />
+                    <span className="font-bold text-[11px]">Wear Frequency:</span>
                   </div>
-                  <span className="text-xs font-black text-blue-700 bg-white/80 px-2.5 py-1 rounded-lg border border-blue-200">
+                  <span className="text-blue-200 font-extrabold text-[11px]">
                     {stats.frequencyText}
                   </span>
                 </div>
@@ -543,72 +505,6 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
           </div>
         </div>
       )}
-
-      {/* ================= FULLSCREEN GALLERY LIGHTBOX MODAL ================= */}
-      {lightboxIndex !== null && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-lg p-4"
-          onClick={() => setLightboxIndex(null)}
-        >
-          <div
-            className="relative max-w-3xl w-full flex flex-col items-center"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Close Button */}
-            <button
-              type="button"
-              onClick={() => setLightboxIndex(null)}
-              className="absolute -top-12 right-0 p-2 text-white/80 hover:text-white transition-colors cursor-pointer flex items-center gap-1 text-xs font-medium"
-              title="Close photo viewer"
-            >
-              <span>Close</span>
-              <X className="w-6 h-6" />
-            </button>
-
-            {/* Main Image */}
-            <div className="relative w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-6 flex items-center justify-center min-h-[340px] max-h-[75vh] shadow-2xl">
-              <img
-                src={gallery[lightboxIndex]}
-                alt={`Sneaker photo ${lightboxIndex + 1}`}
-                className="max-h-[68vh] w-auto max-w-full object-contain rounded-lg"
-              />
-            </div>
-
-            {/* Navigation Controls */}
-            <div className="flex items-center justify-between w-full mt-4 px-2 text-white">
-              <button
-                type="button"
-                onClick={() => setLightboxIndex((lightboxIndex - 1 + gallery.length) % gallery.length)}
-                disabled={gallery.length <= 1}
-                className="p-3 rounded-full bg-white/10 hover:bg-white/20 text-white disabled:opacity-20 disabled:hover:bg-white/10 transition-all cursor-pointer"
-                title="Previous photo"
-              >
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-
-              <div className="text-center">
-                <span className="text-sm font-bold text-zinc-200 block">
-                  {sneaker.name}
-                </span>
-                <span className="text-xs text-zinc-400 font-medium">
-                  Photo {lightboxIndex + 1} of {gallery.length}
-                </span>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setLightboxIndex((lightboxIndex + 1) % gallery.length)}
-                disabled={gallery.length <= 1}
-                className="p-3 rounded-full bg-white/10 hover:bg-white/20 text-white disabled:opacity-20 disabled:hover:bg-white/10 transition-all cursor-pointer"
-                title="Next photo"
-              >
-                <ChevronRight className="w-6 h-6" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }
-

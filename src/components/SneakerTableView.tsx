@@ -131,7 +131,7 @@ export default function SneakerTableView({
                 {/* Last Worn */}
                 <td className="py-3 px-5 text-center whitespace-nowrap text-xs text-zinc-400">
                   <span className="bg-zinc-900 px-2 py-1 rounded border border-zinc-800 text-zinc-300 font-semibold">
-                    {formatLastWorn(sneaker.last_worn)}
+                    {formatLastWorn(sneaker.last_worn, sneaker.worn)}
                   </span>
                 </td>
 

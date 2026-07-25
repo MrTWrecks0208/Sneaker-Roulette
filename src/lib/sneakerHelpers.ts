@@ -14,19 +14,18 @@ export const getHeightBadgeStyle = (height: string) => {
     return 'bg-sky-600 text-white';
   }
   if (h.includes('mid')) {
-    return 'bg-amber-600/10 text-amber-500 border-amber-600/20';
+    return 'bg-amber-600 text-white';
   }
   if (h.includes('high')) {
-    return 'bg-rose-600/10 text-rose-500 border-rose-600/20';
+    return 'bg-rose-600 text-white';
   }
-  return 'bg-emerald-600/10 text-emerald-500 border-emerald-600/20';
+  return 'bg-emerald-600 text-white';
 };
 
 export function calculateWearStats(
   datesWorn?: unknown,
   totalWornCount: number = 0,
-  lastWornDateStr?: string | null,
-  createdAtStr?: string | null
+  lastWornDateStr?: string | null
 ): WearStats {
   const nowMs = Date.now();
 
@@ -82,57 +81,44 @@ export function calculateWearStats(
     frequencyText = 'Never worn';
   } else if (totalWears === 1) {
     frequencyText = 'Worn once';
-  } else {
+  } else if (validTimes.length >= 2) {
     let avgGapDays = 0;
+    const tFirst = validTimes[0];
+    const tLast = validTimes[validTimes.length - 1];
+    const daysBetweenWears = (tLast - tFirst) / (24 * 60 * 60 * 1000);
+    const gaps = validTimes.length - 1;
 
-    if (validTimes.length >= 2) {
-      const tFirst = validTimes[0];
-      const tLast = validTimes[validTimes.length - 1];
-      const daysBetweenWears = (tLast - tFirst) / (24 * 60 * 60 * 1000);
-      const gaps = validTimes.length - 1;
+    const gapFromWears = gaps > 0 ? daysBetweenWears / gaps : 0;
+    const daysFromFirstToNow = Math.max(0, (nowMs - tFirst) / (24 * 60 * 60 * 1000));
+    const overallAvgSpan = daysFromFirstToNow / validTimes.length;
 
-      const gapFromWears = gaps > 0 ? daysBetweenWears / gaps : 0;
-      const daysFromFirstToNow = Math.max(0, (nowMs - tFirst) / (24 * 60 * 60 * 1000));
-      const overallAvgSpan = daysFromFirstToNow / validTimes.length;
-
-      if (gapFromWears <= 0) {
-        avgGapDays = overallAvgSpan;
-      } else if (daysFromFirstToNow > daysBetweenWears + gapFromWears) {
-        avgGapDays = Math.max(gapFromWears, overallAvgSpan);
-      } else {
-        avgGapDays = gapFromWears;
-      }
+    if (gapFromWears <= 0) {
+      avgGapDays = overallAvgSpan;
+    } else if (daysFromFirstToNow > daysBetweenWears + gapFromWears) {
+      avgGapDays = Math.max(gapFromWears, overallAvgSpan);
     } else {
-      const tCreated = createdAtStr ? new Date(createdAtStr).getTime() : NaN;
-      const tLast = normalizedLastWorn ? new Date(normalizedLastWorn).getTime() : NaN;
-      let tRef = NaN;
-      if (!isNaN(tCreated) && !isNaN(tLast)) tRef = Math.min(tCreated, tLast);
-      else if (!isNaN(tCreated)) tRef = tCreated;
-      else if (!isNaN(tLast)) tRef = tLast;
-
-      const daysSpan = !isNaN(tRef) ? Math.max(1, (nowMs - tRef) / (24 * 60 * 60 * 1000)) : 30;
-      avgGapDays = daysSpan / totalWears;
+      avgGapDays = gapFromWears;
     }
 
-    if (avgGapDays < 1.5 && totalWears >= 5) {
-      frequencyText = 'Every day (~30x / mo)';
+    if (avgGapDays < 1.5) {
+      frequencyText = 'Every day';
     } else if (avgGapDays < 25) {
-      const roundedDays = Math.round(avgGapDays);
-      const wearsPerMonthVal = 30 / Math.max(0.5, avgGapDays);
-      const wearsPerMonth = wearsPerMonthVal >= 10 ? Math.round(wearsPerMonthVal) : parseFloat(wearsPerMonthVal.toFixed(1));
-      if (roundedDays <= 1) {
-        frequencyText = `Every ~1 day (~${wearsPerMonth}x / mo)`;
+      const roundedDays = Math.max(1, Math.round(avgGapDays));
+      if (roundedDays === 1) {
+        frequencyText = 'Every ~1 day';
       } else {
-        frequencyText = `Every ~${roundedDays} days (~${wearsPerMonth}x / mo)`;
+        frequencyText = `Every ~${roundedDays} days`;
       }
     } else if (avgGapDays <= 45) {
-      frequencyText = '1x / month';
+      frequencyText = 'Every ~1 month';
     } else if (avgGapDays < 300) {
       const roundedMonths = Math.max(1, Math.round(avgGapDays / 30));
-      frequencyText = `Once every ~${roundedMonths} ${roundedMonths === 1 ? 'month' : 'months'}`;
+      frequencyText = `Every ~${roundedMonths} ${roundedMonths === 1 ? 'month' : 'months'}`;
     } else {
-      frequencyText = 'Rarely / Once in a blue moon';
+      frequencyText = 'Rarely';
     }
+  } else {
+    frequencyText = 'Dates not logged';
   }
 
   return {

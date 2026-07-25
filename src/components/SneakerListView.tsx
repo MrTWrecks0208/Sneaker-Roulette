@@ -103,7 +103,7 @@ export default function SneakerListView({
               <div className="hidden sm:flex items-center gap-1.5 text-xs text-zinc-400 bg-zinc-950/30 px-2.5 py-1.5 rounded-xl border border-zinc-800/40 whitespace-nowrap">
                 <Calendar className="w-3.5 h-3.5 text-zinc-500" />
                 <span className="text-zinc-500">Last Worn:</span>
-                <span className="text-zinc-300 font-semibold">{formatLastWorn(sneaker.last_worn)}</span>
+                <span className="text-zinc-300 font-semibold">{formatLastWorn(sneaker.last_worn, sneaker.worn)}</span>
               </div>
 
               {/* Wear Log Action */}
