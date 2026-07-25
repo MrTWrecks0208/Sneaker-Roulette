@@ -12,12 +12,11 @@ import FileUpload from './components/FileUpload';
 import SneakerPicker from './components/SneakerPicker';
 import SneakerListView from './components/SneakerListView';
 import SneakerTableView from './components/SneakerTableView';
-import FaqModal from './components/FaqModal';
 import {
   Plus, Upload, Search, Footprints,
   SlidersHorizontal, X, AlertCircle, CheckCircle2, Database, LogOut,
   ChevronDown, ChevronUp, Copy, Terminal, Check, LifeBuoy, Settings, ArrowUpDown,
-  LayoutGrid, List, Table, HelpCircle
+  LayoutGrid, List, Table
 } from 'lucide-react';
 
 function App() {
@@ -41,7 +40,6 @@ function App() {
   const [sneakerToDelete, setSneakerToDelete] = useState<Sneaker | null>(null);
   const [showImport, setShowImport] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
-  const [showFaq, setShowFaq] = useState(false);
   const [showSqlGuide, setShowSqlGuide] = useState(false);
   const [copiedSql, setCopiedSql] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -272,7 +270,6 @@ function App() {
                 <Upload className="w-4 h-4" />
                 Import
               </button>
-
               <button
                 onClick={() => setShowForm(true)}
                 className="flex items-center gap-2 px-4 pt-1.5 pb-2 bg-rose-600/10 text-rose-400 text-sm font-medium rounded-2xl border border-rose-700/20 hover:bg-rose-600/20 transition-colors cursor-pointer"
@@ -307,22 +304,16 @@ function App() {
                   </button>
 
                   {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-52 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl py-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-100">
-                      <div className="px-4 py-2 border-b border-zinc-800/80">
-                        <p className="text-xs font-semibold text-white truncate">
-                          {user.user_metadata?.username || user.user_metadata?.full_name || 'Account'}
-                        </p>
-                        <p className="text-[10px] text-zinc-400 truncate">{user.email}</p>
-                      </div>
+                    <div className="absolute right-0 mt-2 w-48 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl py-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-100">
                       <button
                         onClick={() => {
                           setShowUserMenu(false);
-                          setShowFaq(true);
+                          setShowSettingsModal(true);
                         }}
-                        className="w-full px-4 py-2.5 text-left text-xs font-medium text-zinc-200 hover:text-white hover:bg-zinc-800/80 transition-colors flex items-center gap-2.5 cursor-pointer focus:outline-none"
+                        className="w-full px-4 py-2.5 text-left text-xs font-medium text-zinc-300 hover:text-white hover:bg-zinc-800/80 transition-colors flex items-center gap-2 cursor-pointer focus:outline-none"
                       >
-                        <HelpCircle className="w-4 h-4 text-blue-400" />
-                        <span>FAQ Page</span>
+                        <Settings className="w-4 h-4 text-zinc-400" />
+                        Settings
                       </button>
                       <div className="h-px bg-zinc-800/60 my-1" />
                       <button
@@ -330,10 +321,10 @@ function App() {
                           setShowUserMenu(false);
                           signOut();
                         }}
-                        className="w-full px-4 py-2.5 text-left text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors flex items-center gap-2.5 cursor-pointer focus:outline-none"
+                        className="w-full px-4 py-2.5 text-left text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors flex items-center gap-2 cursor-pointer focus:outline-none"
                       >
                         <LogOut className="w-4 h-4" />
-                        <span>Sign Out</span>
+                        Sign Out
                       </button>
                     </div>
                   )}
@@ -766,7 +757,7 @@ CREATE POLICY "Users can delete own sneakers"
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={() => setShowForm(true)}
-                  className="px-5 py-2.5 bg-rose-600 text-white text-sm font-medium rounded-xl hover:bg-rose-500 transition-colors"
+                  className="px-5 py-2.5 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-500 transition-colors"
                 >
                   Add Sneaker
                 </button>
@@ -826,7 +817,6 @@ CREATE POLICY "Users can delete own sneakers"
         <SneakerForm
           onSave={handleSave}
           onCancel={() => { setShowForm(false); setEditSneaker(null); }}
-          onOpenFaq={() => setShowFaq(true)}
         />
       )}
 
@@ -835,7 +825,6 @@ CREATE POLICY "Users can delete own sneakers"
           sneaker={editSneaker}
           onSave={handleSave}
           onCancel={() => setEditSneaker(null)}
-          onOpenFaq={() => setShowFaq(true)}
         />
       )}
 
@@ -947,9 +936,6 @@ CREATE POLICY "Users can delete own sneakers"
           </div>
         </div>
       )}
-
-      {/* Faq Modal */}
-      <FaqModal isOpen={showFaq} onClose={() => setShowFaq(false)} />
 
       {/* Back to Top Button */}
       <AnimatePresence>

@@ -2,7 +2,6 @@ import { Sneaker } from '../lib/supabase';
 import { Trash2, Edit3, Footprints, Plus } from 'lucide-react';
 import { COLOR_HEX } from '../lib/colors';
 import { BrandLogo } from './BrandLogo';
-import { formatLastWorn } from '../lib/utils';
 
 interface SneakerTableViewProps {
   sneakers: Sneaker[];
@@ -65,18 +64,11 @@ export default function SneakerTableView({
 
                 {/* 3. Height */}
                 <td className="py-3 px-5 whitespace-nowrap">
-                  {sneaker.height ? (() => {
-                    const hLower = sneaker.height.toLowerCase();
-                    let cls = 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
-                    if (hLower.includes('low')) cls = 'bg-blue-500/15 text-blue-400 border-blue-500/30';
-                    else if (hLower.includes('mid')) cls = 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30';
-                    else if (hLower.includes('high')) cls = 'bg-red-500/15 text-red-400 border-red-500/30';
-                    return (
-                      <span className={`px-2 py-0.5 border rounded text-[10px] font-semibold uppercase tracking-wider ${cls}`}>
-                        {sneaker.height}
-                      </span>
-                    );
-                  })() : (
+                  {sneaker.height ? (
+                    <span className="px-2 py-0.5 bg-zinc-800/80 border border-zinc-750 rounded text-[10px] text-zinc-300 font-semibold uppercase tracking-wider">
+                      {sneaker.height}
+                    </span>
+                  ) : (
                     <span className="text-zinc-600 text-xs">-</span>
                   )}
                 </td>
@@ -131,7 +123,7 @@ export default function SneakerTableView({
                 {/* Last Worn */}
                 <td className="py-3 px-5 text-center whitespace-nowrap text-xs text-zinc-400">
                   <span className="bg-zinc-900 px-2 py-1 rounded border border-zinc-800 text-zinc-300 font-semibold">
-                    {formatLastWorn(sneaker.last_worn, sneaker.worn)}
+                    {formatLastWorn(sneaker.last_worn)}
                   </span>
                 </td>
 
@@ -163,3 +155,33 @@ export default function SneakerTableView({
   );
 }
 
+const formatLastWorn = (dateString?: string | null) => {
+  if (!dateString) return 'Never';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Never';
+    const now = new Date();
+    
+    // Check if it's today
+    if (date.toDateString() === now.toDateString()) {
+      return 'Today';
+    }
+    
+    // Check if it's yesterday
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    if (date.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    }
+    
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays < 7) {
+      return `${diffDays} days ago`;
+    }
+    
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch {
+    return 'Never';
+  }
+};

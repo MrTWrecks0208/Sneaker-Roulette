@@ -19,9 +19,6 @@ export interface Sneaker {
   image_url: string;
   last_worn?: string | null;
   user_id?: string;
-  condition?: string | null;
-  gallery_images?: string[] | null;
-  dates_worn?: string[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -42,14 +39,14 @@ export const BRAND_CATEGORIES = [
   {
     category: 'DESIGNER/LUXURY',
     brands: [
-      'A Bathing Ape', 'Alexander McQueen', 'Alohas', 'Amiri', 'Ann Demeulemeester', 'Autry', 'Axel Arigato', 'Balenciaga',
-      'Balmain', 'Bottega Veneta', 'Burberry', 'Brooks', 'Christian Louboutin', 'Clae', 'Clearweather',
-      'Coach', 'Cole Haan', 'Diadora', 'Dior', 'Dries Van Noten', 'Eytys', 'Fear of God', 'Fendi',
+      'A Bathing Ape', 'Alexander McQueen', 'Alohas', 'Amiri', 'Ann Demeulemeester', 'AUTRY', 'Axel Arigato', 'Balenciaga',
+      'Balmain', 'Bottega Veneta', 'Burberry', 'Brooks', 'Christian Louboutin',
+      'Coach', 'Cole Haan', 'Diadora', 'Dior', 'Dries Van Noten', 'Fear of God', 'Fendi',
       'Ferragamo', 'Givenchy', 'Golden Goose', 'Gucci', 'Hermés', 'Jacquemus',
       'Jimmy Choo', 'Kate Spade', 'Kenneth Cole', 'Lanvin', 'Louis Vuitton',
-      'Maison Margiela', 'Maison Mihara Yasuhiro', 'Michael Kors', 'Moncler', 'Native', 'No One', 'Off-White', 'Onitsuka Tiger',
-      'Other', 'Ouder', 'Prada', 'Raf Simons', 'Rick Owens', 'Stepney Workers Club', 'Tom Ford', 'Tory Burch',
-      'Versace','Saint Laurent (YSL)',
+      'Maison Margiela', 'Maison Mihara Yasuhiro', 'Michael Kors', 'Moncler', 'Off-White', 'Onitsuka Tiger',
+      'Other', 'Prada', 'Raf Simons', 'Rick Owens', 'Tom Ford', 'Tory Burch',
+      'Versace', 'Saint Laurent (YSL)',
     ],
   },
   {
@@ -64,7 +61,7 @@ export const BRAND_CATEGORIES = [
     brands: [
       'Allbirds', 'ASICS', 'Bata', 'Birkenstock', 'Cariuma',
       'Common Projects', 'Converse', 'Crocs', 'ECCO', 'Filling Pieces', 'K-Swiss',
-      'KangaROOS', 'Keds', 'Moonstar', 'New Balance', 'Nothing New', 'Oofos',
+      'KangaROOS', 'Keds', 'Moonstar', 'New Balance', 'Nothing New', 'OOfos',
       'Puma', "Rothy's", 'Saucony', 'SeaVees', 'Skechers', "Sperry's",
       'Thousand Fell', 'Toms', 'Tretorn', 'Zegna',
     ],
@@ -83,8 +80,6 @@ export const BRAND_CATEGORIES = [
 export const BRANDS = BRAND_CATEGORIES.flatMap(c => c.brands);
 
 export const HEIGHTS = ['Low', 'Mid', 'High'] as const;
-
-export const CONDITIONS = ['DS', 'VNDS', 'Excellent', 'Good', 'Fair', 'Beat'] as const;
 
 export const STYLES = [
   'Athletic', 'Basketball', 'Boat', 'Boot', 'Canvas', 'Casual', 
