@@ -678,16 +678,40 @@ export default function SneakerForm({ sneaker, onSave, onCancel, onOpenFaq }: Sn
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Height</label>
               <div className="flex gap-2">
-                {HEIGHTS.map(h => (
-                  <button
-                    key={h}
-                    type="button"
-                    onClick={() => handleHeightEdit(h)}
-                    className={'flex-1 py-2 rounded-lg text-sm font-medium transition-colors border ' + (height === h ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/40' : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-zinc-500')}
-                      >
-                    {h}
-                  </button>
-                ))}
+                {HEIGHTS.map(h => {
+                  const isSelected = height === h;
+                  let colorClasses = '';
+                  const hLower = h.toLowerCase();
+
+                  if (hLower.includes('low')) {
+                    colorClasses = isSelected
+                      ? 'bg-blue-600/25 text-blue-400 border-blue-500/60 shadow-xs'
+                      : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-blue-500/40 hover:text-blue-300';
+                  } else if (hLower.includes('mid')) {
+                    colorClasses = isSelected
+                      ? 'bg-yellow-600/25 text-yellow-400 border-yellow-500/60 shadow-xs'
+                      : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-yellow-500/40 hover:text-yellow-300';
+                  } else if (hLower.includes('high')) {
+                    colorClasses = isSelected
+                      ? 'bg-red-600/25 text-red-400 border-red-500/60 shadow-xs'
+                      : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-red-500/40 hover:text-red-300';
+                  } else {
+                    colorClasses = isSelected
+                      ? 'bg-emerald-600/25 text-emerald-400 border-emerald-500/60 shadow-xs'
+                      : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-zinc-500';
+                  }
+
+                  return (
+                    <button
+                      key={h}
+                      type="button"
+                      onClick={() => handleHeightEdit(h)}
+                      className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all border ${colorClasses}`}
+                    >
+                      {h}
+                    </button>
+                  );
+                })}
               </div>
             </div>
             {/* Colorway */}
