@@ -202,7 +202,7 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
               {/* Multi-Photo Carousel Controls on Front if >1 photo */}
               {gallery.length > 1 && (
                 <div 
-                  className="absolute bottom-2 left-2 flex items-center gap-1 z-20"
+                  className="absolute bottom-2 right-2 flex items-center gap-1 z-20"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <button
@@ -227,8 +227,15 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
                 </div>
               )}
 
-              {/* Flip Hint Overlay on Bottom Right */}
-              <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-zinc-900/80 text-white rounded-md text-[9px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 shadow-sm">
+              {/* Worn Count Badge on Bottom Left of Image Container */}
+              <div className="absolute bottom-2 left-2 z-10 flex items-center gap-1">
+                <div className="px-2 py-0.5 bg-black/50 text-white rounded-md text-[10px] font-bold shadow-sm backdrop-blur-xs border border-white/10">
+                  <span>worn {sneaker.worn || 0} {(sneaker.worn || 0) === 1 ? 'x' : 'x'}</span>
+                </div>
+              </div>
+
+              {/* Flip Hint Overlay on Top Left on Hover */}
+              <div className="absolute top-2 left-2 z-10 px-2 py-0.5 bg-zinc-900/80 text-white rounded-md text-[9px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 shadow-sm border border-zinc-700/40 pointer-events-none">
                 <Activity className="w-2.5 h-2.5 text-blue-400" />
                 <span>Details &amp; Actions</span>
               </div>
@@ -241,11 +248,24 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
                   {sneaker.name || 'Unnamed Sneaker'}
                 </h3>
 
-                {sneaker.style.length > 0 && (
-                  <p className="text-xs text-gray-600 mt-0.5">
-                    {sneaker.style.join(', ')}
-                  </p>
-                )}
+                {/* Styles on Left, Height Pill on Right */}
+                <div className="flex items-center justify-between gap-2 mt-1">
+                  <div className="flex-1 min-w-0">
+                    {sneaker.style && sneaker.style.length > 0 ? (
+                      <p className="text-xs text-gray-600 truncate" title={sneaker.style.join(', ')}>
+                        {sneaker.style.join(', ')}
+                      </p>
+                    ) : (
+                      <span className="text-xs text-gray-400 italic">No style specified</span>
+                    )}
+                  </div>
+
+                  {sneaker.height && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs shrink-0">
+                      {sneaker.height.toLowerCase().includes('top') ? sneaker.height : `${sneaker.height} Top`}
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div>
@@ -480,15 +500,14 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
                       <span>Delete</span>
                     </button>
                   </div>
-
-                  {/* Worn Badge */}
-                  {sneaker.worn > 0 && (
-                    <div className="absolute bottom-4 left-4 px-3 py-1 bg-black/80 backdrop-blur-md rounded-lg text-xs text-white font-semibold flex items-center gap-1">
-                      <Footprints className="w-3.5 h-3.5 text-blue-400" />
-                      <span>Worn {sneaker.worn} times</span>
-                    </div>
-                  )}
-                </div>
+       
+       {/* Worn count badge */}
+        {sneaker.worn > 0 && (
+          <div className="absolute bottom-3 left-3 px-2.5 pt-0.5 pb-1.5 bg-black/70 backdrop-blur-sm rounded-md text-xs text-white font-medium">
+            Worn {sneaker.worn}x
+          </div>
+        )}
+      </div>
 
                 {/* Content Section */}
                 <div className="p-5 flex-1 flex flex-col justify-between bg-white">
