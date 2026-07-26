@@ -1,6 +1,6 @@
 import multicolorImg from '../assets/images/multicolor_swatch_1783883698636.jpg';
 import iridescentImg from '../assets/images/iridescent.png';
-import glitterImg from '../assets/images/glitter_swatch_1785022823245.jpg';
+import glitterImg from '../assets/images/glitter.png';
 
 export const COLOR_HEX: Record<string, string> = {
   'White': '#ffffff', 'Ivory': '#fffff0', 'Cream': '#FDFBD4', 'Black': '#000000', 'Gunmetal': '#2f4f4f',

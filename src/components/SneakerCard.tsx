@@ -25,21 +25,21 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
         )}
 
         {/* Brand Logo in Upper Right Corner */}
-        <div className="absolute z-10 top-[18px] right-[24px] transition-opacity duration-200 pointer-events-none">
+        <div className="absolute z-10 top-[18px] right-[24px] transition-opacity duration-200 pointer-events-none group-hover:opacity-0">
           <BrandLogo brand={sneaker.brand} sneakerName={sneaker.name} />
         </div>
 
         {/* Hover action buttons */}
-        <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <div className="absolute z-20 top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <button
             onClick={() => onEdit(sneaker)}
-            className="p-1.5 bg-white/90 backdrop-blur-sm rounded-lg border border-gray-200 text-gray-700 hover:text-gray-900 hover:bg-white transition-colors"
+            className="p-1.5 bg-white/90 backdrop-blur-sm rounded-lg border border-gray-200 text-gray-700 hover:text-gray-900 hover:bg-white shadow-sm transition-colors"
           >
             <Edit3 className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => onDelete(sneaker.id)}
-            className="p-1.5 bg-white/90 backdrop-blur-sm rounded-lg border border-gray-200 text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+            className="p-1.5 bg-white/90 backdrop-blur-sm rounded-lg border border-gray-200 text-red-400 hover:text-red-600 hover:bg-red-50 shadow-sm transition-colors"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>

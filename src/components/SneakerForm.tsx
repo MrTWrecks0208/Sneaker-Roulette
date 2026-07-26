@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Sneaker, SneakerInsert, BRANDS, BRAND_CATEGORIES, HEIGHTS, STYLES, COLORS, buildName } from '../lib/supabase';
-import { X, Upload, Loader2, Camera, Sparkles } from 'lucide-react';
+import { X, Upload, Loader2, Camera, Sparkles, ChevronDown, Search, Check } from 'lucide-react';
 import multicolorImg from '../assets/images/multicolor_swatch_1783883698636.jpg';
 import iridescentImg from '../assets/images/iridescent.png';
 
@@ -259,6 +259,124 @@ function parseSneakerName(name: string): ParsedName {
   };
 }
 
+// ─── Custom Brand Combobox Component ──────────────────────────────────────────
+
+function BrandSelect({ value, onChange }: { value: string; onChange: (b: string) => void }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const searchLower = search.trim().toLowerCase();
+
+  const filteredCategories = BRAND_CATEGORIES.map(group => ({
+    category: group.category,
+    brands: group.brands.filter(b => b.toLowerCase().includes(searchLower)),
+  })).filter(group => group.brands.length > 0);
+
+  return (
+    <div ref={containerRef} className="relative w-full">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-left text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors flex items-center justify-between"
+      >
+        <span className={value ? 'text-zinc-200 font-medium' : 'text-zinc-500'}>
+          {value || 'Select brand'}
+        </span>
+        <ChevronDown className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-0 right-0 top-full mt-1.5 z-50 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-64 sm:max-h-72">
+          <div className="p-2 border-b border-zinc-800 bg-zinc-950/90 backdrop-blur-sm sticky top-0 z-10 flex items-center gap-2">
+            <Search className="w-4 h-4 text-zinc-400 shrink-0 ml-1" />
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search brands..."
+              autoFocus
+              className="w-full bg-transparent text-sm text-zinc-200 placeholder-zinc-500 focus:outline-none py-1"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                className="p-1 text-zinc-500 hover:text-zinc-300"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          <div className="overflow-y-auto p-1.5 space-y-3">
+            {filteredCategories.length === 0 ? (
+              <div className="px-3 py-4 text-xs text-center text-zinc-400">
+                No brand found matching "{search}"
+                {search.trim() && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onChange(search.trim());
+                      setIsOpen(false);
+                      setSearch('');
+                    }}
+                    className="block mx-auto mt-2 px-3 py-1 bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 rounded-lg text-xs font-semibold transition-colors"
+                  >
+                    Use "{search.trim()}" as brand
+                  </button>
+                )}
+              </div>
+            ) : (
+              filteredCategories.map(group => (
+                <div key={group.category}>
+                  <div className="px-2 py-1 text-[10px] font-bold text-zinc-400 uppercase tracking-wider bg-zinc-950/60 rounded mb-1">
+                    {group.category}
+                  </div>
+                  <div className="space-y-0.5">
+                    {group.brands.map(b => {
+                      const isSelected = value === b;
+                      return (
+                        <button
+                          key={b}
+                          type="button"
+                          onClick={() => {
+                            onChange(b);
+                            setIsOpen(false);
+                            setSearch('');
+                          }}
+                          className={`w-full text-left px-2.5 py-1.5 rounded-lg text-sm transition-colors flex items-center justify-between ${
+                            isSelected
+                              ? 'bg-blue-600/20 text-blue-400 font-medium'
+                              : 'text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100'
+                          }`}
+                        >
+                          <span>{b}</span>
+                          {isSelected && <Check className="w-4 h-4 text-blue-400 shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Component ─────────────────────────────────────────────────────────────────
 
 export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormProps) {
@@ -487,22 +605,10 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
           {/* Brand */}
           <div>
             <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Brand</label>
-            <select
+            <BrandSelect
               value={brand}
-              onChange={e => handleFieldEdit(setBrand)(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors"
-            >
-              <option value="">Select brand</option>
-              {BRAND_CATEGORIES.map(group => (
-                <optgroup key={group.category} label={group.category} className="bg-zinc-900 text-zinc-400 font-semibold tracking-wider">
-                  {group.brands.map(b => (
-                    <option key={b} value={b} className="bg-zinc-900 text-zinc-200 font-normal">
-                      {b}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
+              onChange={handleFieldEdit(setBrand)}
+            />
           </div>
 
           {/* Model */}
