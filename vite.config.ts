@@ -12,6 +12,6 @@ export default defineConfig({
     allowedHosts: 'all',
   },
   optimizeDeps: {
-    exclude: ['lucide-react']
+    include: ['lucide-react']
   },
 });

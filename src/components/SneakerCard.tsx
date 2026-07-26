@@ -78,19 +78,19 @@ function CardInner({
       {/* ─── FRONT FACE ─── */}
       <div className={`absolute inset-0 w-full h-full bg-white overflow-hidden [backface-visibility:hidden] flex flex-col justify-between border border-gray-100 ${isScaled ? 'rounded-2xl' : 'rounded-xl'}`}>
         {/* Image Container */}
-        <div className={`relative bg-gradient-to-br from-gray-50 to-gray-100 aspect-square flex items-center justify-center overflow-hidden ${isScaled ? 'p-5' : 'p-4'}`}>
+        <div className={`relative bg-gradient-to-br from-gray-50 to-gray-100 aspect-square flex items-center justify-center overflow-hidden ${isScaled ? 'p-8' : 'p-6'}`}>
           {sneaker.image_url ? (
             <img
               src={sneaker.image_url}
               alt={sneaker.name}
-              className={`w-full h-full object-contain transition-transform duration-300 group-hover:scale-105 ${isScaled ? 'p-8' : 'p-6'}`}
+              className={`w-full h-full object-contain transition-transform scale-105 duration-300 ${isScaled ? 'p-10' : 'p-8'}`}
             />
           ) : (
             <Footprints className={isScaled ? 'w-16 h-16 text-gray-300' : 'w-12 h-12 text-gray-300'} />
           )}
 
           {/* Brand Logo in Upper Right Corner */}
-          <div className={`absolute z-10 transition-opacity duration-200 pointer-events-none group-hover:opacity-0 ${isScaled ? 'top-[20px] right-[30px] scale-100' : 'top-[18px] right-[24px]'}`}>
+          <div className={`absolute z-10 transition-opacity duration-200 pointer-events-none group-hover:opacity-0 ${isScaled ? 'top-[14px] right-[28px] scale-95' : 'top-[12px] right-[26px] scale-90'}`}>
             <BrandLogo brand={sneaker.brand} sneakerName={sneaker.name} />
           </div>
 
@@ -126,6 +126,13 @@ function CardInner({
               Worn {sneaker.worn}x
             </div>
           )}
+
+          {/* Height badge */}
+          {sneaker.height && (
+            <div className={`absolute bottom-2 right-2 px-2 pt-0.5 pb-1 bg-emerald-600/50 backdrop-blur-sm rounded-md text-white font-medium ${isScaled ? 'text-xs px-2.5 py-1' : 'text-[10px]'}`}>
+              {sneaker.height}
+            </div>
+          )}
         </div>
 
         {/* Content Container */}
@@ -134,10 +141,18 @@ function CardInner({
             {sneaker.name || 'Unnamed Sneaker'}
           </h3>
 
+          {/* Style pills */}
           {sneaker.style.length > 0 && (
-            <p className={`text-gray-600 truncate ${isScaled ? 'text-xs -mt-0.5' : 'text-xs -mt-1'}`}>
-              {sneaker.style.join(', ')}
-            </p>
+            <div className="flex flex-wrap gap-1">
+              {sneaker.style.map((st) => (
+                <span
+                  key={st}
+                  className={`px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-md font-medium ${isScaled ? 'text-xs' : 'text-[10px]'}`}
+                >
+                  {st}
+                </span>
+              ))}
+            </div>
           )}
 
           {/* Color swatches */}
