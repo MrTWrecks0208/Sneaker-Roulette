@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Sneaker, SneakerInsert, BRANDS, BRAND_CATEGORIES, HEIGHTS, STYLES, COLORS, buildName } from '../lib/supabase';
-import { X, Upload, Loader2, Camera, Sparkles, ChevronDown, Search, Check } from 'lucide-react';
+import { Sneaker, SneakerInsert, BRANDS, BRAND_CATEGORIES, HEIGHTS, STYLES, COLORS, CONDITION_OPTIONS, buildName } from '../lib/supabase';
+import { X, Upload, Loader2, Camera, Sparkles, ChevronDown, Search, Check, Star } from 'lucide-react';
 import multicolorImg from '../assets/images/multicolor_swatch_1783883698636.jpg';
 import iridescentImg from '../assets/images/iridescent.png';
 
@@ -54,6 +54,7 @@ const COLOR_GLOW: Record<string, { bg: string; text: string; border: string; sha
   'Green Cyan':       { bg: 'rgba(124,206,175,.80)', text: '#000000', border: 'rgba(124,206,175,.80)' },
   'Carolina Blue':    { bg: 'rgba(114,172,214,.80)', text: '#000000', border: 'rgba(114,172,214,.80)' },
   'Platinum':         { bg: 'rgba(217,217,217,.80)', text: '#000000', border: 'rgba(217,217,217,.80)' },
+  'Glitter':          { bg: 'rgba(230,232,250,.80)', text: '#000000', border: 'rgba(230,232,250,.80)' },
 };
 
 interface SneakerFormProps {
@@ -388,9 +389,20 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
   const [colorway, setColorway] = useState(sneaker?.colorway || '');
   const [style, setStyle] = useState<string[]>(sneaker?.style || []);
   const [color, setColor] = useState<string[]>(sneaker?.color || []);
+  const [condition, setCondition] = useState<string>(() => {
+    if (sneaker?.condition && CONDITION_OPTIONS.includes(sneaker.condition)) {
+      return sneaker.condition;
+    }
+    return 'Deadstock (DS)';
+  });
   const [worn, setWorn] = useState(sneaker?.worn || 0);
   const [lastWornAt, setLastWornAt] = useState<string>(sneaker?.last_worn || '');
   const [imageUrl, setImageUrl] = useState(sneaker?.image_url || '');
+  const [images, setImages] = useState<string[]>(() => {
+    if (sneaker?.images && sneaker.images.length > 0) return sneaker.images;
+    if (sneaker?.image_url) return [sneaker.image_url];
+    return [];
+  });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [lookingUp, setLookingUp] = useState(false);
@@ -411,9 +423,14 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
       setColorway(sneaker.colorway);
       setStyle(sneaker.style);
       setColor(sneaker.color);
+      if (sneaker.condition) {
+        setCondition(sneaker.condition);
+      }
       setWorn(sneaker.worn);
       setLastWornAt(sneaker.last_worn || '');
-      setImageUrl(sneaker.image_url);
+      const imgs = sneaker.images && sneaker.images.length > 0 ? sneaker.images : (sneaker.image_url ? [sneaker.image_url] : []);
+      setImages(imgs);
+      setImageUrl(sneaker.image_url || imgs[0] || '');
     }
   }, [sneaker]);
 
@@ -447,24 +464,45 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
     setHeight(value);
   };
 
-  const handleImageUpload = async (file: File) => {
+  const handleImageUploads = async (fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0) return;
     setUploading(true);
     try {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const dataUrl = e.target?.result as string;
-        setImageUrl(dataUrl);
-        setUploading(false);
-      };
-      reader.onerror = () => {
-        console.error('File read error');
-        setUploading(false);
-      };
-      reader.readAsDataURL(file);
+      const newUrls: string[] = [];
+      for (let i = 0; i < fileList.length; i++) {
+        const file = fileList[i];
+        const dataUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target?.result as string);
+          reader.readAsDataURL(file);
+        });
+        newUrls.push(dataUrl);
+      }
+      setImages(prev => {
+        const updated = [...prev, ...newUrls];
+        if (!imageUrl && updated.length > 0) {
+          setImageUrl(updated[0]);
+        }
+        return updated;
+      });
     } catch (err) {
       console.error('Upload error:', err);
+    } finally {
       setUploading(false);
     }
+  };
+
+  const handleRemoveImage = (indexToRemove: number) => {
+    const removedUrl = images[indexToRemove];
+    const updated = images.filter((_, idx) => idx !== indexToRemove);
+    setImages(updated);
+    if (removedUrl === imageUrl) {
+      setImageUrl(updated[0] || '');
+    }
+  };
+
+  const handleSetPrimaryImage = (url: string) => {
+    setImageUrl(url);
   };
 
   const handleLookup = async () => {
@@ -512,6 +550,8 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
     e.preventDefault();
     setSaving(true);
     const finalName = autoName || nameInput;
+    const primaryImage = imageUrl || images[0] || '';
+    const finalImages = images.length > 0 ? images : (primaryImage ? [primaryImage] : []);
     await onSave({
       name: finalName,
       brand,
@@ -521,9 +561,12 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
       height: height || 'Low',
       style,
       color,
+      condition,
       worn,
       last_worn: lastWornAt ? new Date(lastWornAt).toISOString() : null,
-      image_url: imageUrl,
+      image_url: primaryImage,
+      images: finalImages,
+      dates_worn: sneaker?.dates_worn || (lastWornAt ? [new Date(lastWornAt).toISOString()] : []),
     });
     setSaving(false);
   };
@@ -620,23 +663,38 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
                 value={model}
                 onChange={e => handleFieldEdit(setModel)(e.target.value)}
                 placeholder="e.g. Air Max 90"
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-2 text-sm text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
             {/* Height */}
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Height</label>
               <div className="flex gap-2">
-                {HEIGHTS.map(h => (
-                  <button
-                    key={h}
-                    type="button"
-                    onClick={() => handleHeightEdit(h)}
-                    className={'flex-1 py-2 rounded-lg text-sm font-medium transition-colors border ' + (height === h ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/40' : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-zinc-500')}
-                      >
-                    {h}
-                  </button>
-                ))}
+                {HEIGHTS.map(h => {
+                  const isSelected = height === h;
+                  const lower = h.toLowerCase();
+                  let selectedClasses = 'bg-emerald-600/30 text-emerald-300 border-emerald-500/50';
+                  if (lower.includes('low')) {
+                    selectedClasses = 'bg-sky-600/30 text-sky-300 border-sky-500/50';
+                  } else if (lower.includes('mid')) {
+                    selectedClasses = 'bg-amber-600/30 text-amber-300 border-amber-500/50';
+                  } else if (lower.includes('high')) {
+                    selectedClasses = 'bg-rose-600/30 text-rose-300 border-rose-500/50';
+                  }
+
+                  return (
+                    <button
+                      key={h}
+                      type="button"
+                      onClick={() => handleHeightEdit(h)}
+                      className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
+                        isSelected ? selectedClasses : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-zinc-500'
+                      }`}
+                    >
+                      {h}
+                    </button>
+                  );
+                })}
               </div>
             </div>
             {/* Colorway */}
@@ -713,8 +771,25 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
             </div>
           </div>
 
-          {/* Worn and Last Worn Date */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Condition, Times Worn, and Last Worn Date */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Condition</label>
+              <select
+                value={condition}
+                onChange={e => {
+                  setUserEditedFields(true);
+                  setCondition(e.target.value);
+                }}
+                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors cursor-pointer"
+              >
+                {CONDITION_OPTIONS.map(cond => (
+                  <option key={cond} value={cond} className="bg-zinc-900 text-zinc-100">
+                    {cond}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Times Worn</label>
               <input
@@ -739,23 +814,51 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
             </div>
           </div>
 
-          {/* Image Upload */}
+          {/* Image Gallery & Upload */}
           <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Image</label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Image Gallery</label>
+              <span className="text-[10px] text-zinc-400">Click star to set main card image</span>
+            </div>
             <div className="flex flex-col gap-3">
-              {imageUrl && (
-                <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-zinc-700">
-                  <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => setImageUrl('')}
-                    className="absolute top-1 right-1 p-1 bg-zinc-900/90 rounded text-zinc-400 hover:text-red-400"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
+              {/* Image Thumbnails Grid */}
+              {images.length > 0 && (
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 bg-zinc-950 p-3 rounded-xl border border-zinc-800">
+                  {images.map((img, idx) => {
+                    const isPrimary = img === imageUrl || (!imageUrl && idx === 0);
+                    return (
+                      <div key={`${img.slice(0, 30)}-${idx}`} className={`relative group aspect-square rounded-lg overflow-hidden border bg-zinc-900 ${isPrimary ? 'border-amber-500 ring-1 ring-amber-500/50' : 'border-zinc-700'}`}>
+                        <img src={img} alt={`Upload ${idx + 1}`} className="w-full h-full object-cover" />
+                        {/* Primary Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleSetPrimaryImage(img)}
+                          className={`absolute top-1 left-1 p-1 rounded-md transition-all ${isPrimary ? 'bg-amber-500 text-black shadow-md' : 'bg-black/60 text-zinc-400 hover:text-amber-400 hover:bg-black/80'}`}
+                          title={isPrimary ? 'Primary Card Image' : 'Set as Primary Image'}
+                        >
+                          <Star className={`w-3.5 h-3.5 ${isPrimary ? 'fill-black' : ''}`} />
+                        </button>
+                        {/* Remove Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(idx)}
+                          className="absolute top-1 right-1 p-1 bg-black/60 text-zinc-400 hover:text-red-400 hover:bg-black/90 rounded-md transition-colors"
+                          title="Remove image"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                        {isPrimary && (
+                          <div className="absolute bottom-0 inset-x-0 bg-amber-500/90 text-black text-[9px] font-extrabold text-center py-0.5 uppercase tracking-wider">
+                            Main Image
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
-              <div className="flex gap-2">
+
+              <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -763,7 +866,7 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
                   className="px-4 py-2 bg-zinc-800 text-zinc-300 text-sm rounded-lg border border-zinc-700 hover:bg-zinc-700 transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-40"
                 >
                   {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                  Upload Image
+                  Upload Images
                 </button>
                 <button
                   type="button"
@@ -779,7 +882,8 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
-                onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+                multiple
+                onChange={e => handleImageUploads(e.target.files)}
                 className="hidden"
               />
               <input
@@ -787,7 +891,7 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
                 type="file"
                 accept="image/*"
                 capture="environment"
-                onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+                onChange={e => handleImageUploads(e.target.files)}
                 className="hidden"
               />
             </div>

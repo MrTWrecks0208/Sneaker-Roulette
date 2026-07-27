@@ -15,9 +15,17 @@ const DEFAULT_SNEAKERS: Sneaker[] = [
     color: ['White', 'Red', 'Black'],
     worn: 12,
     image_url: '/icons/sportshoe.png',
+    images: ['/icons/sportshoe.png', '/icons/sportshoe-white.png'],
+    dates_worn: [
+      new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(),
+      new Date(Date.now() - 14 * 24 * 3600 * 1000).toISOString(),
+      new Date(Date.now() - 28 * 24 * 3600 * 1000).toISOString(),
+      new Date(Date.now() - 42 * 24 * 3600 * 1000).toISOString(),
+      new Date(Date.now() - 56 * 24 * 3600 * 1000).toISOString(),
+    ],
     last_worn: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(),
-    created_at: new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 60 * 24 * 3600 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(),
   },
   {
     id: '2',
@@ -31,9 +39,15 @@ const DEFAULT_SNEAKERS: Sneaker[] = [
     color: ['White', 'Black'],
     worn: 5,
     image_url: '/icons/sportshoe-white.png',
+    images: ['/icons/sportshoe-white.png', '/icons/sportshoe.png'],
+    dates_worn: [
+      new Date(Date.now() - 10 * 24 * 3600 * 1000).toISOString(),
+      new Date(Date.now() - 25 * 24 * 3600 * 1000).toISOString(),
+      new Date(Date.now() - 40 * 24 * 3600 * 1000).toISOString(),
+    ],
     last_worn: new Date(Date.now() - 10 * 24 * 3600 * 1000).toISOString(),
-    created_at: new Date(Date.now() - 15 * 24 * 3600 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 15 * 24 * 3600 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 45 * 24 * 3600 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 10 * 24 * 3600 * 1000).toISOString(),
   },
   {
     id: '3',
@@ -47,9 +61,17 @@ const DEFAULT_SNEAKERS: Sneaker[] = [
     color: ['Black', 'White'],
     worn: 24,
     image_url: '/icons/sportshoe.png',
+    images: ['/icons/sportshoe.png'],
+    dates_worn: [
+      new Date(Date.now() - 1 * 24 * 3600 * 1000).toISOString(),
+      new Date(Date.now() - 4 * 24 * 3600 * 1000).toISOString(),
+      new Date(Date.now() - 8 * 24 * 3600 * 1000).toISOString(),
+      new Date(Date.now() - 12 * 24 * 3600 * 1000).toISOString(),
+      new Date(Date.now() - 16 * 24 * 3600 * 1000).toISOString(),
+    ],
     last_worn: new Date(Date.now() - 1 * 24 * 3600 * 1000).toISOString(),
-    created_at: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 1 * 24 * 3600 * 1000).toISOString(),
   },
 ];
 
@@ -333,9 +355,13 @@ export function useSneakers(userId?: string) {
   const incrementWorn = async (id: string) => {
     const sneaker = sneakers.find(s => s.id === id);
     if (!sneaker) return null;
+    const nowIso = new Date().toISOString();
+    const existingDates = Array.isArray(sneaker.dates_worn) ? sneaker.dates_worn : [];
+    const updatedDates = [nowIso, ...existingDates];
     return updateSneaker(id, { 
       worn: sneaker.worn + 1,
-      last_worn: new Date().toISOString()
+      last_worn: nowIso,
+      dates_worn: updatedDates,
     });
   };
 

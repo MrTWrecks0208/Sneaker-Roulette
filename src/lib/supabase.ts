@@ -17,6 +17,8 @@ export interface Sneaker {
   color: string[];
   worn: number;
   image_url: string;
+  images?: string[];
+  dates_worn?: string[] | null;
   condition?: string;
   last_worn?: string | null;
   user_id?: string;
@@ -25,6 +27,16 @@ export interface Sneaker {
 }
 
 export type SneakerInsert = Omit<Sneaker, 'id' | 'created_at' | 'updated_at'>;
+
+export const CONDITION_OPTIONS = [
+  'Beaters',
+  'Fair',
+  'Good',
+  'Very Good',
+  'Excellent',
+  'Very Near Deadstock (VNDS)',
+  'Deadstock (DS)',
+];
 
 export const BRAND_CATEGORIES = [
   {
