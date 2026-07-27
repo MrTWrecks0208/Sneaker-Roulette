@@ -33,7 +33,7 @@ export default function SneakerListView({
             className="group relative bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-800/80 hover:border-zinc-700 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-200"
           >
             {/* Left: Thumbnail & Name / Brand details */}
-            <div className="flex items-center gap-4 min-w-0">
+            <div className="flex items-center gap-4 min-w-0 flex-1">
               {/* Image Thumbnail */}
               <div className="relative w-16 h-16 bg-zinc-950 border border-zinc-800/80 rounded-xl flex items-center justify-center p-2 flex-shrink-0 overflow-hidden">
                 {sneaker.image_url ? (
@@ -48,29 +48,49 @@ export default function SneakerListView({
               </div>
 
               {/* Sneaker Info */}
-              <div className="min-w-0 space-y-1">
+              <div className="min-w-0 space-y-1.5 flex-1">
                 <div className="flex items-center flex-wrap gap-2">
                   <h3 className="font-bold text-sm text-zinc-100 truncate max-w-[200px] md:max-w-[300px]" title={sneaker.name}>
                     {sneaker.name || 'Unnamed Sneaker'}
                   </h3>
                   {sneaker.height && (
-                    <span className="px-1.5 py-0.5 bg-zinc-800 border border-zinc-700/60 rounded text-[10px] text-zinc-400 font-semibold uppercase tracking-wider">
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider border ${
+                      sneaker.height.toLowerCase().includes('low')
+                        ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
+                        : sneaker.height.toLowerCase().includes('mid')
+                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                        : sneaker.height.toLowerCase().includes('high')
+                        ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                        : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                    }`}>
                       {sneaker.height}
+                    </span>
+                  )}
+                  {sneaker.condition && (
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider border bg-emerald-500/10 text-emerald-300 border-emerald-500/30">
+                      {sneaker.condition}
                     </span>
                   )}
                 </div>
 
-                <div className="flex items-center gap-2 flex-wrap text-xs text-zinc-400">
-                  {/* Brand Display */}
-                  <div className="flex items-center max-h-5 scale-75 origin-left -my-1">
-                    <BrandLogo brand={sneaker.brand} sneakerName={sneaker.name} />
+                <div className="flex items-center gap-3 flex-wrap text-xs text-zinc-400">
+                  {/* Brand Logo Only */}
+                  <div className="h-5 flex items-center justify-center text-zinc-300 shrink-0">
+                    <BrandLogo brand={sneaker.brand} sneakerName={sneaker.name} className="h-4 text-zinc-300" />
                   </div>
-                  <span className="text-zinc-600">•</span>
-                  {/* Styles */}
-                  {sneaker.style.length > 0 ? (
-                    <span className="truncate max-w-[150px] md:max-w-[250px]">{sneaker.style.join(', ')}</span>
-                  ) : (
-                    <span className="text-zinc-600 italic">No styles</span>
+
+                  {/* Styles displayed as separate pills */}
+                  {sneaker.style && sneaker.style.length > 0 && (
+                    <div className="flex items-center gap-1 flex-wrap">
+                      {sneaker.style.map((st, i) => (
+                        <span
+                          key={i}
+                          className="px-2 py-0.5 text-[10px] font-medium bg-zinc-800/80 text-zinc-300 rounded-md border border-zinc-700/50"
+                        >
+                          {st}
+                        </span>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
@@ -78,16 +98,16 @@ export default function SneakerListView({
 
             {/* Right Side: Colors, Worn Counter, Actions */}
             <div className="flex flex-wrap md:flex-nowrap items-center justify-between md:justify-end gap-x-6 gap-y-3 w-full md:w-auto pt-3 md:pt-0 border-t border-zinc-800/60 md:border-t-0">
-              {/* Color Swatches */}
+              {/* Color Swatches (without black background container) */}
               {sneaker.color.length > 0 && (
-                <div className="flex items-center gap-1.5 bg-zinc-950/40 border border-zinc-800/40 rounded-lg p-1.5">
+                <div className="flex items-center gap-1.5">
                   {sneaker.color.map((c, idx) => {
                     const val = COLOR_HEX[c] || (c.startsWith('#') ? c : '#cccccc');
                     const isImage = val.startsWith('/') || val.startsWith('data:') || val.includes('assets/') || val.includes('blob:');
                     return (
                       <div
                         key={`${c}-${idx}`}
-                        className="w-3.5 h-3.5 rounded-full border border-zinc-850 hover:scale-125 transition-all duration-150 bg-center bg-cover flex-shrink-0"
+                        className="w-3.5 h-3.5 rounded-full border border-zinc-700 hover:scale-125 transition-all duration-150 bg-center bg-cover flex-shrink-0 shadow-sm"
                         style={isImage ? { backgroundImage: `url(${val})` } : { backgroundColor: val }}
                         title={c}
                       />
@@ -104,19 +124,19 @@ export default function SneakerListView({
                 </div>
               )}
 
-              {/* Last Worn */}
-              <div className="hidden sm:flex items-center gap-1.5 text-xs text-zinc-400 bg-zinc-950/30 px-2.5 py-1.5 rounded-xl border border-zinc-800/40 whitespace-nowrap">
+              {/* Last Worn (without dark gray background) */}
+              <div className="hidden sm:flex items-center gap-1.5 text-xs text-zinc-400 whitespace-nowrap">
                 <Calendar className="w-3.5 h-3.5 text-zinc-500" />
                 <span className="text-zinc-500">Last Worn:</span>
                 <span className="text-zinc-300 font-semibold">{formatLastWorn(sneaker.last_worn)}</span>
               </div>
 
-              {/* Wear Log Action */}
+              {/* Wear Log Action (fixed width pill so all items match) */}
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => onIncrementWorn(sneaker.id)}
                   title="Log a wear (+1)"
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600/10 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/20 hover:border-red-500 rounded-xl text-xs font-semibold tracking-wide transition-all duration-150 cursor-pointer"
+                  className="w-24 flex items-center justify-center gap-1.5 py-1.5 bg-red-600/10 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/20 hover:border-red-500 rounded-xl text-xs font-semibold tracking-wide transition-all duration-150 cursor-pointer flex-shrink-0"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Worn {sneaker.worn}x</span>

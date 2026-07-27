@@ -63,9 +63,17 @@ export default function SneakerTableView({
                 </td>
 
                 {/* 3. Height */}
-                <td className="py-3 px-5 whitespace-nowrap">
+                <td className="py-2 px-3.5 whitespace-nowrap">
                   {sneaker.height ? (
-                    <span className="px-2 py-0.5 bg-zinc-800/80 border border-zinc-750 rounded text-[10px] text-zinc-300 font-semibold uppercase tracking-wider">
+                    <span className={`px-2 rounded text-[10px] font-semibold uppercase tracking-wider border ${
+                      sneaker.height.toLowerCase().includes('low')
+                        ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
+                        : sneaker.height.toLowerCase().includes('mid')
+                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                        : sneaker.height.toLowerCase().includes('high')
+                        ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                        : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                    }`}>
                       {sneaker.height}
                     </span>
                   ) : (
