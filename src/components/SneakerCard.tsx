@@ -238,8 +238,8 @@ function CardInner({
           )}
 
           {/* Brand Logo in Upper Right Corner */}
-          <div className={`absolute z-10 transition-opacity duration-200 pointer-events-none group-hover:opacity-0 ${isScaled ? 'top-[14px] right-[28px] scale-95' : 'top-[12px] right-[26px] scale-90'}`}>
-            <BrandLogo brand={sneaker.brand} sneakerName={sneaker.name} />
+          <div className={`absolute z-10 transition-opacity duration-200 scale-110 pointer-events-none group-hover:opacity-0 ${isScaled ? 'top-8 right-10' : 'top-6 right-8'}`}>
+            <BrandLogo brand={sneaker.brand} sneakerName={sneaker.name} className={`${isScaled ? 'h-18 sm:h-16' : 'h-16 sm:h-14'} w-auto text-zinc-900 drop-shadow-sm`} />
           </div>
 
           {/* Hover action buttons */}
@@ -341,8 +341,8 @@ function CardInner({
         {/* 1. Name at the Top */}
         <div className="flex items-start justify-between gap-2 pb-2 border-b border-gray-100 shrink-0">
           <div className="flex-1 min-w-0 pr-1">
-            <div className="flex items-center gap-1.5 scale-50 origin-left -mb-2.5 -mt-2">
-              <BrandLogo brand={sneaker.brand} sneakerName={sneaker.name} />
+            <div className="flex items-center gap-1.5 mb-1">
+              <BrandLogo brand={sneaker.brand} sneakerName={sneaker.name} className="h-4 w-auto text-zinc-900" />
             </div>
             <h4 className={`font-bold text-gray-900 leading-tight break-words ${isScaled ? 'text-base' : 'text-xs sm:text-sm'}`} title={sneaker.name}>
               {sneaker.name || 'Unnamed Sneaker'}
