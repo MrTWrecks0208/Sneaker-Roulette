@@ -12,11 +12,12 @@ import FileUpload from './components/FileUpload';
 import SneakerPicker from './components/SneakerPicker';
 import SneakerListView from './components/SneakerListView';
 import SneakerTableView from './components/SneakerTableView';
+import PhotoGuideModal from './components/PhotoGuide';
 import {
   Plus, Upload, Search, Footprints,
   SlidersHorizontal, X, AlertCircle, CheckCircle2, Database, LogOut,
   ChevronDown, ChevronUp, Copy, Terminal, Check, LifeBuoy, Settings, ArrowUpDown,
-  LayoutGrid, List, Table
+  LayoutGrid, List, Table, HelpCircle
 } from 'lucide-react';
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
   const [sneakerToDelete, setSneakerToDelete] = useState<Sneaker | null>(null);
   const [showImport, setShowImport] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
+  const [showPhotoGuide, setShowPhotoGuide] = useState(false);
   const [showSqlGuide, setShowSqlGuide] = useState(false);
   const [copiedSql, setCopiedSql] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -262,6 +264,14 @@ function App() {
               >
                 <LifeBuoy className="w-5 h-5 text-emerald-400" />
                 Spin the Wheel
+              </button>
+              <button
+                onClick={() => setShowPhotoGuide(true)}
+                className="hidden sm:flex items-center gap-1.5 px-3.5 pt-1.5 pb-2 bg-blue-600/10 text-blue-400 text-sm font-medium rounded-2xl border border-blue-500/20 hover:bg-blue-600/20 transition-colors cursor-pointer"
+                title="Photo Guide & Help"
+              >
+                <HelpCircle className="w-4 h-4 text-blue-400" />
+                Photo Guide
               </button>
               <button
                 onClick={() => setShowImport(true)}
@@ -841,6 +851,13 @@ CREATE POLICY "Users can delete own sneakers"
           onWear={handleWear}
           onClose={() => setShowPicker(false)}
           resultCount={pickerResultCount}
+        />
+      )}
+
+      {showPhotoGuide && (
+        <PhotoGuideModal
+          isOpen={showPhotoGuide}
+          onClose={() => setShowPhotoGuide(false)}
         />
       )}
 

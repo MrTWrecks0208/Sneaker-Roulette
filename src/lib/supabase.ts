@@ -29,13 +29,14 @@ export interface Sneaker {
 export type SneakerInsert = Omit<Sneaker, 'id' | 'created_at' | 'updated_at'>;
 
 export const CONDITION_OPTIONS = [
-  'Beaters',
-  'Fair',
-  'Good',
-  'Very Good',
-  'Excellent',
-  'Very Near Deadstock (VNDS)',
   'Deadstock (DS)',
+  'Very Near Deadstock (VNDS)',
+  'Excellent',
+  'Very Good',
+  'Good',
+  'Fair',
+  'Poor',
+  'Beaters',
 ];
 
 export const BRAND_CATEGORIES = [

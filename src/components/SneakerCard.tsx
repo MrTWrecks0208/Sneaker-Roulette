@@ -278,10 +278,10 @@ function CardInner({
           {/* Height badge */}
           {sneaker.height && (
             <div className={`absolute bottom-2 right-2 px-2 pt-0.5 pb-1 ${
-              sneaker.height.toLowerCase().includes('low') ? 'bg-sky-600/70' :
-              sneaker.height.toLowerCase().includes('mid') ? 'bg-amber-600/70' :
-              sneaker.height.toLowerCase().includes('high') ? 'bg-rose-600/70' : 'bg-emerald-600/70'
-            } backdrop-blur-sm rounded-md text-white font-medium ${isScaled ? 'text-xs px-2.5 py-1' : 'text-[10px]'}`}>
+              sneaker.height.toLowerCase().includes('low') ? 'bg-sky-600' :
+              sneaker.height.toLowerCase().includes('mid') ? 'bg-amber-600' :
+              sneaker.height.toLowerCase().includes('high') ? 'bg-rose-600' : 'bg-emerald-600'
+            } backdrop-blur-sm rounded-md font-medium text-white ${isScaled ? 'text-xs px-2.5 py-1' : 'text-[10px]'}`}> 
               {sneaker.height}
             </div>
           )}
@@ -424,22 +424,22 @@ function CardInner({
         {/* 3. 4 Small Wear Stats Cards */}
         <div className="my-1.5 shrink-0">
           <div className={`font-semibold text-gray-500 uppercase tracking-wider mb-1 ${isScaled ? 'text-xs' : 'text-[10px]'}`}>
-            Worn History
+            Wear Counts
           </div>
           <div className="grid grid-cols-4 gap-1 sm:gap-1.5">
-            <div className="bg-gradient-to-b from-gray-50 to-gray-100/80 border border-gray-200/80 rounded-lg p-1 text-center shadow-2xs">
+            <div className="bg-gradient-to-br from-emerald-600/10 to-emerald-600/0 border border-emerald-700/20 rounded-lg p-1 text-center shadow-2xs">
               <div className={`text-gray-400 font-medium ${isScaled ? 'text-[10px]' : 'text-[8px]'} uppercase leading-none`}>30D</div>
               <div className={`font-extrabold text-gray-900 ${isScaled ? 'text-sm mt-0.5' : 'text-xs mt-0.5'}`}>{stats.last30}x</div>
             </div>
-            <div className="bg-gradient-to-b from-gray-50 to-gray-100/80 border border-gray-200/80 rounded-lg p-1 text-center shadow-2xs">
+            <div className="bg-gradient-to-br from-emerald-600/0 to-emerald-600/10 border border-emerald-700/20 rounded-lg p-1 text-center shadow-2xs">
               <div className={`text-gray-400 font-medium ${isScaled ? 'text-[10px]' : 'text-[8px]'} uppercase leading-none`}>3M</div>
               <div className={`font-extrabold text-gray-900 ${isScaled ? 'text-sm mt-0.5' : 'text-xs mt-0.5'}`}>{stats.last90}x</div>
             </div>
-            <div className="bg-gradient-to-b from-gray-50 to-gray-100/80 border border-gray-200/80 rounded-lg p-1 text-center shadow-2xs">
+            <div className="bg-gradient-to-br from-emerald-600/0 to-emerald-600/10 border border-emerald-700/20 rounded-lg p-1 text-center shadow-2xs">
               <div className={`text-gray-400 font-medium ${isScaled ? 'text-[10px]' : 'text-[8px]'} uppercase leading-none`}>6M</div>
               <div className={`font-extrabold text-gray-900 ${isScaled ? 'text-sm mt-0.5' : 'text-xs mt-0.5'}`}>{stats.last180}x</div>
             </div>
-            <div className="bg-gradient-to-b from-gray-50 to-gray-100/80 border border-gray-200/80 rounded-lg p-1 text-center shadow-2xs">
+            <div className="bg-gradient-to-br from-emerald-600/0 to-emerald-600/10 border border-emerald-700/20 rounded-lg p-1 text-center shadow-2xs">
               <div className={`text-gray-400 font-medium ${isScaled ? 'text-[10px]' : 'text-[8px]'} uppercase leading-none`}>1Y</div>
               <div className={`font-extrabold text-gray-900 ${isScaled ? 'text-sm mt-0.5' : 'text-xs mt-0.5'}`}>{stats.last365}x</div>
             </div>
@@ -462,7 +462,7 @@ function CardInner({
             <span className={`font-semibold text-gray-500 uppercase tracking-wider ${isScaled ? 'text-xs' : 'text-[10px]'}`}>
               Wear Frequency:
             </span>
-            <span className={`font-semibold px-2 py-0.5 ${stats.frequencyText === 'Insufficient Data' ? 'text-gray-500' : 'text-blue-700'} ${isScaled ? 'text-xs' : 'text-[10px]'}`}>
+            <span className={`font-semibold italic px-2 py-0.5 ${stats.frequencyText === 'Needs more data' ? 'text-rose-500' : 'text-blue-700'} ${isScaled ? 'text-xs' : 'text-[10px]'}`}>
               {stats.frequencyText}
             </span>
           </div>
@@ -501,7 +501,7 @@ function calculateWearStats(datesWorn?: string[] | null, lastWornAt?: string | n
   const last180 = countInDays(180);
   const last365 = countInDays(365);
 
-  let frequencyText = 'Insufficient Data';
+  let frequencyText = 'Needs more data';
 
   if (dates.length >= 2) {
     const ascDates = [...dates].sort((a, b) => a.getTime() - b.getTime());

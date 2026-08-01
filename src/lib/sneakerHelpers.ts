@@ -118,7 +118,7 @@ export function calculateWearStats(
       frequencyText = 'Rarely';
     }
   } else {
-    frequencyText = 'Dates not logged';
+    frequencyText = 'Needs more data';
   }
 
   return {

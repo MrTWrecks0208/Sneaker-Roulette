@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Sneaker, SneakerInsert, BRANDS, BRAND_CATEGORIES, HEIGHTS, STYLES, COLORS, CONDITION_OPTIONS, buildName } from '../lib/supabase';
-import { X, Upload, Loader2, Camera, Sparkles, ChevronDown, Search, Check, Star } from 'lucide-react';
+import { X, Upload, Loader2, Camera, Sparkles, ChevronDown, Search, Check, Star, Info } from 'lucide-react';
+import PhotoGuideModal from './PhotoGuide';
 import multicolorImg from '../assets/images/multicolor_swatch_1783883698636.jpg';
 import iridescentImg from '../assets/images/iridescent.png';
 
@@ -409,6 +410,7 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
   const [lookupMessage, setLookupMessage] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [userEditedFields, setUserEditedFields] = useState(false);
+  const [showPhotoGuideModal, setShowPhotoGuideModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -654,7 +656,7 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
             />
           </div>
 
-          {/* Model */}
+          {/* Model & Height */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Model</label>
@@ -663,7 +665,7 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
                 value={model}
                 onChange={e => handleFieldEdit(setModel)(e.target.value)}
                 placeholder="e.g. Air Max 90"
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-2 text-sm text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
             {/* Height */}
@@ -687,7 +689,7 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
                       key={h}
                       type="button"
                       onClick={() => handleHeightEdit(h)}
-                      className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
+                      className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors border ${
                         isSelected ? selectedClasses : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-zinc-500'
                       }`}
                     >
@@ -697,7 +699,10 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
                 })}
               </div>
             </div>
-            {/* Colorway */}
+          </div>
+
+          {/* Colorway, Variant, and Condition */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Colorway</label>
               <input
@@ -708,7 +713,33 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
                 className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
-            {/* Variant */}           <div className="flex flex-col sm:flex-row gap-4">             <div>               <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Variant</label>               <input                 type="text"                 value={variant}                 onChange={e => handleFieldEdit(setVariant)(e.target.value)}                 placeholder="e.g. 77 Blazer"                 className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors"               />             </div>           </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Variant</label>
+              <input
+                type="text"
+                value={variant}
+                onChange={e => handleFieldEdit(setVariant)(e.target.value)}
+                placeholder="e.g. 77 Blazer"
+                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Condition</label>
+              <select
+                value={condition}
+                onChange={e => {
+                  setUserEditedFields(true);
+                  setCondition(e.target.value);
+                }}
+                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors cursor-pointer"
+              >
+                {CONDITION_OPTIONS.map(cond => (
+                  <option key={cond} value={cond} className="bg-zinc-900 text-zinc-100">
+                    {cond}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
          
           {/* Style */}
@@ -771,25 +802,8 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
             </div>
           </div>
 
-          {/* Condition, Times Worn, and Last Worn Date */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Condition</label>
-              <select
-                value={condition}
-                onChange={e => {
-                  setUserEditedFields(true);
-                  setCondition(e.target.value);
-                }}
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors cursor-pointer"
-              >
-                {CONDITION_OPTIONS.map(cond => (
-                  <option key={cond} value={cond} className="bg-zinc-900 text-zinc-100">
-                    {cond}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {/* Times Worn and Last Worn Date */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Times Worn</label>
               <input
@@ -817,7 +831,17 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
           {/* Image Gallery & Upload */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Image Gallery</label>
+              <div className="flex items-center gap-1.5">
+                <label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Image Gallery</label>
+                <button
+                  type="button"
+                  onClick={() => setShowPhotoGuideModal(true)}
+                  className="p-0.5 text-zinc-400 hover:text-blue-400 transition-colors rounded-full hover:bg-zinc-800 focus:outline-none flex items-center justify-center cursor-pointer"
+                  title="Photo guide & image tips"
+                >
+                  <Info className="w-3.5 h-3.5" />
+                </button>
+              </div>
               <span className="text-[10px] text-zinc-400">Click star to set main card image</span>
             </div>
             <div className="flex flex-col gap-3">
@@ -911,6 +935,10 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
         </form>
              
       </div>
+
+      {showPhotoGuideModal && (
+        <PhotoGuideModal isOpen={showPhotoGuideModal} onClose={() => setShowPhotoGuideModal(false)} />
+      )}
     </div>
   );
 }

@@ -48,10 +48,10 @@ export default function PhotoGuideModal({ isOpen, onClose }: PhotoGuideModalProp
     {
       id: 'spin-wheel',
       category: 'App Features',
-      question: 'How does the "Spin the Wheel" feaure (or "Sneaker Roulette") work?',
+      question: 'How does "Spin the Wheel" (Sneaker Roulette) pick a shoe?',
       answer: (
         <p className="text-zinc-300 leading-relaxed text-sm">
-          When you click to 'Spin the Wheel' in Sneaker Roulette, the app randomly selects a pair of sneakers from your collection based on the filters you set (by brand, color, style, or height). You can toggle logic operators (AND / OR) to narrow down your selection when deciding what kicks to wear today.
+          Sneaker Roulette randomly selects 1, 3, or 5 sneakers from your collection based on your filters (by brand, color, style, or height). You can toggle logic operators (AND / OR) to narrow down your selection when deciding what kicks to wear today.
         </p>
       ),
     },
@@ -61,7 +61,7 @@ export default function PhotoGuideModal({ isOpen, onClose }: PhotoGuideModalProp
       question: 'How are wear counts and wear frequencies calculated?',
       answer: (
         <p className="text-zinc-300 leading-relaxed text-sm">
-          Whenever you choose to wear a pair of sneakers, the app records a timestamp. On the back of every sneaker card, you can view your wear metrics broken down by 30 days, 3 months, 6 months, and 1 year, along with an estimated wear frequency average (e.g. "Every ~5 days").
+          Whenever you log a wear for a sneaker, the app records a timestamp. On the back of every sneaker card, you can view your wear metrics broken down by 1 month, 3 months, 6 months, and 12 months, along with an estimated wear frequency average (e.g. "Every ~5 days").
         </p>
       ),
     },
@@ -71,7 +71,7 @@ export default function PhotoGuideModal({ isOpen, onClose }: PhotoGuideModalProp
       question: 'Can I batch import my sneaker collection from a file or spreadsheet?',
       answer: (
         <p className="text-zinc-300 leading-relaxed text-sm">
-          Yes! To upload a file into Sneaker Roulette, click the <strong>Import</strong> button in the top navigation bar. You can upload or drag-and-drop <strong>CSV (.csv)</strong>, <strong>JSON (.json)</strong>, or <strong>Excel (.xlsx)</strong> files containing columns or properties like Name, Brand, Model, Style, Colors, Times Worn, Image URL, and Condition.
+          Yes! Click the <strong>Import</strong> button in the top navigation bar. You can upload or drag-and-drop <strong>CSV (.csv)</strong>, <strong>JSON (.json)</strong>, or <strong>Excel (.xlsx)</strong> files containing columns or properties like Name, Brand, Model, Style, Colors, Times Worn, Image URL, and Condition.
         </p>
       ),
     },
