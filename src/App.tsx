@@ -13,20 +13,30 @@ import SneakerPicker from './components/SneakerPicker';
 import SneakerListView from './components/SneakerListView';
 import SneakerTableView from './components/SneakerTableView';
 import PhotoGuideModal from './components/PhotoGuide';
+import SubscriptionModal from './components/SubscriptionModal';
+import { useSubscription } from './hooks/useSubscription';
 import {
   Plus, Upload, Search, Footprints,
   SlidersHorizontal, X, AlertCircle, CheckCircle2, Database, LogOut,
   ChevronDown, ChevronUp, Copy, Terminal, Check, LifeBuoy, Settings, ArrowUpDown,
-  LayoutGrid, List, Table, HelpCircle
+  LayoutGrid, List, Table, Crown
 } from 'lucide-react';
 
 function App() {
   const { user, loading: authLoading, signOut } = useAuth();
   const { sneakers, loading, error, isSupabaseConfigured, usingLocalStorageFallback, addSneaker, addSneakersBatch, updateSneaker, deleteSneaker, incrementWorn } = useSneakers(user?.id);
+  const { tier, config, checkAddPairAllowed, canImport } = useSubscription();
   const isGuest = user?.id === 'guest-user-bypass';
   const isLive = isSupabaseConfigured && !isGuest;
   const [showLoading, setShowLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [subscriptionReason, setSubscriptionReason] = useState<string | undefined>(undefined);
+
+  const handleOpenSubscriptionModal = (reason?: string) => {
+    setSubscriptionReason(reason);
+    setShowSubscriptionModal(true);
+  };
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -266,22 +276,29 @@ function App() {
                 Spin the Wheel
               </button>
               <button
-                onClick={() => setShowPhotoGuide(true)}
-                className="hidden sm:flex items-center gap-1.5 px-3.5 pt-1.5 pb-2 bg-blue-600/10 text-blue-400 text-sm font-medium rounded-2xl border border-blue-500/20 hover:bg-blue-600/20 transition-colors cursor-pointer"
-                title="Photo Guide & Help"
-              >
-                <HelpCircle className="w-4 h-4 text-blue-400" />
-                Photo Guide
-              </button>
-              <button
-                onClick={() => setShowImport(true)}
+                onClick={() => {
+                  if (!canImport) {
+                    handleOpenSubscriptionModal('Batch importing CSV, JSON, or Excel files is available on Pro & Premium plans!');
+                  } else {
+                    setShowImport(true);
+                  }
+                }}
                 className="hidden sm:flex items-center gap-2 px-4 pt-1.5 pb-2 bg-sky-600/10 text-sky-400 text-sm font-medium rounded-2xl border border-sky-700/20 hover:bg-blue-600/20 transition-colors cursor-pointer"
               >
                 <Upload className="w-4 h-4" />
                 Import
               </button>
               <button
-                onClick={() => setShowForm(true)}
+                onClick={() => {
+                  const check = checkAddPairAllowed(sneakers.length);
+                  if (!check.allowed) {
+                    handleOpenSubscriptionModal(
+                      `You've reached your maximum limit of ${check.max} pairs on the ${config.name} (${config.badge}) plan. Upgrade to Pro for 30 pairs or Premium for unlimited pairs!`
+                    );
+                  } else {
+                    setShowForm(true);
+                  }
+                }}
                 className="flex items-center gap-2 px-4 pt-1.5 pb-2 bg-rose-600/10 text-rose-400 text-sm font-medium rounded-2xl border border-rose-700/20 hover:bg-rose-600/20 transition-colors cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
@@ -292,50 +309,162 @@ function App() {
 
               <div className="flex flex-col items-start gap-1">
                 <div className="relative" id="user-menu-container">
+                  {/* User Avatar Button with Minimal Subscription Badge */}
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-2.5 p-1 hover:bg-zinc-800/50 rounded-xl border border-transparent hover:border-zinc-800/50 transition-all cursor-pointer text-left focus:outline-none"
+                    className="flex items-center gap-2.5 p-1.5 hover:bg-zinc-800/60 rounded-xl border border-transparent hover:border-zinc-800/80 transition-all cursor-pointer text-left focus:outline-none"
+                    title="User account & subscription"
                   >
-                    <img
-                      src={user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(user.email)}`}
-                      alt="Avatar"
-                      className="w-8 h-8 rounded-xl object-cover border border-zinc-800 bg-zinc-900"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="hidden md:flex flex-col text-left">
-                      <span className="text-xs font-semibold text-zinc-200 truncate max-w-[120px]">
-                        {user.user_metadata?.username || user.user_metadata?.full_name || user.email.split('@')[0]}
+                    <div className="relative shrink-0">
+                      <img
+                        src={user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(user.email)}`}
+                        alt="Avatar"
+                        className="w-8 h-8 rounded-xl object-cover border border-zinc-800 bg-zinc-900"
+                        referrerPolicy="no-referrer"
+                      />
+                      <span className={`absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center animate-pulse rounded-full text-black font-black text-[9px] shadow-lg ${
+                        tier === 'premium'
+                          ? 'bg-amber-400 text-zinc-950'
+                          : tier === 'pro'
+                          ? 'bg-cyan-400 text-zinc-950'
+                          : 'bg-emerald-600/10 border border-emerald-700/20 text-emerald-400 shadow-emerald-600/10'
+                      }`}>
+                        <Crown className="w-2.5 h-2.5 fill-current" />
                       </span>
-                      <span className="text-[10px] text-zinc-500 truncate max-w-[120px]">
+                    </div>
+
+                    <div className="hidden md:flex flex-col text-left">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-semibold text-zinc-200 truncate max-w-[100px]">
+                          {user.user_metadata?.username || user.user_metadata?.full_name || user.email.split('@')[0]}
+                        </span>
+
+                        {/* Minimal Badge in Avatar Area - Vibrant High Contrast Colors */}
+                        <span
+                          className={`text-[9px] font-black px-1.5 py-0.5 rounded-md border uppercase tracking-wider shadow-sm ${
+                            tier === 'premium'
+                              ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
+                              : tier === 'pro'
+                              ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50'
+                              : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50'
+                          }`}
+                        >
+                          {config.badge}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-zinc-400 truncate max-w-[120px]">
                         {user.email}
                       </span>
                     </div>
+
                     <ChevronDown className="w-4 h-4 text-zinc-400 hidden md:block" />
                   </button>
 
+                  {/* Dropdown Menu */}
                   {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl py-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-100">
-                      <button
-                        onClick={() => {
-                          setShowUserMenu(false);
-                          setShowSettingsModal(true);
-                        }}
-                        className="w-full px-4 py-2.5 text-left text-xs font-medium text-zinc-300 hover:text-white hover:bg-zinc-800/80 transition-colors flex items-center gap-2 cursor-pointer focus:outline-none"
-                      >
-                        <Settings className="w-4 h-4 text-zinc-400" />
-                        Settings
-                      </button>
-                      <div className="h-px bg-zinc-800/60 my-1" />
-                      <button
-                        onClick={() => {
-                          setShowUserMenu(false);
-                          signOut();
-                        }}
-                        className="w-full px-4 py-2.5 text-left text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors flex items-center gap-2 cursor-pointer focus:outline-none"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        Sign Out
-                      </button>
+                    <div className="absolute right-0 mt-2 w-64 bg-zinc-900 border border-zinc-800/90 rounded-2xl shadow-2xl overflow-hidden py-1 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                      {/* Account Info */}
+                      <div className="px-4 py-3 border-b border-zinc-800/80 bg-zinc-950/70">
+                        <div className="text-xs font-bold text-white truncate">
+                          {user.user_metadata?.username || user.user_metadata?.full_name || user.email.split('@')[0]}
+                        </div>
+                        <div className="text-[11px] text-zinc-400 truncate mb-2.5">
+                          {user.email}
+                        </div>
+
+                        {/* Subscription Card at top of dropdown */}
+                        <div
+                          onClick={() => {
+                            setShowUserMenu(false);
+                            handleOpenSubscriptionModal();
+                          }}
+                          className={`p-2.5 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${
+                            tier === 'premium'
+                              ? 'bg-gradient-to-r from-amber-500/20 via-purple-500/15 to-amber-500/10 border-amber-500/40 hover:border-amber-300'
+                              : tier === 'pro'
+                              ? 'bg-gradient-to-r from-blue-500/20 to-cyan-500/15 border-cyan-500/40 hover:border-cyan-300'
+                              : 'bg-gradient-to-r from-emerald-500/15 to-teal-500/10 border-emerald-500/30 hover:border-emerald-400'
+                          }`}
+                          title="Click to manage subscription"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <div className={`p-1.5 rounded-lg border ${
+                              tier === 'premium'
+                                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                : tier === 'pro'
+                                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+                                : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                            }`}>
+                              <Crown className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <div className="text-xs font-black text-white flex items-center gap-1.5">
+                                <span>{config.name} Plan</span>
+                                <span className={`text-[9px] font-extrabold px-1.5 py-0.2 rounded uppercase tracking-wider border ${
+                                  tier === 'premium'
+                                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                    : tier === 'pro'
+                                    ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+                                    : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                }`}>
+                                  {config.badge}
+                                </span>
+                              </div>
+                              <div className="text-[10px] text-zinc-300 font-medium mt-0.5">
+                                {tier === 'free'
+                                  ? '10 pair limit • 3 spins/day'
+                                  : tier === 'pro'
+                                  ? '30 pair limit • 10 spins/day'
+                                  : 'Unlimited pairs & spins'}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Menu Actions */}
+                      <div className="py-1">
+                        {/* Subscription Option */}
+                        <button
+                          onClick={() => {
+                            setShowUserMenu(false);
+                            handleOpenSubscriptionModal();
+                          }}
+                          className="w-full px-4 py-2.5 text-left text-xs font-semibold text-zinc-200 hover:text-white hover:bg-zinc-800/80 transition-colors flex items-center justify-between cursor-pointer focus:outline-none"
+                        >
+                          <span className="flex items-center gap-2.5">
+                            <Crown className="w-4 h-4 text-amber-400" />
+                            <span>Subscription</span>
+                          </span>
+                          <span className="text-[10px] font-bold text-amber-400 hover:underline">
+                            Manage →
+                          </span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setShowUserMenu(false);
+                            setShowSettingsModal(true);
+                          }}
+                          className="w-full px-4 py-2.5 text-left text-xs font-medium text-zinc-300 hover:text-white hover:bg-zinc-800/80 transition-colors flex items-center gap-2.5 cursor-pointer focus:outline-none"
+                        >
+                          <Settings className="w-4 h-4 text-zinc-400" />
+                          <span>Settings</span>
+                        </button>
+
+                        <div className="h-px bg-zinc-800/60 my-1" />
+
+                        <button
+                          onClick={() => {
+                            setShowUserMenu(false);
+                            signOut();
+                          }}
+                          className="w-full px-4 py-2.5 text-left text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors flex items-center gap-2.5 cursor-pointer focus:outline-none"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          <span>Sign Out</span>
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -827,6 +956,7 @@ CREATE POLICY "Users can delete own sneakers"
         <SneakerForm
           onSave={handleSave}
           onCancel={() => { setShowForm(false); setEditSneaker(null); }}
+          onOpenSubscriptionModal={handleOpenSubscriptionModal}
         />
       )}
 
@@ -835,6 +965,7 @@ CREATE POLICY "Users can delete own sneakers"
           sneaker={editSneaker}
           onSave={handleSave}
           onCancel={() => setEditSneaker(null)}
+          onOpenSubscriptionModal={handleOpenSubscriptionModal}
         />
       )}
 
@@ -842,6 +973,7 @@ CREATE POLICY "Users can delete own sneakers"
         <FileUpload
           onImport={handleImport}
           onClose={() => setShowImport(false)}
+          onOpenSubscriptionModal={handleOpenSubscriptionModal}
         />
       )}
 
@@ -851,8 +983,15 @@ CREATE POLICY "Users can delete own sneakers"
           onWear={handleWear}
           onClose={() => setShowPicker(false)}
           resultCount={pickerResultCount}
+          onOpenSubscriptionModal={handleOpenSubscriptionModal}
         />
       )}
+
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+        triggerReason={subscriptionReason}
+      />
 
       {showPhotoGuide && (
         <PhotoGuideModal

@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Sneaker, SneakerInsert, BRANDS, BRAND_CATEGORIES, HEIGHTS, STYLES, COLORS, CONDITION_OPTIONS, buildName } from '../lib/supabase';
-import { X, Upload, Loader2, Camera, Sparkles, ChevronDown, Search, Check, Star, Info } from 'lucide-react';
+import { X, Upload, Loader2, Camera, Sparkles, ChevronDown, Search, Check, Star, Info, Lock } from 'lucide-react';
 import PhotoGuideModal from './PhotoGuide';
+import { useSubscription } from '../hooks/useSubscription';
 import multicolorImg from '../assets/images/multicolor_swatch_1783883698636.jpg';
 import iridescentImg from '../assets/images/iridescent.png';
 
@@ -62,6 +63,7 @@ interface SneakerFormProps {
   sneaker?: Sneaker | null;
   onSave: (data: SneakerInsert) => Promise<Sneaker | null>;
   onCancel: () => void;
+  onOpenSubscriptionModal?: (reason: string) => void;
 }
 
 // ─── Local name parser ────────────────────────────────────────────────────────
@@ -381,7 +383,8 @@ function BrandSelect({ value, onChange }: { value: string; onChange: (b: string)
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 
-export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormProps) {
+export default function SneakerForm({ sneaker, onSave, onCancel, onOpenSubscriptionModal }: SneakerFormProps) {
+  const { config, isLastWornAllowed, maxImages } = useSubscription();
   const [nameInput, setNameInput] = useState(sneaker ? buildName(sneaker.brand, sneaker.model, sneaker.variant || '', sneaker.colorway) : '');
   const [brand, setBrand] = useState(sneaker?.brand || '');
   const [model, setModel] = useState(sneaker?.model || '');
@@ -468,11 +471,30 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
 
   const handleImageUploads = async (fileList: FileList | null) => {
     if (!fileList || fileList.length === 0) return;
+
+    if (images.length >= maxImages) {
+      if (onOpenSubscriptionModal) {
+        onOpenSubscriptionModal(
+          `Your ${config.name} (${config.badge}) plan allows up to ${maxImages} image(s) per card. Upgrade to Pro or Premium to add more!`
+        );
+      }
+      return;
+    }
+
     setUploading(true);
     try {
       const newUrls: string[] = [];
-      for (let i = 0; i < fileList.length; i++) {
-        const file = fileList[i];
+      const availableSlots = maxImages - images.length;
+      const filesToProcess = Array.from(fileList).slice(0, availableSlots);
+
+      if (fileList.length > availableSlots && onOpenSubscriptionModal) {
+        onOpenSubscriptionModal(
+          `Your ${config.name} (${config.badge}) plan allows up to ${maxImages} image(s) per card. Only ${availableSlots} new image(s) were added.`
+        );
+      }
+
+      for (let i = 0; i < filesToProcess.length; i++) {
+        const file = filesToProcess[i];
         const dataUrl = await new Promise<string>((resolve) => {
           const reader = new FileReader();
           reader.onload = (e) => resolve(e.target?.result as string);
@@ -815,16 +837,57 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Last Worn Date</label>
-              <input
-                type="date"
-                value={lastWornAt ? lastWornAt.split('T')[0] : ''}
-                onChange={e => {
-                  const val = e.target.value;
-                  setLastWornAt(val ? new Date(val).toISOString() : '');
-                }}
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors [color-scheme:dark]"
-              />
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-medium text-zinc-400 uppercase tracking-wider">
+                  Last Worn Date
+                </label>
+                {!isLastWornAllowed && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onOpenSubscriptionModal) {
+                        onOpenSubscriptionModal(
+                          "Tracking 'Last Worn Date' is a Pro & Premium feature. Upgrade to unlock date tracking!"
+                        );
+                      }
+                    }}
+                    className="flex items-center gap-1 text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded cursor-pointer hover:bg-amber-500/20 transition-colors"
+                  >
+                    <Lock className="w-3 h-3" />
+                    <span>Pro Feature</span>
+                  </button>
+                )}
+              </div>
+              <div className="relative">
+                <input
+                  type="date"
+                  disabled={!isLastWornAllowed}
+                  value={lastWornAt ? lastWornAt.split('T')[0] : ''}
+                  onChange={e => {
+                    const val = e.target.value;
+                    setLastWornAt(val ? new Date(val).toISOString() : '');
+                  }}
+                  className={`w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm transition-colors [color-scheme:dark] ${
+                    !isLastWornAllowed
+                      ? 'opacity-50 cursor-not-allowed text-zinc-500'
+                      : 'text-zinc-200 focus:outline-none focus:border-blue-500'
+                  }`}
+                />
+                {!isLastWornAllowed && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onOpenSubscriptionModal) {
+                        onOpenSubscriptionModal(
+                          "Tracking 'Last Worn Date' is a Pro & Premium feature. Upgrade to unlock date tracking!"
+                        );
+                      }
+                    }}
+                    className="absolute inset-0 w-full h-full cursor-pointer bg-transparent"
+                    title="Click to upgrade and unlock Last Worn field"
+                  />
+                )}
+              </div>
             </div>
           </div>
 
@@ -832,7 +895,9 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <div className="flex items-center gap-1.5">
-                <label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Image Gallery</label>
+                <label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">
+                  Image Gallery
+                </label>
                 <button
                   type="button"
                   onClick={() => setShowPhotoGuideModal(true)}
@@ -841,6 +906,9 @@ export default function SneakerForm({ sneaker, onSave, onCancel }: SneakerFormPr
                 >
                   <Info className="w-3.5 h-3.5" />
                 </button>
+                <span className="text-[10px] text-blue-400 font-semibold bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-md">
+                  {images.length} / {maxImages === Infinity ? '∞' : maxImages} allowed ({config.badge})
+                </span>
               </div>
               <span className="text-[10px] text-zinc-400">Click star to set main card image</span>
             </div>

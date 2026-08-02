@@ -1,12 +1,14 @@
 import { useState, useRef } from 'react';
 import { SneakerInsert, HEIGHTS, BRANDS, CONDITION_OPTIONS, buildName } from '../lib/supabase';
-import { Upload, FileText, X, AlertCircle, CheckCircle2, FileCode, FileSpreadsheet, Download, Sparkles } from 'lucide-react';
+import { Upload, FileText, X, AlertCircle, CheckCircle2, FileCode, FileSpreadsheet, Download, Sparkles, Lock, Crown } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import Papa from 'papaparse';
+import { useSubscription } from '../hooks/useSubscription';
 
 interface FileUploadProps {
   onImport: (sneakers: SneakerInsert[]) => Promise<unknown>;
   onClose: () => void;
+  onOpenSubscriptionModal?: (reason: string) => void;
 }
 
 interface ParseError {
@@ -132,7 +134,8 @@ function parseRow(row: Record<string, unknown>): SneakerInsert | null {
   };
 }
 
-export default function FileUpload({ onImport, onClose }: FileUploadProps) {
+export default function FileUpload({ onImport, onClose, onOpenSubscriptionModal }: FileUploadProps) {
+  const { isImportAllowed } = useSubscription();
   const [dragging, setDragging] = useState(false);
   const [preview, setPreview] = useState<SneakerInsert[]>([]);
   const [errors, setErrors] = useState<ParseError[]>([]);
@@ -327,7 +330,34 @@ export default function FileUpload({ onImport, onClose }: FileUploadProps) {
         </div>
 
         <div className="p-4 sm:p-6 space-y-5">
-          {!imported ? (
+          {!isImportAllowed ? (
+            <div className="py-8 px-6 text-center space-y-4 bg-zinc-950/60 rounded-2xl border border-zinc-800">
+              <div className="w-14 h-14 bg-gradient-to-br from-amber-500/20 to-purple-500/20 border border-amber-500/30 rounded-2xl flex items-center justify-center mx-auto text-amber-400">
+                <Lock className="w-7 h-7" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg font-bold text-white">Batch Import is a Pro & Premium Feature</h3>
+                <p className="text-xs text-zinc-400 max-w-md mx-auto leading-relaxed">
+                  Bulk uploading your sneaker collection from CSV, JSON, or Excel (.xlsx) files requires a <strong>Pro (Enthusiast)</strong> or <strong>Premium (Sneakerhead)</strong> plan.
+                </p>
+              </div>
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    if (onOpenSubscriptionModal) {
+                      onOpenSubscriptionModal('Batch Import (CSV, JSON, XLSX) is available on Pro & Premium plans!');
+                    }
+                  }}
+                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold text-xs sm:text-sm rounded-xl shadow-lg shadow-blue-500/20 transition-all cursor-pointer inline-flex items-center gap-2"
+                >
+                  <Crown className="w-4 h-4 text-amber-300" />
+                  <span>Upgrade Membership to Unlock</span>
+                </button>
+              </div>
+            </div>
+          ) : !imported ? (
             <>
               {/* Format pills */}
               <div className="flex items-center justify-between text-xs text-zinc-400 bg-zinc-950/60 p-3 rounded-xl border border-zinc-800">

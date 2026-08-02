@@ -1,7 +1,9 @@
 import { useState, useCallback } from 'react';
 import { Sneaker } from '../lib/supabase';
-import { Shuffle, Check, X, Filter, Footprints, Sparkles, Paintbrush } from 'lucide-react';
+import { Shuffle, Check, X, Filter, Footprints, Sparkles, Paintbrush, Crown, Lock } from 'lucide-react';
 import RouletteAnimation from './RouletteAnimation';
+import { useSubscription } from '../hooks/useSubscription';
+import { incrementDailySpinCount } from '../lib/subscription';
 
 const HighTopSneaker = ({ className }: { className?: string }) => (
   <svg
@@ -37,9 +39,11 @@ interface SneakerPickerProps {
   onWear: (id: string) => Promise<unknown>;
   onClose: () => void;
   resultCount: number;
+  onOpenSubscriptionModal?: (reason: string) => void;
 }
 
-export default function SneakerPicker({ sneakers, onWear, onClose, resultCount }: SneakerPickerProps) {
+export default function SneakerPicker({ sneakers, onWear, onClose, resultCount, onOpenSubscriptionModal }: SneakerPickerProps) {
+  const { config, spinStatus } = useSubscription();
   const [filter, setFilter] = useState<PickerFilter>('random');
   const [styleFilters, setStyleFilters] = useState<string[]>([]);
   const [colorFilters, setColorFilters] = useState<string[]>([]);
@@ -75,6 +79,15 @@ export default function SneakerPicker({ sneakers, onWear, onClose, resultCount }
   const pickSneaker = useCallback(() => {
     if (sneakers.length === 0) return;
 
+    if (!spinStatus.allowed) {
+      if (onOpenSubscriptionModal) {
+        onOpenSubscriptionModal(
+          `You've reached your daily limit of ${spinStatus.max} spin(s) on the ${config.name} (${config.badge}) plan. Upgrade to unlock more spins!`
+        );
+      }
+      return;
+    }
+
     let pool = [...sneakers];
 
     if (filter === 'least_worn') {
@@ -99,6 +112,9 @@ export default function SneakerPicker({ sneakers, onWear, onClose, resultCount }
       return;
     }
 
+    // Increment daily spin count when spin starts
+    incrementDailySpinCount();
+
     const targetCount = Math.min(resultCount, pool.length);
     const finalPool = [...pool];
     const finalSelection: Sneaker[] = [];
@@ -111,7 +127,7 @@ export default function SneakerPicker({ sneakers, onWear, onClose, resultCount }
 
     setPendingSelection(finalSelection);
     setShowRoulette(true);
-  }, [sneakers, filter, styleFilters, colorFilters, logicOperator, resultCount]);
+  }, [sneakers, filter, styleFilters, colorFilters, logicOperator, resultCount, spinStatus, config, onOpenSubscriptionModal]);
 
   const handleRouletteComplete = useCallback(() => {
     setShowRoulette(false);
@@ -389,15 +405,50 @@ export default function SneakerPicker({ sneakers, onWear, onClose, resultCount }
                 )}
               </div>
 
-              {/* Pick Button */}
-              <button
-                onClick={pickSneaker}
-                disabled={showRoulette || sneakers.length === 0 || (filter === 'style' && styleFilters.length === 0) || (filter === 'color' && colorFilters.length === 0)}
-                className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold rounded-xl hover:from-blue-500 hover:to-blue-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none"
-              >
-                <Shuffle className="w-5 h-5" />
-                Pick My Sneakers
-              </button>
+              {/* Pick Button & Spin Status */}
+              <div className="space-y-2 pt-1">
+                <div className="flex items-center justify-between text-xs px-1">
+                  <span className="text-zinc-400 font-medium flex items-center gap-1.5">
+                    <Crown className="w-3.5 h-3.5 text-amber-400" />
+                    <span>{config.name} ({config.badge}) Plan</span>
+                  </span>
+                  <span
+                    className={`font-semibold px-2 py-0.5 rounded-md text-[11px] border ${
+                      spinStatus.max === Infinity
+                        ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'
+                        : spinStatus.remaining > 0
+                        ? 'bg-blue-500/10 text-blue-300 border-blue-500/20'
+                        : 'bg-rose-500/10 text-rose-300 border-rose-500/20'
+                    }`}
+                  >
+                    {spinStatus.max === Infinity
+                      ? '⚡ Unlimited Daily Spins'
+                      : `🎯 ${spinStatus.remaining} / ${spinStatus.max} spins left today`}
+                  </span>
+                </div>
+
+                <button
+                  onClick={pickSneaker}
+                  disabled={showRoulette || sneakers.length === 0 || (filter === 'style' && styleFilters.length === 0) || (filter === 'color' && colorFilters.length === 0)}
+                  className={`w-full py-3.5 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed ${
+                    !spinStatus.allowed
+                      ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 shadow-lg shadow-amber-500/20'
+                      : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400'
+                  }`}
+                >
+                  {!spinStatus.allowed ? (
+                    <>
+                      <Lock className="w-5 h-5 text-amber-200" />
+                      <span>Daily Spin Limit Reached (Upgrade Plan)</span>
+                    </>
+                  ) : (
+                    <>
+                      <Shuffle className="w-5 h-5" />
+                      <span>Pick My Sneakers</span>
+                    </>
+                  )}
+                </button>
+              </div>
 
               {sneakers.length > 0 && ((filter === 'style' && styleFilters.length === 0) || (filter === 'color' && colorFilters.length === 0)) && (
                 <p className="text-xs text-zinc-500 text-center">Select one or more {filter === 'style' ? 'styles' : 'colors'} above to continue</p>
