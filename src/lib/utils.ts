@@ -47,3 +47,21 @@ const getSafeStorage = (): Storage => {
 };
 
 export const safeLocalStorage = getSafeStorage();
+
+export function parseDatesWorn(datesWorn: unknown): string[] {
+  if (!datesWorn) return [];
+  if (Array.isArray(datesWorn)) {
+    return datesWorn.filter((d): d is string => typeof d === 'string' && d.trim().length > 0);
+  }
+  if (typeof datesWorn === 'string') {
+    try {
+      const parsed = JSON.parse(datesWorn);
+      if (Array.isArray(parsed)) {
+        return parsed.filter((d): d is string => typeof d === 'string' && d.trim().length > 0);
+      }
+    } catch {
+      return datesWorn.split(',').map(s => s.trim()).filter(Boolean);
+    }
+  }
+  return [];
+}

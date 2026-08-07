@@ -37,8 +37,8 @@ export const TIER_CONFIGS: Record<SubscriptionTier, TierConfig> = {
       { text: 'Add up to 10 pairs', included: true },
       { text: '1 image per card', included: true },
       { text: '3 wheel spins max per day', included: true },
-      { text: 'No \'Last Worn\' field', included: false },
-      { text: 'No batch Import (CSV/JSON/XLSX)', included: false },
+      { text: '\'Last Worn\' date tracking field', included: false },
+      { text: 'Batch Import (CSV, JSON, XLSX)', included: false },
     ],
   },
   pro: {

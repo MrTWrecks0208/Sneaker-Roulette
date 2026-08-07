@@ -2,6 +2,7 @@ import { Sneaker } from '../lib/supabase';
 import { Trash2, Edit3, Footprints, Plus, Calendar } from 'lucide-react';
 import { COLOR_HEX } from '../lib/colors';
 import { BrandLogo } from './BrandLogo';
+import { getConditionBadgeStyle } from '../lib/sneakerHelpers';
 
 interface SneakerListViewProps {
   sneakers: Sneaker[];
@@ -67,7 +68,7 @@ export default function SneakerListView({
                     </span>
                   )}
                   {sneaker.condition && (
-                    <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider border bg-emerald-500/10 text-emerald-300 border-emerald-500/30">
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider border ${getConditionBadgeStyle(sneaker.condition, 'dark')}`}>
                       {sneaker.condition}
                     </span>
                   )}

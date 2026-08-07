@@ -272,6 +272,65 @@ export function useAuth() {
     }
   };
 
+  const updateProfile = async ({ username, avatarUrl }: { username?: string; avatarUrl?: string }) => {
+    setError(null);
+    if (!user) {
+      return { success: false, error: 'No user signed in.' };
+    }
+
+    const trimmedUsername = username !== undefined ? username.trim() : (user.user_metadata?.username || '');
+    if (username !== undefined && !trimmedUsername) {
+      return { success: false, error: 'Username cannot be empty.' };
+    }
+
+    const currentAvatar = user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(user.email)}`;
+    const newAvatar = avatarUrl !== undefined
+      ? avatarUrl.trim()
+      : currentAvatar;
+
+    const updatedMetadata = {
+      ...user.user_metadata,
+      username: trimmedUsername || user.user_metadata?.username || user.email.split('@')[0],
+      full_name: trimmedUsername || user.user_metadata?.full_name || user.email.split('@')[0],
+      avatar_url: newAvatar,
+    };
+
+    if (!isSupabaseConfigured || user.id === 'guest-user-bypass' || user.id.includes('mock')) {
+      const updatedUser: UserProfile = {
+        ...user,
+        user_metadata: updatedMetadata,
+      };
+      safeLocalStorage.setItem('sneakers_mock_user', JSON.stringify(updatedUser));
+      window.dispatchEvent(new Event('mock-auth-change'));
+      setUser(updatedUser);
+      return { success: true, user: updatedUser };
+    }
+
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        data: updatedMetadata,
+      });
+
+      if (error) throw error;
+
+      const updatedUser: UserProfile = {
+        id: data.user.id,
+        email: data.user.email || '',
+        user_metadata: data.user.user_metadata,
+      };
+      setUser(updatedUser);
+      return { success: true, user: updatedUser };
+    } catch (err: unknown) {
+      const e = err as Error;
+      console.error('Update profile error:', e);
+      return { success: false, error: e.message || 'Failed to update profile.' };
+    }
+  };
+
+  const updateUsername = async (newUsername: string) => {
+    return updateProfile({ username: newUsername });
+  };
+
   return {
     user,
     loading,
@@ -281,5 +340,7 @@ export function useAuth() {
     signInWithGoogle,
     signInAsGuest,
     signOut,
+    updateUsername,
+    updateProfile,
   };
 }

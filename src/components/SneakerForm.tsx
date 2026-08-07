@@ -3,6 +3,7 @@ import { Sneaker, SneakerInsert, BRANDS, BRAND_CATEGORIES, HEIGHTS, STYLES, COLO
 import { X, Upload, Loader2, Camera, Sparkles, ChevronDown, Search, Check, Star, Info, Lock } from 'lucide-react';
 import PhotoGuideModal from './PhotoGuide';
 import { useSubscription } from '../hooks/useSubscription';
+import { getConditionBadgeStyle } from '../lib/sneakerHelpers';
 import multicolorImg from '../assets/images/multicolor_swatch_1783883698636.jpg';
 import iridescentImg from '../assets/images/iridescent.png';
 
@@ -746,7 +747,14 @@ export default function SneakerForm({ sneaker, onSave, onCancel, onOpenSubscript
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Condition</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-medium text-zinc-400 uppercase tracking-wider">Condition</label>
+                {condition && (
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider border ${getConditionBadgeStyle(condition, 'dark')}`}>
+                    {condition}
+                  </span>
+                )}
+              </div>
               <select
                 value={condition}
                 onChange={e => {

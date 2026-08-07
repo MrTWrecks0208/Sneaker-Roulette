@@ -22,6 +22,57 @@ export const getHeightBadgeStyle = (height: string) => {
   return 'bg-emerald-600 text-white';
 };
 
+export const getConditionBadgeStyle = (condition: string, variant: 'light' | 'dark' = 'light') => {
+  const c = condition.toLowerCase();
+
+  let color = 'emerald';
+
+  if (c.includes('beater')) {
+    color = 'red';
+  } else if (c.includes('poor')) {
+    color = 'orange';
+  } else if (c.includes('fair')) {
+    color = 'amber';
+  } else if (c.includes('very good')) {
+    color = 'lime';
+  } else if (c.includes('good')) {
+    color = 'yellow';
+  } else if (c.includes('excellent')) {
+    color = 'green';
+  } else if (c.includes('vnds') || c.includes('very near deadstock')) {
+    color = 'emerald';
+  } else if (c.includes('ds') || c.includes('deadstock')) {
+    color = 'sky';
+  }
+
+  if (variant === 'dark') {
+    switch (color) {
+      case 'red': return 'bg-red-600/10 text-red-400 border-red-700/20';
+      case 'orange': return 'bg-orange-600/10 text-orange-400 border-orange-700/20';
+      case 'amber': return 'bg-amber-600/10 text-amber-400 border-amber-700/20';
+      case 'yellow': return 'bg-yellow-600/10 text-yellow-400 border-yellow-700/20';
+      case 'lime': return 'bg-lime-600/10 text-lime-400 border-lime-700/20';
+      case 'green': return 'bg-green-600/10 text-green-400 border-green-700/20';
+      case 'emerald': return 'bg-emerald-600/10 text-emerald-400 border-emerald-700/20';
+      case 'sky': return 'bg-sky-600/10 text-sky-400 border-sky-700/20';
+      default: return 'bg-emerald-600/10 text-emerald-400 border-emerald-700/20';
+    }
+  }
+
+  // Light variant
+  switch (color) {
+    case 'red': return 'bg-red-50 text-red-700 border-red-200/80';
+    case 'orange': return 'bg-orange-50 text-orange-700 border-orange-200/80';
+    case 'amber': return 'bg-amber-50 text-amber-800 border-amber-200/80';
+    case 'yellow': return 'bg-yellow-50 text-yellow-800 border-yellow-200/80';
+    case 'lime': return 'bg-lime-50 text-lime-800 border-lime-200/80';
+    case 'green': return 'bg-green-50 text-green-700 border-green-200/80';
+    case 'emerald': return 'bg-emerald-50 text-emerald-700 border-emerald-200/80';
+    case 'sky': return 'bg-sky-50 text-sky-700 border-sky-200/80';
+    default: return 'bg-emerald-50 text-emerald-700 border-emerald-200/80';
+  }
+};
+
 export function calculateWearStats(
   datesWorn?: unknown,
   totalWornCount: number = 0,

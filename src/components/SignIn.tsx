@@ -178,7 +178,10 @@ export default function SignIn({ onSuccess }: SignInProps) {
                 exit={{ opacity: 0, height: 0 }}
                 className="space-y-1.5"
               >
-                <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider">Username</label>
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider">Choose Username</label>
+                  <span className="text-[10px] text-zinc-500 font-normal">Custom Handle</span>
+                </div>
                 <div className="relative">
                   <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-zinc-500" />
                   <input
@@ -186,10 +189,11 @@ export default function SignIn({ onSuccess }: SignInProps) {
                     required
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Enter username"
+                    placeholder="e.g. SneakerHead99"
                     className="w-full bg-zinc-950 border border-zinc-800/80 rounded-2xl pl-11 pr-4 py-3 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-red-500/80 focus:ring-1 focus:ring-red-500/30 transition-all"
                   />
                 </div>
+                <p className="text-[11px] text-zinc-500 font-medium">This will be your visible display name in your locker.</p>
               </motion.div>
             )}
 

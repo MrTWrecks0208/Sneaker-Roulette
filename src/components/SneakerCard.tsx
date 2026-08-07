@@ -3,6 +3,7 @@ import { Sneaker } from '../lib/supabase';
 import { Trash2, Edit3, Footprints, X, ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react';
 import { COLOR_HEX } from '../lib/colors';
 import { BrandLogo } from './BrandLogo';
+import { getConditionBadgeStyle, calculateWearStats } from '../lib/sneakerHelpers';
 
 interface SneakerCardProps {
   sneaker: Sneaker;
@@ -218,7 +219,7 @@ function CardInner({
   onOpenLightbox: (index: number) => void;
   isScaled?: boolean;
 }) {
-  const stats = calculateWearStats(sneaker.dates_worn, sneaker.last_worn);
+  const stats = calculateWearStats(sneaker.dates_worn, sneaker.times_worn, sneaker.last_worn);
 
   return (
     <div className={`w-full h-full relative transition-transform duration-700 ease-in-out [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)] ${isScaled ? 'rounded-2xl shadow-2xl' : 'rounded-xl shadow-md hover:shadow-2xl'}`}>
@@ -238,8 +239,8 @@ function CardInner({
           )}
 
           {/* Brand Logo in Upper Right Corner */}
-          <div className={`absolute z-10 transition-opacity duration-200 scale-110 pointer-events-none group-hover:opacity-0 ${isScaled ? 'top-8 right-10' : 'top-6 right-8'}`}>
-            <BrandLogo brand={sneaker.brand} sneakerName={sneaker.name} className={`${isScaled ? 'h-18 sm:h-16' : 'h-16 sm:h-14'} w-auto text-zinc-900 drop-shadow-sm`} />
+          <div className={`absolute z-10 duration-200 pointer-events-none ${isScaled ? 'top-7 right-10' : 'top-6 right-8'}`}>
+            <BrandLogo brand={sneaker.brand} sneakerName={sneaker.name} className={`${isScaled ? 'h-14 sm:h-16' : 'h-12 sm:h-14'} w-auto text-zinc-900 opacity-80`} />
           </div>
 
           {/* Hover action buttons */}
@@ -427,21 +428,21 @@ function CardInner({
             Wear Counts
           </div>
           <div className="grid grid-cols-4 gap-1 sm:gap-1.5">
-            <div className="bg-gradient-to-br from-emerald-600/10 to-emerald-600/0 border border-emerald-700/20 rounded-lg p-1 text-center shadow-2xs">
-              <div className={`text-gray-400 font-medium ${isScaled ? 'text-[10px]' : 'text-[8px]'} uppercase leading-none`}>30D</div>
-              <div className={`font-extrabold text-gray-900 ${isScaled ? 'text-sm mt-0.5' : 'text-xs mt-0.5'}`}>{stats.last30}x</div>
+            <div className="bg-gradient-to-br from-emerald-600/10 to-emerald-600/20 border border-emerald-700/20 rounded-lg p-1 text-center shadow-2xs">
+              <div className={`text-gray-500 font-medium ${isScaled ? 'text-[10px]' : 'text-[9px]'} uppercase leading-none`}>30D</div>
+              <div className={`font-extrabold text-gray-900 ${isScaled ? 'text-sm mt-0.5' : 'text-xs mt-0.5'}`}>{stats.last1m}x</div>
             </div>
-            <div className="bg-gradient-to-br from-emerald-600/0 to-emerald-600/10 border border-emerald-700/20 rounded-lg p-1 text-center shadow-2xs">
-              <div className={`text-gray-400 font-medium ${isScaled ? 'text-[10px]' : 'text-[8px]'} uppercase leading-none`}>3M</div>
-              <div className={`font-extrabold text-gray-900 ${isScaled ? 'text-sm mt-0.5' : 'text-xs mt-0.5'}`}>{stats.last90}x</div>
+            <div className="bg-gradient-to-br from-emerald-600/10 to-emerald-600/20 border border-emerald-700/20 rounded-lg p-1 text-center shadow-2xs">
+              <div className={`text-gray-500 font-medium ${isScaled ? 'text-[10px]' : 'text-[9px]'} uppercase leading-none`}>3M</div>
+              <div className={`font-extrabold text-gray-900 ${isScaled ? 'text-sm mt-0.5' : 'text-xs mt-0.5'}`}>{stats.last3m}x</div>
             </div>
-            <div className="bg-gradient-to-br from-emerald-600/0 to-emerald-600/10 border border-emerald-700/20 rounded-lg p-1 text-center shadow-2xs">
-              <div className={`text-gray-400 font-medium ${isScaled ? 'text-[10px]' : 'text-[8px]'} uppercase leading-none`}>6M</div>
-              <div className={`font-extrabold text-gray-900 ${isScaled ? 'text-sm mt-0.5' : 'text-xs mt-0.5'}`}>{stats.last180}x</div>
+            <div className="bg-gradient-to-br from-emerald-600/10 to-emerald-600/20 border border-emerald-700/20 rounded-lg p-1 text-center shadow-2xs">
+              <div className={`text-gray-500 font-medium ${isScaled ? 'text-[10px]' : 'text-[9px]'} uppercase leading-none`}>6M</div>
+              <div className={`font-extrabold text-gray-900 ${isScaled ? 'text-sm mt-0.5' : 'text-xs mt-0.5'}`}>{stats.last6m}x</div>
             </div>
-            <div className="bg-gradient-to-br from-emerald-600/0 to-emerald-600/10 border border-emerald-700/20 rounded-lg p-1 text-center shadow-2xs">
-              <div className={`text-gray-400 font-medium ${isScaled ? 'text-[10px]' : 'text-[8px]'} uppercase leading-none`}>1Y</div>
-              <div className={`font-extrabold text-gray-900 ${isScaled ? 'text-sm mt-0.5' : 'text-xs mt-0.5'}`}>{stats.last365}x</div>
+            <div className="bg-gradient-to-br from-emerald-600/10 to-emerald-600/20 border border-emerald-700/20 rounded-lg p-1 text-center shadow-2xs">
+              <div className={`text-gray-500 font-medium ${isScaled ? 'text-[10px]' : 'text-[9px]'} uppercase leading-none`}>1Y</div>
+              <div className={`font-extrabold text-gray-900 ${isScaled ? 'text-sm mt-0.5' : 'text-xs mt-0.5'}`}>{stats.last12m}x</div>
             </div>
           </div>
         </div>
@@ -453,7 +454,7 @@ function CardInner({
               <span className={`font-semibold text-gray-500 uppercase tracking-wider ${isScaled ? 'text-xs' : 'text-[10px]'}`}>
                 Condition:
               </span>
-              <span className={`font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/80 rounded px-1.5 py-0.5 ${isScaled ? 'text-xs' : 'text-[10px]'}`}>
+              <span className={`font-semibold border rounded px-1.5 py-0.5 ${getConditionBadgeStyle(sneaker.condition, 'light')} ${isScaled ? 'text-xs' : 'text-[10px]'}`}>
                 {sneaker.condition}
               </span>
             </div>
@@ -462,7 +463,7 @@ function CardInner({
             <span className={`font-semibold text-gray-500 uppercase tracking-wider ${isScaled ? 'text-xs' : 'text-[10px]'}`}>
               Wear Frequency:
             </span>
-            <span className={`font-semibold italic px-2 py-0.5 ${stats.frequencyText === 'Needs more data' ? 'text-rose-500' : 'text-blue-700'} ${isScaled ? 'text-xs' : 'text-[10px]'}`}>
+            <span className={`font-semibold italic px-2 py-0.5 ${stats.frequencyText === 'Needs more data' ? 'text-amber-600' : stats.frequencyText === 'Never worn' ? 'text-zinc-500' : 'text-emerald-700'} ${isScaled ? 'text-xs' : 'text-[10px]'}`}>
               {stats.frequencyText}
             </span>
           </div>
@@ -472,66 +473,6 @@ function CardInner({
 
     </div>
   );
-}
-
-function calculateWearStats(datesWorn?: string[] | null, lastWornAt?: string | null) {
-  let dates: Date[] = [];
-  if (Array.isArray(datesWorn) && datesWorn.length > 0) {
-    dates = datesWorn
-      .map((d) => new Date(d))
-      .filter((d) => !isNaN(d.getTime()))
-      .sort((a, b) => b.getTime() - a.getTime());
-  } else if (lastWornAt) {
-    const lw = new Date(lastWornAt);
-    if (!isNaN(lw.getTime())) {
-      dates = [lw];
-    }
-  }
-
-  const now = new Date();
-  const msInDay = 1000 * 60 * 60 * 24;
-
-  const countInDays = (days: number) => {
-    const cutoff = now.getTime() - days * msInDay;
-    return dates.filter((d) => d.getTime() >= cutoff).length;
-  };
-
-  const last30 = countInDays(30);
-  const last90 = countInDays(90);
-  const last180 = countInDays(180);
-  const last365 = countInDays(365);
-
-  let frequencyText = 'Needs more data';
-
-  if (dates.length >= 2) {
-    const ascDates = [...dates].sort((a, b) => a.getTime() - b.getTime());
-    const minTime = ascDates[0].getTime();
-    const maxTime = ascDates[ascDates.length - 1].getTime();
-    const diffDays = (maxTime - minTime) / msInDay;
-
-    if (diffDays <= 0) {
-      frequencyText = 'Multiple times a day';
-    } else {
-      const avgIntervalDays = diffDays / (ascDates.length - 1);
-      if (avgIntervalDays < 1.5) {
-        frequencyText = 'Every day';
-      } else if (avgIntervalDays < 6.5) {
-        frequencyText = `Every ${Math.round(avgIntervalDays)} days`;
-      } else if (avgIntervalDays < 11) {
-        frequencyText = 'Every week';
-      } else if (avgIntervalDays < 25) {
-        const weeks = Math.round(avgIntervalDays / 7);
-        frequencyText = `Every ${weeks} week${weeks > 1 ? 's' : ''}`;
-      } else if (avgIntervalDays < 340) {
-        const months = Math.round(avgIntervalDays / 30);
-        frequencyText = `Every ${months} month${months > 1 ? 's' : ''}`;
-      } else {
-        frequencyText = 'Every year';
-      }
-    }
-  }
-
-  return { last30, last90, last180, last365, frequencyText };
 }
 
 const formatLastWorn = (dateString?: string | null) => {
