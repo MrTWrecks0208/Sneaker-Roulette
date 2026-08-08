@@ -100,6 +100,30 @@ export default function SubscriptionModal({
           </div>
         )}
 
+        {/* Developer Testing Bypass Switcher */}
+        <div className="mx-5 sm:mx-6 mt-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex flex-wrap items-center justify-between gap-2.5 text-xs">
+          <div className="flex items-center gap-2 text-amber-300 font-bold">
+            <Zap className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>Developer / Tester Instant Bypass:</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            {(['free', 'pro', 'premium'] as SubscriptionTier[]).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => handleSelectTier(t)}
+                className={`px-3 py-1 rounded-lg text-xs font-bold uppercase transition-all cursor-pointer ${
+                  currentTier === t
+                    ? 'bg-amber-400 text-zinc-950 font-black shadow-md'
+                    : 'bg-zinc-900 text-zinc-300 border border-zinc-800 hover:bg-zinc-800'
+                }`}
+              >
+                {t === 'premium' ? '⚡ Premium (Unlimited)' : t}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Content Body */}
         <div className="p-5 sm:p-6 overflow-y-auto space-y-6 flex-1">
           {/* Monthly / Yearly Billing Toggle */}

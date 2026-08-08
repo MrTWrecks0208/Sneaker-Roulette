@@ -51,7 +51,7 @@ export const BRAND_CATEGORIES = [
     ],
   },
   {
-    category: 'DESIGNER/LUXURY',
+    category: 'DESIGNER/FASHION',
     brands: [
       'A Bathing Ape', 'Alexander McQueen', 'Alohas', 'Amiri', 'Ann Demeulemeester', 'AUTRY', 'Axel Arigato', 'Balenciaga',
       'Balmain', 'Bottega Veneta', 'Burberry', 'Brooks', 'Christian Louboutin',
@@ -76,7 +76,7 @@ export const BRAND_CATEGORIES = [
       'Allbirds', 'ASICS', 'Bata', 'Birkenstock', 'Cariuma',
       'Common Projects', 'Converse', 'Crocs', 'ECCO', 'Filling Pieces', 'K-Swiss',
       'KangaROOS', 'Keds', 'Moonstar', 'New Balance', 'Nothing New', 'OOfos',
-      'Puma', "Rothy's", 'Saucony', 'SeaVees', 'Skechers', "Sperry's",
+      'Puma', "Rothy's", 'Saucony', 'SeaVees', 'Skechers', "Sperry",
       'Thousand Fell', 'Toms', 'Tretorn', 'Zegna',
     ],
   },

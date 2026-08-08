@@ -14,6 +14,7 @@ import SneakerListView from './components/SneakerListView';
 import SneakerTableView from './components/SneakerTableView';
 import PhotoGuideModal from './components/PhotoGuide';
 import SubscriptionModal from './components/SubscriptionModal';
+import { SettingsModal, UserPreferences, DEFAULT_PREFERENCES } from './components/SettingsModal';
 import { useSubscription } from './hooks/useSubscription';
 import {
   Plus, Upload, Search, Footprints,
@@ -36,7 +37,37 @@ const AVATAR_PRESETS = [
 function App() {
   const { user, loading: authLoading, signOut, updateProfile } = useAuth();
   const { sneakers, loading, error, isSupabaseConfigured, usingLocalStorageFallback, addSneaker, addSneakersBatch, updateSneaker, deleteSneaker, incrementWorn } = useSneakers(user?.id);
-  const { tier, config, checkAddPairAllowed, canImport } = useSubscription();
+  const { tier, config, changeTier, checkAddPairAllowed, canImport } = useSubscription();
+
+  const [preferences, setPreferences] = useState<UserPreferences>(() => {
+    const saved = safeLocalStorage.getItem('sneaker_user_preferences');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return DEFAULT_PREFERENCES;
+      }
+    }
+    return DEFAULT_PREFERENCES;
+  });
+
+  const handleSavePreferencesFromSettings = (newPrefs: UserPreferences) => {
+    setPreferences(newPrefs);
+    if (newPrefs.defaultSort) {
+      const parts = newPrefs.defaultSort.split('-');
+      if (parts.length === 2) {
+        setSortBy(parts[0] as any);
+        setSortOrder(parts[1] as 'asc' | 'desc');
+      }
+    }
+  };
+
+  const handleSaveProfileFromSettings = async (data: { username: string; avatarUrl: string; email: string }) => {
+    await updateProfile({
+      username: data.username.trim(),
+      avatarUrl: data.avatarUrl.trim() || undefined,
+    });
+  };
   const isGuest = user?.id === 'guest-user-bypass';
   const isLive = isSupabaseConfigured && !isGuest;
   const [showLoading, setShowLoading] = useState(false);
@@ -1029,360 +1060,18 @@ CREATE POLICY "Users can delete own sneakers"
 
       {/* Account Settings Modal */}
       {showSettingsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-zinc-900 border border-zinc-800/90 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 sm:px-6 sm:py-4 border-b border-zinc-800 bg-zinc-950/80 shrink-0">
-              <div className="flex items-center gap-3">
-                <Settings className="w-5 h-5 text-red-500 shrink-0" />
-                <div>
-                  <h2 className="text-base font-bold text-zinc-100">Account Settings</h2>
-                  <p className="text-xs text-zinc-400">Manage profile, avatar, subscription & preferences</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowSettingsModal(false)}
-                className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer focus:outline-none"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Modal Tabs Bar */}
-            <div className="flex border-b border-zinc-800 bg-zinc-950/40 px-4 pt-2 gap-1 shrink-0 overflow-x-auto">
-              <button
-                type="button"
-                onClick={() => setSettingsTab('profile')}
-                className={`pb-3 px-3 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-                  settingsTab === 'profile'
-                    ? 'border-red-500 text-white'
-                    : 'border-transparent text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <User className="w-4 h-4 text-red-400" />
-                <span>Profile & Avatar</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSettingsTab('subscription')}
-                className={`pb-3 px-3 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-                  settingsTab === 'subscription'
-                    ? 'border-amber-500 text-white'
-                    : 'border-transparent text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <Crown className="w-4 h-4 text-amber-400" />
-                <span>Subscription</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSettingsTab('preferences')}
-                className={`pb-3 px-3 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
-                  settingsTab === 'preferences'
-                    ? 'border-sky-500 text-white'
-                    : 'border-transparent text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <Footprints className="w-4 h-4 text-sky-400" />
-                <span>Sneaker Options</span>
-              </button>
-            </div>
-            
-            {/* Modal Body */}
-            <div className="p-5 overflow-y-auto space-y-5 text-left flex-1">
-              {/* TAB 1: PROFILE & AVATAR */}
-              {settingsTab === 'profile' && user && (
-                <form onSubmit={handleSaveProfile} className="space-y-5">
-                  {/* Avatar Live Preview & Header */}
-                  <div className="p-4 rounded-2xl bg-zinc-950/90 border border-zinc-800/80 flex items-center gap-4">
-                    <div className="relative shrink-0">
-                      <img
-                        src={newAvatarUrl || user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(user.email)}`}
-                        alt="Avatar Preview"
-                        className="w-16 h-16 rounded-2xl object-cover border-2 border-zinc-700 bg-zinc-900 shadow-md"
-                        referrerPolicy="no-referrer"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(newUsername || 'SneakerHead')}`;
-                        }}
-                      />
-                      <span className={`absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full text-black font-black text-[9px] shadow-lg ${
-                        tier === 'premium'
-                          ? 'bg-amber-400 text-zinc-950'
-                          : tier === 'pro'
-                          ? 'bg-cyan-400 text-zinc-950'
-                          : 'bg-emerald-400 text-zinc-950'
-                      }`}>
-                        <Crown className="w-3 h-3 fill-current" />
-                      </span>
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-bold text-white truncate">
-                        {newUsername || user.user_metadata?.username || user.email.split('@')[0]}
-                      </div>
-                      <div className="text-xs text-zinc-400 truncate">
-                        {user.email}
-                      </div>
-                      <div className="inline-flex items-center gap-1 mt-1 text-[9px] font-extrabold px-2 py-0.5 rounded bg-zinc-800 text-amber-300 border border-zinc-700 uppercase">
-                        <Crown className="w-2.5 h-2.5 text-amber-400" />
-                        <span>{config.badge} Member</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Username Handle Input */}
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-zinc-300 uppercase tracking-wider">
-                      Username
-                    </label>
-                    <div className="relative">
-                      <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-                      <input
-                        type="text"
-                        required
-                        value={newUsername}
-                        onChange={(e) => setNewUsername(e.target.value)}
-                        placeholder="e.g. SneakerHead99"
-                        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-red-500/80 focus:ring-1 focus:ring-red-500/30 transition-all font-medium"
-                      />
-                    </div>
-                    <p className="text-[11px] text-zinc-500">Visible on your sneaker locker and daily activity.</p>
-                  </div>
-
-                  {/* Avatar Upload Box */}
-                  <div className="space-y-2">
-                    <label className="block text-xs font-semibold text-zinc-300 uppercase tracking-wider">
-                      Avatar Image
-                    </label>
-
-                    {/* Drag & Drop / File Selector Box */}
-                    <div
-                      onDragOver={handleAvatarDragOver}
-                      onDragLeave={handleAvatarDragLeave}
-                      onDrop={handleAvatarDrop}
-                      className={`relative border-2 border-dashed rounded-2xl p-5 text-center transition-all flex flex-col items-center justify-center cursor-pointer ${
-                        isDraggingAvatar
-                          ? 'border-red-500 bg-red-500/10 scale-[1.01]'
-                          : 'border-zinc-800 hover:border-zinc-700 bg-zinc-950/60 hover:bg-zinc-950'
-                      }`}
-                    >
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleAvatarFileUpload}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                      />
-                      
-                      <div className="flex items-center justify-center gap-2 mb-2">
-                        <Upload className="w-5 h-5 text-red-500" />
-                        <Camera className="w-5 h-5 text-zinc-400" />
-                      </div>
-
-                      <span className="text-xs font-bold text-zinc-200">
-                        Upload Your Own Photo
-                      </span>
-                      <span className="text-[11px] text-zinc-400 mt-0.5">
-                        Click to browse or drag and drop an image file
-                      </span>
-                      <span className="text-[10px] text-zinc-500 mt-1">
-                        PNG, JPG, WEBP, GIF up to 10MB
-                      </span>
-                    </div>
-
-                    {/* Preset Avatars or Custom URL options */}
-                    <div className="pt-2 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-semibold text-zinc-400">Or pick a preset avatar:</span>
-                        {newAvatarUrl && (
-                          <button
-                            type="button"
-                            onClick={() => setNewAvatarUrl('')}
-                            className="text-[10px] text-zinc-500 hover:text-zinc-300 flex items-center gap-1 transition-colors cursor-pointer"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                            <span>Reset Photo</span>
-                          </button>
-                        )}
-                      </div>
-
-                      <div className="grid grid-cols-8 gap-1.5">
-                        {AVATAR_PRESETS.map((preset) => {
-                          const isSelected = newAvatarUrl === preset.url;
-                          return (
-                            <button
-                              key={preset.id}
-                              type="button"
-                              onClick={() => setNewAvatarUrl(preset.url)}
-                              className={`relative p-0.5 rounded-xl border transition-all cursor-pointer aspect-square flex items-center justify-center ${
-                                isSelected
-                                  ? 'bg-red-500/20 border-red-500 ring-2 ring-red-500/30 scale-105'
-                                  : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700'
-                              }`}
-                              title={preset.label}
-                            >
-                              <img
-                                src={preset.url}
-                                alt={preset.label}
-                                className="w-full h-full object-cover rounded-lg"
-                              />
-                            </button>
-                          );
-                        })}
-                      </div>
-
-
-                    </div>
-                  </div>
-
-                  {profileStatus && (
-                    <div className={`text-xs font-medium flex items-center gap-2 p-3 rounded-xl border ${
-                      profileStatus.type === 'success'
-                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                        : 'bg-red-500/10 border-red-500/30 text-red-400'
-                    }`}>
-                      {profileStatus.type === 'success' ? <Check className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
-                      <span>{profileStatus.message}</span>
-                    </div>
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={isSavingProfile || !newUsername.trim()}
-                    className="w-full py-3 bg-red-600 hover:bg-red-500 disabled:bg-zinc-800 disabled:text-zinc-500 text-white text-xs font-bold rounded-xl transition-all cursor-pointer disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-red-600/20"
-                  >
-                    {isSavingProfile ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Saving Profile Changes...</span>
-                      </>
-                    ) : (
-                      'Save Profile Changes'
-                    )}
-                  </button>
-                </form>
-              )}
-
-              {/* TAB 2: SUBSCRIPTION */}
-              {settingsTab === 'subscription' && (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-xs font-bold text-zinc-300 uppercase tracking-wider">
-                    <Crown className="w-4 h-4 text-amber-400" />
-                    <span>Your Membership Plan</span>
-                  </div>
-
-                  <div className={`p-4 rounded-2xl border flex flex-col gap-3 ${
-                    tier === 'premium'
-                      ? 'bg-gradient-to-r from-amber-500/15 via-purple-500/10 to-amber-500/10 border-amber-500/40'
-                      : tier === 'pro'
-                      ? 'bg-gradient-to-r from-blue-500/15 to-cyan-500/10 border-cyan-500/40'
-                      : 'bg-zinc-950 border-zinc-800'
-                  }`}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-black text-white">{config.name} Plan</span>
-                        <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded border uppercase tracking-wider ${
-                          tier === 'premium'
-                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                            : tier === 'pro'
-                            ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
-                            : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                        }`}>
-                          {config.badge}
-                        </span>
-                      </div>
-                      <Crown className="w-5 h-5 text-amber-400" />
-                    </div>
-
-                    <div className="space-y-2 pt-1 text-xs">
-                      {config.features.map((feat, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                          {feat.included ? (
-                            <>
-                              <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                              <span className="text-zinc-200 font-medium">{feat.text}</span>
-                            </>
-                          ) : (
-                            <>
-                              <X className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
-                              <span className="text-zinc-500 line-through decoration-zinc-700">{feat.text}</span>
-                            </>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowSettingsModal(false);
-                        handleOpenSubscriptionModal();
-                      }}
-                      className="mt-2 w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-extrabold text-xs rounded-xl transition-all cursor-pointer shadow-md shadow-amber-500/20 flex items-center justify-center gap-1.5"
-                    >
-                      <Crown className="w-4 h-4 fill-current" />
-                      <span>{tier === 'free' ? 'Upgrade Plan' : 'Manage Subscription Plans'}</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 3: SNEAKER & PICKER OPTIONS (LAST) */}
-              {settingsTab === 'preferences' && (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-xs font-bold text-zinc-300 uppercase tracking-wider">
-                    <Footprints className="w-4 h-4 text-sky-400" />
-                    <span>Sneaker & Picker Options</span>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 space-y-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-zinc-200">
-                        Spin the wheel options
-                      </label>
-                      <p className="text-xs text-zinc-400 mt-0.5">
-                        Choose how many sneaker options are presented when you spin the sneaker roulette wheel.
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-2.5 pt-1">
-                      {([1, 3, 5] as const).map((num) => (
-                        <button
-                          key={num}
-                          type="button"
-                          onClick={() => {
-                            setPickerResultCount(num);
-                            safeLocalStorage.setItem('picker_result_count', num.toString());
-                            setToast({ type: 'success', message: `Picker updated to ${num} ${num === 1 ? 'option' : 'options'}` });
-                          }}
-                          className={`py-3 px-2 rounded-xl text-xs font-bold border transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
-                            pickerResultCount === num
-                              ? 'bg-sky-500/15 text-sky-300 border-sky-500/50 shadow-md shadow-sky-500/10 ring-1 ring-sky-500/30'
-                              : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-zinc-200'
-                          }`}
-                        >
-                          <span className="text-sm font-black">{num}</span>
-                          <span className="text-[10px] font-medium opacity-80">{num === 1 ? 'Choice' : 'Choices'}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Modal Footer */}
-            <div className="p-4 bg-zinc-950/80 border-t border-zinc-800/80 flex justify-end shrink-0">
-              <button
-                onClick={() => setShowSettingsModal(false)}
-                className="px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white text-xs font-semibold rounded-xl transition-all cursor-pointer focus:outline-none"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
+        <SettingsModal
+          isOpen={showSettingsModal}
+          onClose={() => setShowSettingsModal(false)}
+          user={user}
+          sneakers={sneakers}
+          tier={tier}
+          onChangeTier={changeTier}
+          onSaveProfile={handleSaveProfileFromSettings}
+          onSavePreferences={handleSavePreferencesFromSettings}
+          initialPreferences={preferences}
+          onShowToast={(msg, type) => setToast({ type, message: msg })}
+        />
       )}
 
       {/* Delete Confirmation Modal */}

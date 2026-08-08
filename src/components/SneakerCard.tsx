@@ -463,7 +463,7 @@ function CardInner({
             <span className={`font-semibold text-gray-500 uppercase tracking-wider ${isScaled ? 'text-xs' : 'text-[10px]'}`}>
               Wear Frequency:
             </span>
-            <span className={`font-semibold italic px-2 py-0.5 ${stats.frequencyText === 'Needs more data' ? 'text-amber-600' : stats.frequencyText === 'Never worn' ? 'text-zinc-500' : 'text-emerald-700'} ${isScaled ? 'text-xs' : 'text-[10px]'}`}>
+            <span className={`font-semibold italic px-2 py-0.5 ${stats.frequencyText === 'Needs more data' ? 'text-amber-600' : stats.frequencyText === 'Never worn' ? 'text-zinc-500' : 'text-blue-700'} ${isScaled ? 'text-xs' : 'text-[10px]'}`}>
               {stats.frequencyText}
             </span>
           </div>
