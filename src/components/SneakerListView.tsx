@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Sneaker } from '../lib/supabase';
-import { Trash2, Edit3, Footprints, Plus, Calendar } from 'lucide-react';
+import { Trash2, Edit3, Footprints, Plus, Minus, Calendar } from 'lucide-react';
 import { COLOR_HEX } from '../lib/colors';
 import { BrandLogo } from './BrandLogo';
 import { getConditionBadgeStyle } from '../lib/sneakerHelpers';
@@ -9,13 +10,68 @@ interface SneakerListViewProps {
   onEdit: (sneaker: Sneaker) => void;
   onDelete: (id: string) => void;
   onIncrementWorn: (id: string) => void;
+  onDecrementWorn?: (id: string) => void;
+}
+
+function ListViewWornBadge({
+  worn,
+  onIncrement,
+  onDecrement
+}: {
+  worn: number;
+  onIncrement: () => void;
+  onDecrement: () => void;
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <div
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={`relative inline-flex items-center justify-center w-24 h-8 rounded-xl border transition-colors select-none overflow-hidden ${
+        isHovered
+          ? 'bg-zinc-900 border-zinc-700'
+          : 'bg-red-600/10 border-red-500/20 text-red-400 font-semibold text-xs hover:border-red-500/40 cursor-pointer'
+      }`}
+    >
+      {isHovered ? (
+        <div className="flex w-full h-full divide-x divide-zinc-800">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDecrement();
+            }}
+            className="w-1/2 h-full bg-rose-500/15 hover:bg-rose-500/30 text-rose-400 hover:text-rose-300 font-bold flex items-center justify-center transition-colors cursor-pointer"
+            title="Decrease wear count (-1)"
+          >
+            <Minus className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onIncrement();
+            }}
+            className="w-1/2 h-full bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-400 hover:text-emerald-300 font-bold flex items-center justify-center transition-colors cursor-pointer"
+            title="Increase wear count (+1)"
+          >
+            <Plus className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      ) : (
+        <span className="whitespace-nowrap">Worn {worn}x</span>
+      )}
+    </div>
+  );
 }
 
 export default function SneakerListView({
   sneakers,
   onEdit,
   onDelete,
-  onIncrementWorn
+  onIncrementWorn,
+  onDecrementWorn
 }: SneakerListViewProps) {
   return (
     <div className="space-y-3 w-full mt-8">
@@ -37,9 +93,9 @@ export default function SneakerListView({
             <div className="flex items-center gap-4 min-w-0 flex-1">
               {/* Image Thumbnail */}
               <div className="relative w-16 h-16 bg-zinc-950 border border-zinc-800/80 rounded-xl flex items-center justify-center p-2 flex-shrink-0 overflow-hidden">
-                {sneaker.image_url ? (
+                {sneaker.thumbnail_url ? (
                   <img
-                    src={sneaker.image_url}
+                    src={sneaker.thumbnail_url}
                     alt={sneaker.name}
                     className="w-full h-full object-contain"
                   />
@@ -132,16 +188,13 @@ export default function SneakerListView({
                 <span className="text-zinc-300 font-semibold">{formatLastWorn(sneaker.last_worn)}</span>
               </div>
 
-              {/* Wear Log Action (fixed width pill so all items match) */}
+              {/* Wear Log Action */}
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => onIncrementWorn(sneaker.id)}
-                  title="Log a wear (+1)"
-                  className="w-24 flex items-center justify-center gap-1.5 py-1.5 bg-red-600/10 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/20 hover:border-red-500 rounded-xl text-xs font-semibold tracking-wide transition-all duration-150 cursor-pointer flex-shrink-0"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Worn {sneaker.worn}x</span>
-                </button>
+                <ListViewWornBadge
+                  worn={sneaker.worn || 0}
+                  onIncrement={() => onIncrementWorn(sneaker.id)}
+                  onDecrement={() => onDecrementWorn?.(sneaker.id)}
+                />
               </div>
 
               {/* Actions */}

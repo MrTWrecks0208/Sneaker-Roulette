@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Sneaker } from '../lib/supabase';
-import { Trash2, Edit3, Footprints, X, ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react';
+import { Trash2, Edit3, Footprints, X, ChevronLeft, ChevronRight, Maximize2, Plus, Minus } from 'lucide-react';
 import { COLOR_HEX } from '../lib/colors';
 import { BrandLogo } from './BrandLogo';
 import { getConditionBadgeStyle, calculateWearStats } from '../lib/sneakerHelpers';
@@ -9,21 +9,58 @@ interface SneakerCardProps {
   sneaker: Sneaker;
   onEdit: (sneaker: Sneaker) => void;
   onDelete: (id: string) => void;
+  onIncrementWorn?: (id: string) => void;
+  onDecrementWorn?: (id: string) => void;
 }
 
-export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardProps) {
+export default function SneakerCard({ sneaker, onEdit, onDelete, onIncrementWorn, onDecrementWorn }: SneakerCardProps) {
+  const [isFlipped, setIsFlipped] = useState(false);
   const [isEnlarged, setIsEnlarged] = useState(false);
+  const [isEnlargedFlipped, setIsEnlargedFlipped] = useState(false);
   const [lightboxData, setLightboxData] = useState<{ sneakerName: string; images: string[]; index: number } | null>(null);
 
+  const clickTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const enlargedClickTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   const handleCardClick = (e: React.MouseEvent) => {
-    // Don't enlarge if user clicked interactive buttons, inputs, or links directly
+    // Don't handle if user clicked interactive buttons, inputs, or links directly
     if ((e.target as HTMLElement).closest('button, input, a, [role="button"]')) return;
-    setIsEnlarged(true);
+
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current);
+      clickTimerRef.current = null;
+      // Double click in succession: expand to forefront
+      setIsEnlarged(true);
+    } else {
+      clickTimerRef.current = setTimeout(() => {
+        clickTimerRef.current = null;
+        // Single click: flip card over
+        setIsFlipped(prev => !prev);
+      }, 250);
+    }
+  };
+
+  const handleEnlargedCardClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if ((e.target as HTMLElement).closest('button, input, a, [role="button"]')) return;
+
+    if (enlargedClickTimerRef.current) {
+      clearTimeout(enlargedClickTimerRef.current);
+      enlargedClickTimerRef.current = null;
+      // Double click on enlarged view closes enlarged view
+      setIsEnlarged(false);
+    } else {
+      enlargedClickTimerRef.current = setTimeout(() => {
+        enlargedClickTimerRef.current = null;
+        // Single click flips enlarged card
+        setIsEnlargedFlipped(prev => !prev);
+      }, 250);
+    }
   };
 
   const galleryImages = sneaker.images && sneaker.images.length > 0 
     ? sneaker.images 
-    : (sneaker.image_url ? [sneaker.image_url] : []);
+    : (sneaker.thumbnail_url ? [sneaker.thumbnail_url] : []);
 
   const openLightbox = (index: number) => {
     if (galleryImages.length === 0) return;
@@ -57,21 +94,25 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
       {/* Flip Card Container */}
       <div
         onClick={handleCardClick}
-        className="group relative w-full max-w-[288px] h-[370px] mx-auto cursor-pointer [perspective:1000px]"
+        title="Click to flip • Double-click to expand"
+        className="group relative w-full max-w-[288px] h-[415px] mx-auto cursor-pointer [perspective:1000px] select-none"
       >
         <CardInner 
           sneaker={sneaker} 
           onEdit={onEdit} 
           onDelete={onDelete} 
+          onIncrementWorn={onIncrementWorn}
+          onDecrementWorn={onDecrementWorn}
           galleryImages={galleryImages}
           onOpenLightbox={openLightbox}
+          isFlipped={isFlipped}
         />
       </div>
 
       {/* Enlarged Modal View (With Blurry Backdrop) */}
       {isEnlarged && (
         <div
-          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-lg flex items-center justify-center p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-lg flex items-center justify-center p-4 animate-in fade-in duration-200 select-none"
           onClick={() => setIsEnlarged(false)}
         >
           {/* Floating Close Button */}
@@ -89,15 +130,19 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
 
           {/* Scaled-up Card */}
           <div
-            className="group relative w-[340px] sm:w-[380px] h-[440px] sm:h-[490px] cursor-pointer [perspective:1200px] animate-in zoom-in-95 duration-200"
-            onClick={(e) => e.stopPropagation()}
+            className="group relative w-[340px] sm:w-[380px] h-[500px] sm:h-[540px] cursor-pointer [perspective:1200px]"
+            onClick={handleEnlargedCardClick}
+            title="Click to flip • Double-click to close"
           >
             <CardInner 
               sneaker={sneaker} 
               onEdit={onEdit} 
               onDelete={onDelete} 
+              onIncrementWorn={onIncrementWorn}
+              onDecrementWorn={onDecrementWorn}
               galleryImages={galleryImages}
               onOpenLightbox={openLightbox}
+              isFlipped={isEnlargedFlipped}
               isScaled 
             />
           </div>
@@ -204,33 +249,106 @@ export default function SneakerCard({ sneaker, onEdit, onDelete }: SneakerCardPr
   );
 }
 
+function InteractiveWornBadge({
+  worn,
+  onIncrement,
+  onDecrement,
+  isScaled = false,
+}: {
+  worn: number;
+  onIncrement: (e: React.MouseEvent) => void;
+  onDecrement: (e: React.MouseEvent) => void;
+  isScaled?: boolean;
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const containerClasses = isScaled
+    ? 'w-24 h-7 text-xs rounded-lg'
+    : 'w-[82px] h-6 text-[10px] rounded-md';
+
+  return (
+    <div
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={`relative inline-flex items-center justify-center border border-slate-700/80 shadow-md backdrop-blur-md overflow-hidden transition-colors select-none ${containerClasses} ${
+        isHovered ? 'bg-slate-900/95 border-slate-600' : 'bg-slate-800/90 hover:bg-slate-700/95 text-white font-bold cursor-pointer'
+      }`}
+    >
+      {isHovered ? (
+        <div className="flex w-full h-full divide-x divide-slate-800">
+          <button
+            type="button"
+            onClick={onDecrement}
+            className="w-1/2 h-full bg-rose-500/15 hover:bg-rose-500/30 text-rose-400 hover:text-rose-300 font-bold flex items-center justify-center transition-colors cursor-pointer"
+            title="Decrease wear count (-1)"
+          >
+            <Minus className={isScaled ? 'w-4 h-4' : 'w-3 h-3'} />
+          </button>
+          <button
+            type="button"
+            onClick={onIncrement}
+            className="w-1/2 h-full bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-400 hover:text-emerald-300 font-bold flex items-center justify-center transition-colors cursor-pointer"
+            title="Increase wear count (+1)"
+          >
+            <Plus className={isScaled ? 'w-4 h-4' : 'w-3 h-3'} />
+          </button>
+        </div>
+      ) : (
+        <span className="font-bold text-white whitespace-nowrap">
+          Worn {worn || 0}x
+        </span>
+      )}
+    </div>
+  );
+}
+
 function CardInner({
   sneaker,
   onEdit,
   onDelete,
+  onIncrementWorn,
+  onDecrementWorn,
   galleryImages,
   onOpenLightbox,
+  isFlipped = false,
   isScaled = false,
 }: {
   sneaker: Sneaker;
   onEdit: (sneaker: Sneaker) => void;
   onDelete: (id: string) => void;
+  onIncrementWorn?: (id: string) => void;
+  onDecrementWorn?: (id: string) => void;
   galleryImages: string[];
   onOpenLightbox: (index: number) => void;
+  isFlipped?: boolean;
   isScaled?: boolean;
 }) {
   const stats = calculateWearStats(sneaker.dates_worn, sneaker.times_worn, sneaker.last_worn);
 
+  const handleDecrementWear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDecrementWorn) {
+      onDecrementWorn(sneaker.id);
+    }
+  };
+
+  const handleIncrementWear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onIncrementWorn) {
+      onIncrementWorn(sneaker.id);
+    }
+  };
+
   return (
-    <div className={`w-full h-full relative transition-transform duration-700 ease-in-out [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)] ${isScaled ? 'rounded-2xl shadow-2xl' : 'rounded-xl shadow-md hover:shadow-2xl'}`}>
+    <div className={`w-full h-full relative transition-transform duration-700 ease-in-out [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''} ${isScaled ? 'rounded-2xl shadow-2xl' : 'rounded-xl shadow-md hover:shadow-2xl'}`}>
       
       {/* ─── FRONT FACE ─── */}
       <div className={`absolute inset-0 w-full h-full bg-white overflow-hidden [backface-visibility:hidden] flex flex-col justify-between border border-gray-100 ${isScaled ? 'rounded-2xl' : 'rounded-xl'}`}>
         {/* Image Container */}
         <div className={`relative bg-gradient-to-br from-gray-50 to-gray-100 aspect-square flex items-center justify-center overflow-hidden ${isScaled ? 'p-8' : 'p-6'}`}>
-          {sneaker.image_url ? (
+          {sneaker.thumbnail_url ? (
             <img
-              src={sneaker.image_url}
+              src={sneaker.thumbnail_url}
               alt={sneaker.name}
               className={`w-full h-full object-contain transition-transform scale-105 duration-300 ${isScaled ? 'p-10' : 'p-8'}`}
             />
@@ -243,7 +361,7 @@ function CardInner({
             <BrandLogo brand={sneaker.brand} sneakerName={sneaker.name} className={`${isScaled ? 'h-14 sm:h-16' : 'h-12 sm:h-14'} w-auto text-zinc-900 opacity-80`} />
           </div>
 
-          {/* Hover action buttons */}
+          {/* Hover action buttons (Edit & Delete only) */}
           <div className={`absolute z-20 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${isScaled ? 'top-3 right-3' : 'top-2 right-2'}`}>
             <button
               type="button"
@@ -269,12 +387,15 @@ function CardInner({
             </button>
           </div>
 
-          {/* Worn count badge */}
-          {sneaker.worn > 0 && (
-            <div className={`absolute bottom-2 left-2 px-2 pt-0.5 pb-1 bg-black/70 backdrop-blur-sm rounded-md text-white font-medium ${isScaled ? 'text-xs px-2.5 py-1' : 'text-[10px]'}`}>
-              Worn {sneaker.worn}x
-            </div>
-          )}
+          {/* Interactive Worn count badge (50/50 split on hover) */}
+          <div className="absolute bottom-2 left-2 z-20">
+            <InteractiveWornBadge
+              worn={sneaker.worn || 0}
+              onIncrement={handleIncrementWear}
+              onDecrement={handleDecrementWear}
+              isScaled={isScaled}
+            />
+          </div>
 
           {/* Height badge */}
           {sneaker.height && (
@@ -289,7 +410,7 @@ function CardInner({
         </div>
 
         {/* Content Container */}
-        <div className={`bg-white space-y-1 ${isScaled ? 'p-4 space-y-1.5' : 'p-3'}`}>
+        <div className={`bg-white flex-1 flex flex-col justify-between ${isScaled ? 'p-4' : 'p-3'}`}>
           <h3 className={`font-bold text-gray-900 leading-tight line-clamp-2 ${isScaled ? 'text-base h-11' : 'text-sm h-9'}`} title={sneaker.name}>
             {sneaker.name || 'Unnamed Sneaker'}
           </h3>
@@ -349,7 +470,7 @@ function CardInner({
               {sneaker.name || 'Unnamed Sneaker'}
             </h4>
           </div>
-          <div className="flex gap-1 shrink-0">
+          <div className="flex items-center gap-1 shrink-0">
             <button
               type="button"
               onClick={(e) => {
@@ -428,19 +549,19 @@ function CardInner({
             Wear Counts
           </div>
           <div className="grid grid-cols-4 gap-1 sm:gap-1.5">
-            <div className="bg-gradient-to-br from-emerald-600/10 to-emerald-600/20 border border-emerald-700/20 rounded-lg p-1 text-center shadow-2xs">
+            <div className="bg-gradient-to-br from-blue-600/10 to-blue-600/20 border border-blue-700/20 rounded-lg p-1 text-center shadow-2xs">
               <div className={`text-gray-500 font-medium ${isScaled ? 'text-[10px]' : 'text-[9px]'} uppercase leading-none`}>30D</div>
               <div className={`font-extrabold text-gray-900 ${isScaled ? 'text-sm mt-0.5' : 'text-xs mt-0.5'}`}>{stats.last1m}x</div>
             </div>
-            <div className="bg-gradient-to-br from-emerald-600/10 to-emerald-600/20 border border-emerald-700/20 rounded-lg p-1 text-center shadow-2xs">
+            <div className="bg-gradient-to-br from-blue-600/10 to-blue-600/20 border border-blue-700/20 rounded-lg p-1 text-center shadow-2xs">
               <div className={`text-gray-500 font-medium ${isScaled ? 'text-[10px]' : 'text-[9px]'} uppercase leading-none`}>3M</div>
               <div className={`font-extrabold text-gray-900 ${isScaled ? 'text-sm mt-0.5' : 'text-xs mt-0.5'}`}>{stats.last3m}x</div>
             </div>
-            <div className="bg-gradient-to-br from-emerald-600/10 to-emerald-600/20 border border-emerald-700/20 rounded-lg p-1 text-center shadow-2xs">
+            <div className="bg-gradient-to-br from-blue-600/10 to-blue-600/20 border border-blue-700/20 rounded-lg p-1 text-center shadow-2xs">
               <div className={`text-gray-500 font-medium ${isScaled ? 'text-[10px]' : 'text-[9px]'} uppercase leading-none`}>6M</div>
               <div className={`font-extrabold text-gray-900 ${isScaled ? 'text-sm mt-0.5' : 'text-xs mt-0.5'}`}>{stats.last6m}x</div>
             </div>
-            <div className="bg-gradient-to-br from-emerald-600/10 to-emerald-600/20 border border-emerald-700/20 rounded-lg p-1 text-center shadow-2xs">
+            <div className="bg-gradient-to-br from-blue-600/10 to-blue-600/20 border border-blue-700/20 rounded-lg p-1 text-center shadow-2xs">
               <div className={`text-gray-500 font-medium ${isScaled ? 'text-[10px]' : 'text-[9px]'} uppercase leading-none`}>1Y</div>
               <div className={`font-extrabold text-gray-900 ${isScaled ? 'text-sm mt-0.5' : 'text-xs mt-0.5'}`}>{stats.last12m}x</div>
             </div>
@@ -503,3 +624,4 @@ const formatLastWorn = (dateString?: string | null) => {
     return 'Never';
   }
 };
+

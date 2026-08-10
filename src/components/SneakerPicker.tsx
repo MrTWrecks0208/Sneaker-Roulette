@@ -185,8 +185,8 @@ export default function SneakerPicker({ sneakers, onWear, onClose, resultCount, 
                           }`}
                         >
                           <div className={`w-14 h-14 rounded-lg bg-zinc-900/60 p-1 flex items-center justify-center shrink-0 border ${isHighlighted ? 'border-zinc-300/60' : 'border-zinc-800/80'}`}>
-                            {sneaker.image_url ? (
-                              <img src={sneaker.image_url} alt={sneaker.name} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                            {sneaker.thumbnail_url ? (
+                              <img src={sneaker.thumbnail_url} alt={sneaker.name} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
                             ) : (
                               <Footprints className={`w-7 h-7 ${isHighlighted ? 'text-zinc-600' : 'text-zinc-500'}`} />
                             )}
@@ -220,8 +220,8 @@ export default function SneakerPicker({ sneakers, onWear, onClose, resultCount, 
                 /* Original Single Card Layout */
                 <div className="bg-zinc-950 rounded-xl border border-zinc-800 overflow-hidden transition-all">
                   <div className="aspect-square sm:aspect-video bg-zinc-950 relative overflow-hidden flex items-center justify-center p-2">
-                    {selected?.image_url ? (
-                      <img src={selected.image_url} alt={selected.name} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                    {selected?.thumbnail_url ? (
+                      <img src={selected.thumbnail_url} alt={selected.name} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <Footprints className="w-16 h-16 text-zinc-700" />

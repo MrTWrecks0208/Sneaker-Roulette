@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Sneaker } from '../lib/supabase';
-import { Trash2, Edit3, Footprints, Plus } from 'lucide-react';
+import { Trash2, Edit3, Footprints, Plus, Minus } from 'lucide-react';
 import { COLOR_HEX } from '../lib/colors';
 import { BrandLogo } from './BrandLogo';
 
@@ -8,13 +9,68 @@ interface SneakerTableViewProps {
   onEdit: (sneaker: Sneaker) => void;
   onDelete: (id: string) => void;
   onIncrementWorn: (id: string) => void;
+  onDecrementWorn?: (id: string) => void;
+}
+
+function TableViewWornBadge({
+  worn,
+  onIncrement,
+  onDecrement
+}: {
+  worn: number;
+  onIncrement: () => void;
+  onDecrement: () => void;
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <div
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={`relative inline-flex items-center justify-center w-[72px] h-7 rounded-lg border transition-colors select-none overflow-hidden ${
+        isHovered
+          ? 'bg-zinc-900 border-zinc-700'
+          : 'bg-zinc-900/80 border-zinc-800 text-zinc-200 font-bold text-xs hover:border-zinc-700 cursor-pointer'
+      }`}
+    >
+      {isHovered ? (
+        <div className="flex w-full h-full divide-x divide-zinc-800">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDecrement();
+            }}
+            className="w-1/2 h-full bg-rose-500/15 hover:bg-rose-500/30 text-rose-400 hover:text-rose-300 font-bold flex items-center justify-center transition-colors cursor-pointer"
+            title="Decrease wear count (-1)"
+          >
+            <Minus className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onIncrement();
+            }}
+            className="w-1/2 h-full bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-400 hover:text-emerald-300 font-bold flex items-center justify-center transition-colors cursor-pointer"
+            title="Increase wear count (+1)"
+          >
+            <Plus className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      ) : (
+        <span className="whitespace-nowrap">{worn}x</span>
+      )}
+    </div>
+  );
 }
 
 export default function SneakerTableView({
   sneakers,
   onEdit,
   onDelete,
-  onIncrementWorn
+  onIncrementWorn,
+  onDecrementWorn
 }: SneakerTableViewProps) {
   return (
     <div className="w-full mt-8 overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950/40 backdrop-blur-sm">
@@ -39,9 +95,9 @@ export default function SneakerTableView({
                 <td className="py-3 px-5 whitespace-nowrap">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-zinc-950 border border-zinc-800 rounded-lg flex items-center justify-center p-1.5 flex-shrink-0 overflow-hidden">
-                      {sneaker.image_url ? (
+                      {sneaker.thumbnail_url ? (
                         <img
-                          src={sneaker.image_url}
+                          src={sneaker.thumbnail_url}
                           alt={sneaker.name}
                           className="w-full h-full object-contain"
                         />
@@ -114,18 +170,13 @@ export default function SneakerTableView({
                   )}
                 </td>
 
-                {/* 6. Wear count & Quick button */}
+                {/* 6. Wear count & Quick buttons */}
                 <td className="py-3 px-5 text-center whitespace-nowrap">
-                  <div className="flex items-center justify-center gap-2">
-                    <span className="text-xs font-bold text-zinc-300">{sneaker.worn}x</span>
-                    <button
-                      onClick={() => onIncrementWorn(sneaker.id)}
-                      title="Log wear count (+1)"
-                      className="p-1 bg-red-600/10 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/20 hover:border-red-500 rounded-md transition-all cursor-pointer"
-                    >
-                      <Plus className="w-3 h-3" />
-                    </button>
-                  </div>
+                  <TableViewWornBadge
+                    worn={sneaker.worn || 0}
+                    onIncrement={() => onIncrementWorn(sneaker.id)}
+                    onDecrement={() => onDecrementWorn?.(sneaker.id)}
+                  />
                 </td>
 
                 {/* Last Worn */}

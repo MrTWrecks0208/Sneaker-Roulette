@@ -16,7 +16,8 @@ export interface Sneaker {
   style: string[];
   color: string[];
   worn: number;
-  image_url: string;
+  thumbnail_url?: string;
+  image_url?: string;
   images?: string[];
   dates_worn?: string[] | null;
   condition?: string;

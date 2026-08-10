@@ -10,17 +10,11 @@ import {
   Camera,
   Pencil,
   Check,
-  AlertCircle,
   Footprints,
   Calendar,
   Sparkles,
   Flame,
-  Upload,
-  Trash2,
-  ChevronRight,
   Zap,
-  ArrowRight,
-  CheckCircle2,
   Moon,
   Sun,
   Laptop
@@ -114,16 +108,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [avatarUrl, setAvatarUrl] = useState('');
   const [isEditingUsername, setIsEditingUsername] = useState(false);
   const [isEditingEmail, setIsEditingEmail] = useState(false);
-  const [isDraggingAvatar, setIsDraggingAvatar] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   // Preferences State
   const [preferences, setPreferences] = useState<UserPreferences>(initialPreferences);
   const [brandSearch, setBrandSearch] = useState('');
   const [isBrandDropdownOpen, setIsBrandDropdownOpen] = useState(false);
-
-  // Billing interval state for subscription tab
-  const [billingInterval, setBillingInterval] = useState<'monthly' | 'yearly'>('monthly');
 
   // Sync state on open
   useEffect(() => {

@@ -28,7 +28,7 @@ function normalizeField(rawKey: string): string {
     style: 'style', styles: 'style', category: 'style', categories: 'style', tags: 'style', type: 'style',
     color: 'color', colors: 'color', swatches: 'color',
     worn: 'worn', timesworn: 'worn', wearcount: 'worn', count: 'worn', wears: 'worn', uses: 'worn',
-    imageurl: 'image_url', image: 'image_url', img: 'image_url', photo: 'image_url', picture: 'image_url', url: 'image_url', imagelink: 'image_url',
+    imageurl: 'thumbnail_url', image: 'thumbnail_url', img: 'thumbnail_url', photo: 'thumbnail_url', picture: 'thumbnail_url', url: 'thumbnail_url', imagelink: 'thumbnail_url', thumbnail: 'thumbnail_url', thumbnail_url: 'thumbnail_url',
     condition: 'condition', status: 'condition', state: 'condition',
     datesworn: 'dates_worn', weardates: 'dates_worn', history: 'dates_worn',
     lastworn: 'last_worn', lastworndate: 'last_worn', lastwear: 'last_worn',
@@ -126,7 +126,8 @@ function parseRow(row: Record<string, unknown>): SneakerInsert | null {
     style: parseArrayField(normalized.style),
     color: parseArrayField(normalized.color),
     worn: Number(normalized.worn) || (datesWorn.length > 0 ? datesWorn.length : 0),
-    image_url: getString(normalized.image_url),
+    thumbnail_url: getString(normalized.thumbnail_url || normalized.image_url),
+    image_url: getString(normalized.thumbnail_url || normalized.image_url),
     ...(images.length > 0 ? { images } : {}),
     ...(datesWorn.length > 0 ? { dates_worn: datesWorn } : {}),
     ...(condition ? { condition } : {}),
@@ -487,8 +488,8 @@ export default function FileUpload({ onImport, onClose, onOpenSubscriptionModal 
                   <div className="max-h-52 overflow-y-auto space-y-2 pr-1">
                     {preview.map((s, i) => (
                       <div key={i} className="flex items-center gap-3 p-3 bg-zinc-950/80 rounded-xl border border-zinc-800 hover:border-zinc-700 transition-colors">
-                        {s.image_url ? (
-                          <img src={s.image_url} alt={s.name} className="w-9 h-9 object-contain rounded bg-zinc-900 border border-zinc-800 p-0.5 shrink-0" />
+                        {s.thumbnail_url ? (
+                          <img src={s.thumbnail_url} alt={s.name} className="w-9 h-9 object-contain rounded bg-zinc-900 border border-zinc-800 p-0.5 shrink-0" />
                         ) : (
                           <div className="w-9 h-9 rounded bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 shrink-0">
                             <FileText className="w-4 h-4" />

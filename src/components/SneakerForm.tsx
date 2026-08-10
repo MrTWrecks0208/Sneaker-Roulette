@@ -402,10 +402,10 @@ export default function SneakerForm({ sneaker, onSave, onCancel, onOpenSubscript
   });
   const [worn, setWorn] = useState(sneaker?.worn || 0);
   const [lastWornAt, setLastWornAt] = useState<string>(sneaker?.last_worn || '');
-  const [imageUrl, setImageUrl] = useState(sneaker?.image_url || '');
+  const [imageUrl, setImageUrl] = useState(sneaker?.thumbnail_url || '');
   const [images, setImages] = useState<string[]>(() => {
     if (sneaker?.images && sneaker.images.length > 0) return sneaker.images;
-    if (sneaker?.image_url) return [sneaker.image_url];
+    if (sneaker?.thumbnail_url) return [sneaker.thumbnail_url];
     return [];
   });
   const [saving, setSaving] = useState(false);
@@ -434,9 +434,9 @@ export default function SneakerForm({ sneaker, onSave, onCancel, onOpenSubscript
       }
       setWorn(sneaker.worn);
       setLastWornAt(sneaker.last_worn || '');
-      const imgs = sneaker.images && sneaker.images.length > 0 ? sneaker.images : (sneaker.image_url ? [sneaker.image_url] : []);
+      const imgs = sneaker.images && sneaker.images.length > 0 ? sneaker.images : (sneaker.thumbnail_url ? [sneaker.thumbnail_url] : []);
       setImages(imgs);
-      setImageUrl(sneaker.image_url || imgs[0] || '');
+      setImageUrl(sneaker.thumbnail_url || imgs[0] || '');
     }
   }, [sneaker]);
 
@@ -589,6 +589,7 @@ export default function SneakerForm({ sneaker, onSave, onCancel, onOpenSubscript
       condition,
       worn,
       last_worn: lastWornAt ? new Date(lastWornAt).toISOString() : null,
+      thumbnail_url: primaryImage,
       image_url: primaryImage,
       images: finalImages,
       dates_worn: sneaker?.dates_worn || (lastWornAt ? [new Date(lastWornAt).toISOString()] : []),

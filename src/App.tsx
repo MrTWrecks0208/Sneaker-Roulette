@@ -20,23 +20,14 @@ import {
   Plus, Upload, Search, Footprints,
   SlidersHorizontal, X, AlertCircle, CheckCircle2, Database, LogOut,
   ChevronDown, ChevronUp, Copy, Terminal, Check, LifeBuoy, Settings, ArrowUpDown,
-  LayoutGrid, List, Table, Crown, User, Loader2, Camera, Image, Trash2
+  LayoutGrid, List, Table
 } from 'lucide-react';
 
-const AVATAR_PRESETS = [
-  { id: 'preset-1', label: 'SneakerHead', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=SneakerHead' },
-  { id: 'preset-2', label: 'KicksKing', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=KicksKing' },
-  { id: 'preset-3', label: 'AirJordan', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=AirJordan' },
-  { id: 'preset-4', label: 'FreshKicks', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=FreshKicks' },
-  { id: 'preset-5', label: 'DunkMaster', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=DunkMaster' },
-  { id: 'preset-6', label: 'RetroStyle', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=RetroStyle' },
-  { id: 'preset-7', label: 'HeatCheck', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=HeatCheck' },
-  { id: 'preset-8', label: 'SoleCollector', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=SoleCollector' },
-];
+
 
 function App() {
   const { user, loading: authLoading, signOut, updateProfile } = useAuth();
-  const { sneakers, loading, error, isSupabaseConfigured, usingLocalStorageFallback, addSneaker, addSneakersBatch, updateSneaker, deleteSneaker, incrementWorn } = useSneakers(user?.id);
+  const { sneakers, loading, error, isSupabaseConfigured, usingLocalStorageFallback, addSneaker, addSneakersBatch, updateSneaker, deleteSneaker, incrementWorn, decrementWorn } = useSneakers(user?.id);
   const { tier, config, changeTier, checkAddPairAllowed, canImport } = useSubscription();
 
   const [preferences, setPreferences] = useState<UserPreferences>(() => {
@@ -56,7 +47,7 @@ function App() {
     if (newPrefs.defaultSort) {
       const parts = newPrefs.defaultSort.split('-');
       if (parts.length === 2) {
-        setSortBy(parts[0] as any);
+        setSortBy(parts[0] as 'created_at' | 'worn' | 'name' | 'brand' | 'style' | 'price');
         setSortOrder(parts[1] as 'asc' | 'desc');
       }
     }
@@ -142,115 +133,9 @@ function App() {
 
   const currentSortOption = sortOptions.find(opt => opt.field === sortBy && opt.order === sortOrder) || sortOptions[0];
 
-  const [pickerResultCount, setPickerResultCount] = useState<number>(() => {
-    const saved = safeLocalStorage.getItem('picker_result_count');
-    if (saved) {
-      const parsed = parseInt(saved, 10);
-      if ([1, 3, 5].includes(parsed)) return parsed;
-    }
-    return 1;
-  });
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [settingsTab, setSettingsTab] = useState<'profile' | 'subscription' | 'preferences'>('profile');
   const [showScrollTop, setShowScrollTop] = useState(false);
-
-  const [newUsername, setNewUsername] = useState('');
-  const [newAvatarUrl, setNewAvatarUrl] = useState('');
-  const [isDraggingAvatar, setIsDraggingAvatar] = useState(false);
-  const [isSavingProfile, setIsSavingProfile] = useState(false);
-  const [profileStatus, setProfileStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-
-  useEffect(() => {
-    if (showSettingsModal && user) {
-      setNewUsername(user.user_metadata?.username || user.user_metadata?.full_name || '');
-      setNewAvatarUrl(user.user_metadata?.avatar_url || '');
-      setProfileStatus(null);
-      setSettingsTab('profile');
-    }
-  }, [showSettingsModal, user]);
-
-  const processAvatarFile = (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      setProfileStatus({ type: 'error', message: 'Please upload a valid image file (PNG, JPG, WEBP, GIF).' });
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      setProfileStatus({ type: 'error', message: 'Image file size should be under 10MB.' });
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const size = 300;
-        canvas.width = size;
-        canvas.height = size;
-
-        if (ctx) {
-          const minDim = Math.min(img.width, img.height);
-          const sx = (img.width - minDim) / 2;
-          const sy = (img.height - minDim) / 2;
-          ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.90);
-          setNewAvatarUrl(dataUrl);
-          setProfileStatus({ type: 'success', message: 'Photo ready! Click "Save Profile Changes" below.' });
-        }
-      };
-      img.onerror = () => {
-        setProfileStatus({ type: 'error', message: 'Could not load image. Please try another image file.' });
-      };
-      img.src = event.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleAvatarFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      processAvatarFile(file);
-    }
-  };
-
-  const handleAvatarDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDraggingAvatar(true);
-  };
-
-  const handleAvatarDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDraggingAvatar(false);
-  };
-
-  const handleAvatarDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDraggingAvatar(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) {
-      processAvatarFile(file);
-    }
-  };
-
-  const handleSaveProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newUsername.trim()) return;
-    setIsSavingProfile(true);
-    setProfileStatus(null);
-    const res = await updateProfile({
-      username: newUsername.trim(),
-      avatarUrl: newAvatarUrl.trim() || undefined,
-    });
-    setIsSavingProfile(false);
-    if (res.success) {
-      setProfileStatus({ type: 'success', message: 'Profile updated successfully!' });
-      setToast({ type: 'success', message: 'Profile updated successfully!' });
-    } else {
-      setProfileStatus({ type: 'error', message: res.error || 'Failed to update profile.' });
-    }
-  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -268,9 +153,7 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    safeLocalStorage.setItem('picker_result_count', pickerResultCount.toString());
-  }, [pickerResultCount]);
+
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -366,7 +249,23 @@ function App() {
   };
 
   const handleWear = async (id: string) => {
-    return incrementWorn(id);
+    const updated = await incrementWorn(id);
+    if (updated) {
+      showToast('success', `Logged wear (+1) for ${updated.name || 'sneaker'}`);
+    } else {
+      showToast('error', 'Failed to update wear count');
+    }
+    return updated;
+  };
+
+  const handleDecrementWear = async (id: string) => {
+    const updated = await decrementWorn(id);
+    if (updated) {
+      showToast('success', `Updated wear count (-1) for ${updated.name || 'sneaker'}`);
+    } else {
+      showToast('error', 'Failed to update wear count');
+    }
+    return updated;
   };
 
   if (authLoading) {
@@ -410,10 +309,10 @@ function App() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowPicker(true)}
-                className="hidden sm:flex items-center gap-2 px-4 pt-1.5 py-2 bg-emerald-600/10 text-emerald-400 text-sm font-medium rounded-2xl border border-emerald-500/20 hover:bg-emerald-600/20 transition-colors cursor-pointer"
+                className="hidden sm:flex items-center justify-center w-[120px] gap-2 px-4 pt-1.5 pb-2 bg-rose-600/10 text-rose-400 text-md font-medium rounded-2xl border border-rose-600/20 hover:bg-rose-500/20 transition-colors cursor-pointer"
               >
-                <LifeBuoy className="w-5 h-5 text-emerald-400" />
-                Spin the Wheel
+                <LifeBuoy className="w-5 h-5 mr-1 text-rose-400" />
+                Spin Wheel
               </button>
               <button
                 onClick={() => {
@@ -423,10 +322,10 @@ function App() {
                     setShowImport(true);
                   }
                 }}
-                className="hidden sm:flex items-center gap-2 px-4 pt-1.5 pb-2 bg-sky-600/10 text-sky-400 text-sm font-medium rounded-2xl border border-sky-700/20 hover:bg-blue-600/20 transition-colors cursor-pointer"
+                className="hidden sm:flex items-center justify-center w-[120px] gap-2 px-4 pt-1.5 pb-2 bg-amber-600/10 text-amber-400 text-sm font-medium rounded-2xl border border-amber-700/20 hover:bg-amber-600/20 transition-colors cursor-pointer"
               >
-                <Upload className="w-4 h-4" />
-                Import
+                <Upload className="w-5 h-5 mr-1 text-amber-400" />
+                Import Collection
               </button>
               <button
                 onClick={() => {
@@ -439,10 +338,10 @@ function App() {
                     setShowForm(true);
                   }
                 }}
-                className="flex items-center gap-2 px-4 pt-1.5 pb-2 bg-rose-600/10 text-rose-400 text-sm font-medium rounded-2xl border border-rose-700/20 hover:bg-rose-600/20 transition-colors cursor-pointer"
+                className="flex items-center justify-center w-[120px] gap-2 px-4 pt-1.5 pb-2 bg-sky-600/10 text-sky-400 text-sm font-medium rounded-2xl border border-sky-700/20 hover:bg-sky-600/20 transition-colors cursor-pointer whitespace-nowrap min-w-[110px]"
               >
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Add Sneaker</span>
+                <Plus className="w-5 h-5 text-sky-400" />
+                Add Pair
               </button>
 
               <div className="h-8 w-px bg-zinc-800/80 mx-1 hidden sm:block" />
@@ -453,7 +352,7 @@ function App() {
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     className="p-1 hover:bg-zinc-800/60 rounded-xl border border-transparent hover:border-zinc-800/80 transition-all cursor-pointer focus:outline-none shrink-0"
-                    title="Account & Settings"
+                    title="Settings"
                   >
                     <img
                       src={user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(user.email)}`}
@@ -506,7 +405,7 @@ function App() {
                         >
                           <span className="flex items-center gap-2.5">
                             <Settings className="w-4 h-4 text-zinc-400 group-hover:text-red-400 transition-colors" />
-                            <span>Account Settings</span>
+                            <span>Settings</span>
                           </span>
                         </button>
 
@@ -612,6 +511,7 @@ function App() {
   style text[] DEFAULT '{}',
   color text[] DEFAULT '{}',
   worn integer NOT NULL DEFAULT 0,
+  thumbnail_url text DEFAULT '',
   image_url text DEFAULT '',
   last_worn timestamptz DEFAULT NULL,
   user_id uuid REFERENCES auth.users(id),
@@ -677,6 +577,7 @@ CREATE POLICY "Users can delete own sneakers"
   style text[] DEFAULT '{}',
   color text[] DEFAULT '{}',
   worn integer NOT NULL DEFAULT 0,
+  thumbnail_url text DEFAULT '',
   image_url text DEFAULT '',
   last_worn timestamptz DEFAULT NULL,
   user_id uuid REFERENCES auth.users(id),
@@ -973,6 +874,7 @@ CREATE POLICY "Users can delete own sneakers"
             onEdit={handleEdit}
             onDelete={handleDelete}
             onIncrementWorn={handleWear}
+            onDecrementWorn={handleDecrementWear}
           />
         ) : viewMode === 'table' ? (
           <SneakerTableView
@@ -980,6 +882,7 @@ CREATE POLICY "Users can delete own sneakers"
             onEdit={handleEdit}
             onDelete={handleDelete}
             onIncrementWorn={handleWear}
+            onDecrementWorn={handleDecrementWear}
           />
         ) : (
           <div className="flex flex-none flex-wrap flex-row items-start justify-start gap-3 mt-8">
@@ -989,6 +892,8 @@ CREATE POLICY "Users can delete own sneakers"
                 sneaker={sneaker}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
+                onIncrementWorn={handleWear}
+                onDecrementWorn={handleDecrementWear}
               />
             ))}
           </div>
