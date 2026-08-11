@@ -3,7 +3,6 @@ import { Sneaker, SneakerInsert, BRANDS, BRAND_CATEGORIES, HEIGHTS, STYLES, COLO
 import { X, Upload, Loader2, Camera, Sparkles, ChevronDown, Search, Check, Star, Info, Lock } from 'lucide-react';
 import PhotoGuideModal from './PhotoGuide';
 import { useSubscription } from '../hooks/useSubscription';
-import { getConditionBadgeStyle } from '../lib/sneakerHelpers';
 import multicolorImg from '../assets/images/multicolor_swatch_1783883698636.jpg';
 import iridescentImg from '../assets/images/iridescent.png';
 
@@ -71,6 +70,17 @@ interface SneakerFormProps {
 // Parses a freeform sneaker name like "Jordan 1 Retro High OG Black Toe" into
 // brand, model, colorway, height using the BRANDS/HEIGHTS constants.
 
+const BRAND_ALIASES: Record<string, string> = {
+  'sparry': 'Sperry',
+  'sperry': 'Sperry',
+  'addidas': 'Adidas',
+  'adida': 'Adidas',
+  'nik': 'Nike',
+  'yasy': 'Yeezy',
+  'jordan': 'Jordan',
+  'jordans': 'Jordan',
+};
+
 const BRAND_LOWER_MAP = BRANDS.filter(b => b !== 'Other').map(b => ({
   original: b,
   lower: b.toLowerCase(),
@@ -105,14 +115,22 @@ function parseSneakerName(name: string): ParsedName {
   // 1. Extract brand
   let brand = '';
   let brandEndIdx = 0;
-  // Check multi-word brands first (longer match wins)
-  const sorted = [...BRAND_LOWER_MAP].sort((a, b) => b.tokens.length - a.tokens.length);
-  for (const b of sorted) {
-    const start = name.toLowerCase().indexOf(b.lower);
-    if (start === 0) {
-      brand = b.original;
-      brandEndIdx = b.tokens.length;
-      break;
+
+  // Check alias map first for common typos like sparry -> Sperry
+  const firstWord = tokens[0]?.toLowerCase();
+  if (firstWord && BRAND_ALIASES[firstWord]) {
+    brand = BRAND_ALIASES[firstWord];
+    brandEndIdx = 1;
+  } else {
+    // Check multi-word brands (longer match wins)
+    const sorted = [...BRAND_LOWER_MAP].sort((a, b) => b.tokens.length - a.tokens.length);
+    for (const b of sorted) {
+      const start = name.toLowerCase().indexOf(b.lower);
+      if (start === 0) {
+        brand = b.original;
+        brandEndIdx = b.tokens.length;
+        break;
+      }
     }
   }
 
@@ -470,13 +488,25 @@ export default function SneakerForm({ sneaker, onSave, onCancel, onOpenSubscript
     setHeight(value);
   };
 
+  const handleUploadButtonClick = (ref: React.RefObject<HTMLInputElement | null>) => {
+    if (images.length >= maxImages) {
+      if (onOpenSubscriptionModal) {
+        onOpenSubscriptionModal(
+          `Your ${config.name} plan allows up to ${maxImages} photo(s) per sneaker. Upgrade to Pro or Premium to add more photos!`
+        );
+      }
+      return;
+    }
+    ref.current?.click();
+  };
+
   const handleImageUploads = async (fileList: FileList | null) => {
     if (!fileList || fileList.length === 0) return;
 
     if (images.length >= maxImages) {
       if (onOpenSubscriptionModal) {
         onOpenSubscriptionModal(
-          `Your ${config.name} (${config.badge}) plan allows up to ${maxImages} image(s) per card. Upgrade to Pro or Premium to add more!`
+          `Your ${config.name} plan allows up to ${maxImages} photo(s) per sneaker. Upgrade to Pro or Premium to add more photos!`
         );
       }
       return;
@@ -490,7 +520,7 @@ export default function SneakerForm({ sneaker, onSave, onCancel, onOpenSubscript
 
       if (fileList.length > availableSlots && onOpenSubscriptionModal) {
         onOpenSubscriptionModal(
-          `Your ${config.name} (${config.badge}) plan allows up to ${maxImages} image(s) per card. Only ${availableSlots} new image(s) were added.`
+          `Your ${config.name} plan allows up to ${maxImages} photo(s) per sneaker. Only ${availableSlots} photo(s) could be added. Upgrade to Pro or Premium for more photo slots!`
         );
       }
 
@@ -748,14 +778,7 @@ export default function SneakerForm({ sneaker, onSave, onCancel, onOpenSubscript
               />
             </div>
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-medium text-zinc-400 uppercase tracking-wider">Condition</label>
-                {condition && (
-                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider border ${getConditionBadgeStyle(condition, 'dark')}`}>
-                    {condition}
-                  </span>
-                )}
-              </div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Condition</label>
               <select
                 value={condition}
                 onChange={e => {
@@ -915,9 +938,6 @@ export default function SneakerForm({ sneaker, onSave, onCancel, onOpenSubscript
                 >
                   <Info className="w-3.5 h-3.5" />
                 </button>
-                <span className="text-[10px] text-blue-400 font-semibold bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-md">
-                  {images.length} / {maxImages === Infinity ? '∞' : maxImages} allowed ({config.badge})
-                </span>
               </div>
               <span className="text-[10px] text-zinc-400">Click star to set main card image</span>
             </div>
@@ -962,7 +982,7 @@ export default function SneakerForm({ sneaker, onSave, onCancel, onOpenSubscript
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => handleUploadButtonClick(fileInputRef)}
                   disabled={uploading}
                   className="px-4 py-2 bg-zinc-800 text-zinc-300 text-sm rounded-lg border border-zinc-700 hover:bg-zinc-700 transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-40"
                 >
@@ -971,7 +991,7 @@ export default function SneakerForm({ sneaker, onSave, onCancel, onOpenSubscript
                 </button>
                 <button
                   type="button"
-                  onClick={() => cameraInputRef.current?.click()}
+                  onClick={() => handleUploadButtonClick(cameraInputRef)}
                   disabled={uploading}
                   className="px-4 py-2 bg-zinc-800 text-zinc-300 text-sm rounded-lg border border-zinc-700 hover:bg-zinc-700 transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-40"
                 >

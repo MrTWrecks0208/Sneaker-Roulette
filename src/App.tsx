@@ -177,17 +177,43 @@ function App() {
   const availableColors = [...new Set(sneakers.flatMap(s => s.color || []))].filter(Boolean).sort();
 
   const filtered = sneakers.filter(s => {
-    const matchesSearch = !searchQuery ||
-      s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.colorway.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesBrand = !filterBrand || s.brand === filterBrand;
-    const matchesHeight = !filterHeight || s.height === filterHeight;
-    const matchesStyle = !filterStyle || (Array.isArray(s.style) && s.style.includes(filterStyle));
-    const matchesColor = !filterColor || (Array.isArray(s.color) && s.color.includes(filterColor));
+    const rawQ = searchQuery.toLowerCase().trim();
+    // Normalize sparry <-> sperry, addidas <-> adidas
+    const normQ = rawQ
+      .replace(/sparry/g, 'sperry')
+      .replace(/addidas/g, 'adidas');
+
+    const searchableFields = [
+      s.name,
+      s.brand,
+      s.model,
+      s.variant,
+      s.colorway,
+      s.condition || '',
+      s.height || '',
+      ...(Array.isArray(s.style) ? s.style : []),
+      ...(Array.isArray(s.color) ? s.color : []),
+    ].map(f => (f || '').toLowerCase());
+
+    const matchesSearch = !rawQ || searchableFields.some(f => 
+      f.includes(rawQ) || f.includes(normQ) || (rawQ.includes('sparry') && f.includes('sperry')) || (rawQ.includes('sperry') && f.includes('sparry'))
+    );
+
+    const matchesBrand = !filterBrand || s.brand.toLowerCase() === filterBrand.toLowerCase();
+    const matchesHeight = !filterHeight || s.height.toLowerCase() === filterHeight.toLowerCase();
+    const matchesStyle = !filterStyle || (Array.isArray(s.style) && s.style.some(st => st.toLowerCase() === filterStyle.toLowerCase()));
+    const matchesColor = !filterColor || (Array.isArray(s.color) && s.color.some(c => c.toLowerCase() === filterColor.toLowerCase()));
+
     return matchesSearch && matchesBrand && matchesHeight && matchesStyle && matchesColor;
   });
+
+  const clearAllFilters = () => {
+    setSearchQuery('');
+    setFilterBrand('');
+    setFilterStyle('');
+    setFilterColor('');
+    setFilterHeight('');
+  };
 
   const sortedAndFiltered = [...filtered].sort((a, b) => {
     let comparison = 0;
@@ -217,7 +243,9 @@ function App() {
     }
     const result = await addSneaker(data);
     setShowForm(false);
-    if (result) showToast('success', 'Sneaker added');
+    // Reset filters so newly added pair is immediately visible
+    clearAllFilters();
+    if (result) showToast('success', 'Sneaker added to collection');
     else showToast('error', 'Failed to add sneaker');
     return result;
   };
@@ -243,8 +271,12 @@ function App() {
 
   const handleImport = async (sneakersData: SneakerInsert[]) => {
     const result = await addSneakersBatch(sneakersData);
-    if (result) showToast('success', `Imported ${result.length} sneakers`);
-    else showToast('error', 'Failed to import sneakers');
+    if (result) {
+      clearAllFilters();
+      showToast('success', `Imported ${result.length} sneakers`);
+    } else {
+      showToast('error', 'Failed to import sneakers');
+    }
     return result;
   };
 
@@ -309,10 +341,10 @@ function App() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowPicker(true)}
-                className="hidden sm:flex items-center justify-center w-[120px] gap-2 px-4 pt-1.5 pb-2 bg-rose-600/10 text-rose-400 text-md font-medium rounded-2xl border border-rose-600/20 hover:bg-rose-500/20 transition-colors cursor-pointer"
+                className="hidden sm:flex items-center justify-center w-[120px] h-9 gap-3 bg-rose-600/10 text-rose-400 text-md font-medium rounded-2xl border border-rose-600/20 hover:bg-rose-500/20 transition-colors cursor-pointer"
               >
-                <LifeBuoy className="w-5 h-5 mr-1 text-rose-400" />
-                Spin Wheel
+                <LifeBuoy className="w-5 h-5 text-rose-400" />
+                Spin
               </button>
               <button
                 onClick={() => {
@@ -322,10 +354,10 @@ function App() {
                     setShowImport(true);
                   }
                 }}
-                className="hidden sm:flex items-center justify-center w-[120px] gap-2 px-4 pt-1.5 pb-2 bg-amber-600/10 text-amber-400 text-sm font-medium rounded-2xl border border-amber-700/20 hover:bg-amber-600/20 transition-colors cursor-pointer"
+                className="hidden sm:flex items-center justify-center w-[120px] h-9 gap-1.5 bg-amber-600/10 text-amber-400 text-md font-medium rounded-2xl border border-amber-700/20 hover:bg-amber-600/20 transition-colors cursor-pointer"
               >
-                <Upload className="w-5 h-5 mr-1 text-amber-400" />
-                Import Collection
+                <Upload className="w-5 h-5 text-amber-400" />
+                Import
               </button>
               <button
                 onClick={() => {
@@ -338,10 +370,10 @@ function App() {
                     setShowForm(true);
                   }
                 }}
-                className="flex items-center justify-center w-[120px] gap-2 px-4 pt-1.5 pb-2 bg-sky-600/10 text-sky-400 text-sm font-medium rounded-2xl border border-sky-700/20 hover:bg-sky-600/20 transition-colors cursor-pointer whitespace-nowrap min-w-[110px]"
+                className="flex items-center justify-center w-[120px] h-9 gap-1.5 bg-sky-600/10 text-sky-400 text-md font-medium rounded-2xl border border-sky-700/20 hover:bg-sky-600/20 transition-colors cursor-pointer"
               >
                 <Plus className="w-5 h-5 text-sky-400" />
-                Add Pair
+                Add
               </button>
 
               <div className="h-8 w-px bg-zinc-800/80 mx-1 hidden sm:block" />
@@ -827,12 +859,22 @@ CREATE POLICY "Users can delete own sneakers"
         </div>
 
         {/* Stats bar */}
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-xs text-zinc-500">
-          <span>{sneakers.length} sneakers</span>
-          {filtered.length !== sneakers.length && (
-            <span>{filtered.length} shown</span>
-          )}
-          <span>{sneakers.reduce((sum, s) => sum + s.worn, 0)} total wears</span>
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 text-xs text-zinc-500">
+          <div className="flex items-center gap-4">
+            <span>{sneakers.length} {sneakers.length === 1 ? 'sneaker' : 'sneakers'}</span>
+            {filtered.length !== sneakers.length && (
+              <span className="flex items-center gap-2 text-zinc-400 font-medium">
+                <span>({filtered.length} shown)</span>
+                <button
+                  onClick={clearAllFilters}
+                  className="text-red-400 hover:text-red-300 underline underline-offset-2 transition-colors cursor-pointer text-[11px]"
+                >
+                  Clear search/filters
+                </button>
+              </span>
+            )}
+            <span>{sneakers.reduce((sum, s) => sum + s.worn, 0)} total wears</span>
+          </div>
         </div>
 
         {/* Grid */}
@@ -846,13 +888,22 @@ CREATE POLICY "Users can delete own sneakers"
             <h3 className="text-lg font-medium text-zinc-400 mb-1">
               {sneakers.length === 0 ? 'No sneakers yet' : 'No matches found'}
             </h3>
-            <p className="text-sm text-zinc-600 max-w-sm">
+            <p className="text-sm text-zinc-600 max-w-sm mb-4">
               {sneakers.length === 0
                 ? 'Add your first sneaker or import your collection to get started.'
-                : 'Try adjusting your search or filters.'}
+                : 'Your collection contains sneakers, but none match your active search query or filters.'}
             </p>
+            {sneakers.length > 0 && (
+              <button
+                onClick={clearAllFilters}
+                className="px-5 py-2.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-2"
+              >
+                <X className="w-4 h-4" />
+                <span>Clear All Search & Filters ({sneakers.length} in collection)</span>
+              </button>
+            )}
             {sneakers.length === 0 && (
-              <div className="flex gap-3 mt-6">
+              <div className="flex gap-3 mt-2">
                 <button
                   onClick={() => setShowForm(true)}
                   className="px-5 py-2.5 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-500 transition-colors"

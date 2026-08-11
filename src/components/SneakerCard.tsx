@@ -263,8 +263,8 @@ function InteractiveWornBadge({
   const [isHovered, setIsHovered] = useState(false);
 
   const containerClasses = isScaled
-    ? 'w-24 h-7 text-xs rounded-lg'
-    : 'w-[82px] h-6 text-[10px] rounded-md';
+    ? 'w-24 h-7.5 text-xs rounded-lg'
+    : 'w-[82px] h-7 text-[10px] rounded-md';
 
   return (
     <div
@@ -282,7 +282,7 @@ function InteractiveWornBadge({
             className="w-1/2 h-full bg-rose-500/15 hover:bg-rose-500/30 text-rose-400 hover:text-rose-300 font-bold flex items-center justify-center transition-colors cursor-pointer"
             title="Decrease wear count (-1)"
           >
-            <Minus className={isScaled ? 'w-4 h-4' : 'w-3 h-3'} />
+            <Minus className={isScaled ? 'w-5 h-5' : 'w-4 h-4'} />
           </button>
           <button
             type="button"
@@ -290,7 +290,7 @@ function InteractiveWornBadge({
             className="w-1/2 h-full bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-400 hover:text-emerald-300 font-bold flex items-center justify-center transition-colors cursor-pointer"
             title="Increase wear count (+1)"
           >
-            <Plus className={isScaled ? 'w-4 h-4' : 'w-3 h-3'} />
+            <Plus className={isScaled ? 'w-5 h-5' : 'w-4 h-4'} />
           </button>
         </div>
       ) : (
@@ -461,9 +461,9 @@ function CardInner({
       <div className={`absolute inset-0 w-full h-full bg-white text-gray-900 overflow-hidden [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col border border-gray-200 shadow-md ${isScaled ? 'rounded-2xl p-4' : 'rounded-xl p-3'}`}>
         
         {/* 1. Name at the Top */}
-        <div className="flex items-start justify-between gap-2 pb-2 border-b border-gray-100 shrink-0">
-          <div className="flex-1 min-w-0 pr-1">
-            <div className="flex items-center gap-1.5 mb-1">
+        <div className={`flex items-start justify-between gap-2 pb-2 border-b border-gray-100 shrink-0 ${isScaled ? 'h-[76px]' : 'h-[64px]'}`}>
+          <div className="flex-1 min-w-0 pr-1 flex flex-col justify-start overflow-hidden">
+            <div className="flex items-center gap-1.5 mb-1 shrink-0">
               <BrandLogo brand={sneaker.brand} sneakerName={sneaker.name} className="h-4 w-auto text-zinc-900" />
             </div>
             <h4 className={`font-bold text-gray-900 leading-tight break-words ${isScaled ? 'text-base' : 'text-xs sm:text-sm'}`} title={sneaker.name}>
