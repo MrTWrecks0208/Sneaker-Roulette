@@ -7,7 +7,7 @@ export const COLOR_HEX: Record<string, string> = {
   'Dark Gray': '#333333', 'Gray': '#808080', 'Light Gray': '#d3d3d3', 'Dark Brown': '#654321',
   'Brown': '#8b5a2b', 'Tan': '#d2b48c', 'Beige': '#f5f5dc', 'Red': '#dc143c', 'Crimson': '#dc143c', 'Coral': '#ea6676',
   'Orange': '#ff8c00', 'Light Yellow': '#ffffe0', 'Yellow': '#ffff00', 'Mint': '#aaf0d1',
-  'Lime Green': '#84cc16', 'Green': '#228b22', 'Forest Green': '#228b22', 'Olive': '#6b8e23',
+  'Lime': '#84cc16', 'Green': '#228b22', 'Forest Green': '#228b22', 'Olive': '#6b8e23',
   'Teal': '#008080', 'Turquoise': '#40e0d0', 'Light Blue': '#add8e6', 'Aqua': '#00ffff',
   'Blue': '#0000ff', 'Navy': '#202a44', 'Indigo': '#330099', 'Purple': '#4b0082',
   'Maroon': '#800000', 'Burgundy': '#800020', 'Magenta': '#ff00ff', 'Pink': '#ffc0cb',
