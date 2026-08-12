@@ -25,7 +25,7 @@ const COLOR_GLOW: Record<string, { bg: string; text: string; border: string; sha
   'Light Yellow':     { bg: 'rgba(254,249,195,.80)', text: '#000000', border: 'rgba(254,249,195,.80)' },
   'Yellow':           { bg: 'rgba(250,204,21,.80)',  text: '#000000', border: 'rgba(250,204,21,.80)' },
   'Mint':             { bg: 'rgba(170,240,200,.80)', text: '#000000', border: 'rgba(170,240,200,.80)' },
-  'Lime Green':       { bg: 'rgba(132,204,22,.80)',  text: '#000000', border: 'rgba(132,204,22,.80)' },
+  'Lime':             { bg: 'rgba(0,255,0,.80)',     text: '#000000', border: 'rgba(0,255,0,.80)' },
   'Green':            { bg: 'rgba(34,197,94,.80)',   text: '#ffffff', border: 'rgba(34,197,94,.80)' },
   'Forest Green':     { bg: 'rgba(34,100,60,.80)',   text: '#ffffff', border: 'rgba(34,139,34,.80)' },
   'Olive':            { bg: 'rgba(128,128,0,.80)',   text: '#ffffff', border: 'rgba(128,128,0,.80)' },
