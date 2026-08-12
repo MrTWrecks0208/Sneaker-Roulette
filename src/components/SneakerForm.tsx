@@ -20,6 +20,7 @@ const COLOR_GLOW: Record<string, { bg: string; text: string; border: string; sha
   'Beige':            { bg: 'rgba(245,245,220,.80)', text: '#000000', border: 'rgba(245,245,220,.80)' },
   'Red':              { bg: 'rgba(239,68,68,.80)',   text: '#ffffff', border: 'rgba(239,68,68,.80)' },
   'Crimson':          { bg: 'rgba(220,20,60,.80)',   text: '#ffffff', border: 'rgba(220,20,60,.80)' },
+  'Coral':            { bg: 'rgba(234,106,122,.80)', text: '#ffffff', border: 'rgba(234,106,122,.80)' },
   'Orange':           { bg: 'rgba(249,115,22,.80)',  text: '#ffffff', border: 'rgba(249,115,22,.80)' },
   'Light Yellow':     { bg: 'rgba(254,249,195,.80)', text: '#000000', border: 'rgba(254,249,195,.80)' },
   'Yellow':           { bg: 'rgba(250,204,21,.80)',  text: '#000000', border: 'rgba(250,204,21,.80)' },

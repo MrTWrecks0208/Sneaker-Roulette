@@ -84,6 +84,7 @@ function App() {
   const [sneakerToDelete, setSneakerToDelete] = useState<Sneaker | null>(null);
   const [showImport, setShowImport] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
+  const [pickerResultCount] = useState(1);
   const [showPhotoGuide, setShowPhotoGuide] = useState(false);
   const [showSqlGuide, setShowSqlGuide] = useState(false);
   const [copiedSql, setCopiedSql] = useState(false);
