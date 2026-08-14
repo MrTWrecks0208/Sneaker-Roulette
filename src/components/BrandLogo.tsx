@@ -1418,5 +1418,62 @@ export function BrandLogo({ brand, sneakerName, name, className }: { brand: stri
   if (bLower.includes('gucci')) {
     return (
       <div title="Gucci" className={`inline-flex items-center justify-center shrink-0 ${logoClass}`}>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 264" className="h-full w-auto max-h-full max-w-full text-current fill-current block">
-          <path d="M154.33 2.97C154.78 3.02 155.22 3.06 155.67 3.11C158.56 3.74 161.44 4.37 164.33 5C165.66 5.37 166.99 5.73 168.32 6.1C172.97 7.74 177.63 9.39 182.28 11.03C182.99 11.68 183.75 11.8 184.59 12.22C189.01 14.47 191.88 14.84 196.1 11.72C201.31 9.85 206.51 7.98 211.71 6.11C213.03 5.74 214.35 5.36 215.67 4.99C218.54 4.36 221.41 3.73 224.29 3.1C224.41 3.07 224.54 3.04 224.67 3.01C227.56 3.1 230.31 2.2 233.17 1.91C238.81 1.34 244.5 1.17 250.17 1.26C254.58 1.33 259.11 1.39 263.5 1.93C266.37 2.29 269.43 3.32 272.32 3.04C275.32 3.7 278.33 4.36 281.33 5.03C283.65 5.72 285.97 6.41 288.29 7.11C292.64 8.75 296.98 10.39 301.33 12.03C304.64 13.7 307.96 15.36 311.28 17.03C314.62 19.05 317.96 21.07 321.3 23.1C323.95 25.08 326.6 27.06 329.25 29.04C330.93 30.39 332.61 31.75 334.28 33.11C338.17 36.95 342.05 40.79 345.94 44.63C346.06 44.78 346.18 44.94 346.3 45.09C347.19 47.63 351.14 50.66 352.77 53.05C354.44 55.48 356.22 57.86 357.83 60.32C359.6 63.03 360.92 66.13 362.99 68.63C363.33 70.39 366.7 76.48 367.73 78.45C369.91 82.63 371.03 87.34 372.91 91.62C373.26 92.66 373.61 93.69 373.96 94.73C374.63 97.37 375.3 100.01 375.97 102.66C376.61 105.79 377.25 108.91 377.89 112.04C377.92 112.25 377.94 112.46 377.97 112.67C377.85 113.93 378.3 121.59 378.94 121.94C378.94 128.2 378.94 134.46 378.94 140.72C378.34 141.06 377.91 149 377.99 150.33C377.96 150.68 377.92 151.02 377.89 151.37C376.27 158.02 374.65 164.68 373.02 171.33C372.33 173.35 371.63 175.37 370.93 177.39C369.27 181.35 367.62 185.31 365.96 189.27C365.61 189.96 365.27 190.66 364.92 191.35C363.61 193.67 362.3 195.98 360.98 198.3C359.29 200.96 357.59 203.63 355.9 206.3C353.7 209.17 351.5 212.04 349.29 214.9C349.17 215.04 349.04 215.18 348.92 215.32C346.6 217.97 344.28 220.63 341.96 223.29C339.68 224.21 337.58 227.26 335.79 228.98C332.07 232.55 327.58 235.57 323.5 238.67C321.63 240.08 318.75 241.15 317.33 242.98C314.99 244.31 312.65 245.64 310.31 246.97C307.65 248.28 304.98 249.59 302.31 250.9C299.95 251.92 297.59 252.93 295.23 253.95C292.26 254.93 289.29 255.92 286.32 256.9C280.66 258.26 275 259.62 269.33 260.98C265.19 261.09 261.06 261.93 256.9 262.15C249.29 262.56 241.42 262.45 233.83 261.77C229.88 261.42 225.9 260.6 222.03 259.81C220.25 259.45 218.59 258.86 216.74 258.95C213.37 257.94 210 256.92 206.64 255.91C202.79 254.37 198.95 252.83 195.1 251.28C194.84 251.16 194.57 251.03 194.31 250.9C191.5 249 188.34 248.45 185.62 250.89C185.53 250.93 185.43 250.96 185.33 250.99C183 251.97 180.67 252.94 178.33 253.91C174.33 255.27 170.33 256.63 166.33 257.99C161.38 258.51 156.42 260.18 151.5 261.05C146.26 261.98 140.82 262.22 135.5 262.25C129.23 262.29 122.73 262.52 116.5 261.72C113.17 261.3 108.88 259.78 105.67 259.98C101.66 258.95 97.66 257.93 93.66 256.91C90.66 255.93 87.67 254.95 84.67 253.97C82.33 252.98 79.98 251.99 77.63 250.99C74.97 249.66 72.31 248.32 69.65 246.99C67.46 245.76 65.28 244.52 63.1 243.29C58.63 240.16 54.17 237.03 49.71 233.9C47.04 231.59 44.37 229.28 41.7 226.96C40.49 225.75 39.29 224.53 38.08 223.31C37.41 222.62 36.73 221.93 36.05 221.23C33.73 218.58 31.42 215.93 29.11 213.28C26.74 209.95 24.38 206.63 22.01 203.3C19.7 199.33 17.38 195.35 15.07 191.38C14.05 189.35 13.04 187.32 12.03 185.29C10.38 181.1 8.74 176.9 7.1 172.
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 70" className="h-full w-auto max-h-full max-w-full text-current fill-current block">
+          <text x="190" y="48" textAnchor="middle" fontFamily="'Times New Roman', Times, 'Playfair Display', Georgia, serif" fontSize="48" fontWeight="700" letterSpacing="0.25em" fill="currentColor">
+            GUCCI
+          </text>
+        </svg>
+      </div>
+    );
+  }
+
+  if (bLower.includes('jimmy choo') || bLower.includes('choo')) {
+    return (
+      <div title="Jimmy Choo" className={`inline-flex items-center justify-center shrink-0 ${logoClass}`}>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 60" className="h-full w-auto max-h-full max-w-full text-current fill-current block">
+          <text x="160" y="38" textAnchor="middle" fontFamily="Playfair Display, Didot, Bodoni MT, Georgia, serif" fontSize="28" fontWeight="600" letterSpacing="0.22em" fill="currentColor">
+            JIMMY CHOO
+          </text>
+          <text x="160" y="52" textAnchor="middle" fontFamily="system-ui, sans-serif" fontSize="8" fontWeight="500" letterSpacing="0.35em" fill="currentColor">
+            LONDON
+          </text>
+        </svg>
+      </div>
+    );
+  }
+
+  if (bLower.includes('maison mihara') || bLower.includes('mihara yasuhiro') || bLower.includes('mihara')) {
+    return (
+      <div title="Maison Mihara Yasuhiro" className={`inline-flex items-center justify-center shrink-0 ${logoClass}`}>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 80" className="h-full w-auto max-h-full max-w-full text-current fill-current block">
+          <rect x="4" y="4" width="352" height="72" rx="2" fill="none" stroke="currentColor" strokeWidth="2.5" />
+          <text x="180" y="34" textAnchor="middle" fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" fontSize="13" fontWeight="500" letterSpacing="0.18em" fill="currentColor">
+            Maison
+          </text>
+          <text x="180" y="58" textAnchor="middle" fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" fontSize="18" fontWeight="800" letterSpacing="0.14em" fill="currentColor">
+            MIHARA YASUHIRO
+          </text>
+        </svg>
+      </div>
+    );
+  }
+
+  if (bLower.includes('hermes') || bLower.includes('hermès')) {
+    return (
+      <div title="Hermès" className={`inline-flex items-center justify-center shrink-0 ${logoClass}`}>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 60" className="h-full w-auto max-h-full max-w-full text-current fill-current block">
+          <text x="140" y="36" textAnchor="middle" fontFamily="'Times New Roman', Times, 'Playfair Display', Georgia, serif" fontSize="28" fontWeight="700" letterSpacing="0.25em" fill="currentColor">
+            HERMÈS
+          </text>
+          <text x="140" y="52" textAnchor="middle" fontFamily="system-ui, sans-serif" fontSize="8" fontWeight="600" letterSpacing="0.38em" fill="currentColor">
+            PARIS
+          </text>
+        </svg>
+      </div>
+    );
+  }
+
+  if (bLower.includes('globe')) {
+    return (
+      <div title="Globe" className={`inline-flex items-center justify-center shrink-0 ${logoClass}`}>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 60" className="h-full w-auto max-h-full max-w-full text-current fill-curren
