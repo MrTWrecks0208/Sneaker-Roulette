@@ -102,6 +102,114 @@ export function isValidUuid(id?: string): boolean {
   return UUID_REGEX.test(id);
 }
 
+// Resilient insert helper that automatically recovers if unmigrated columns do not exist in the database table
+async function resilientSupabaseInsert(basePayload: Record<string, unknown>) {
+  const currentPayload: Record<string, unknown> = { ...basePayload };
+  const removedColumns = new Set<string>();
+
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const { data, error } = await supabase
+      .from('sneakers')
+      .insert(currentPayload)
+      .select();
+
+    if (!error) {
+      return { data, error: null };
+    }
+
+    // Check if error is PostgreSQL code 42703 (undefined_column) or column missing message
+    const isColumnMissingError =
+      error.code === '42703' ||
+      (error.message &&
+        error.message.toLowerCase().includes('column') &&
+        (error.message.toLowerCase().includes('does not exist') ||
+          error.message.toLowerCase().includes('not found') ||
+          error.message.toLowerCase().includes('schema')));
+
+    if (isColumnMissingError) {
+      const match =
+        error.message.match(/column\s+"?([a-zA-Z0-9_]+)"?\s+of relation/i) ||
+        error.message.match(/column\s+"?([a-zA-Z0-9_]+)"?\s+does not exist/i);
+      const missingCol = match ? match[1] : null;
+
+      if (missingCol && missingCol in currentPayload && !removedColumns.has(missingCol)) {
+        console.warn(`Supabase table missing column "${missingCol}". Retrying insert without it...`);
+        removedColumns.add(missingCol);
+        delete currentPayload[missingCol];
+        continue;
+      }
+
+      // Check candidate optional columns to strip
+      const candidateCols = ['condition', 'images', 'dates_worn', 'variant', 'height', 'last_worn', 'thumbnail_url', 'image_url', 'style', 'color'];
+      const nextCandidate = candidateCols.find(c => c in currentPayload && !removedColumns.has(c));
+      if (nextCandidate) {
+        console.warn(`Retrying insert without optional column "${nextCandidate}"...`);
+        removedColumns.add(nextCandidate);
+        delete currentPayload[nextCandidate];
+        continue;
+      }
+    }
+
+    // Unrecoverable error
+    return { data: null, error };
+  }
+
+  return { data: null, error: { message: 'Insert failed after multiple schema adaptation attempts' } };
+}
+
+// Resilient update helper
+async function resilientSupabaseUpdate(id: string, userId: string, basePayload: Record<string, unknown>) {
+  const currentPayload: Record<string, unknown> = { ...basePayload };
+  const removedColumns = new Set<string>();
+
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const { data, error } = await supabase
+      .from('sneakers')
+      .update(currentPayload)
+      .eq('id', id)
+      .select();
+
+    if (!error) {
+      return { data, error: null };
+    }
+
+    const isColumnMissingError =
+      error.code === '42703' ||
+      (error.message &&
+        error.message.toLowerCase().includes('column') &&
+        (error.message.toLowerCase().includes('does not exist') ||
+          error.message.toLowerCase().includes('not found') ||
+          error.message.toLowerCase().includes('schema')));
+
+    if (isColumnMissingError) {
+      const match =
+        error.message.match(/column\s+"?([a-zA-Z0-9_]+)"?\s+of relation/i) ||
+        error.message.match(/column\s+"?([a-zA-Z0-9_]+)"?\s+does not exist/i);
+      const missingCol = match ? match[1] : null;
+
+      if (missingCol && missingCol in currentPayload && !removedColumns.has(missingCol)) {
+        console.warn(`Supabase table missing column "${missingCol}". Retrying update without it...`);
+        removedColumns.add(missingCol);
+        delete currentPayload[missingCol];
+        continue;
+      }
+
+      const candidateCols = ['condition', 'images', 'dates_worn', 'variant', 'height', 'last_worn', 'thumbnail_url', 'image_url', 'style', 'color'];
+      const nextCandidate = candidateCols.find(c => c in currentPayload && !removedColumns.has(c));
+      if (nextCandidate) {
+        console.warn(`Retrying update without optional column "${nextCandidate}"...`);
+        removedColumns.add(nextCandidate);
+        delete currentPayload[nextCandidate];
+        continue;
+      }
+    }
+
+    return { data: null, error };
+  }
+
+  return { data: null, error: { message: 'Update failed after multiple schema adaptation attempts' } };
+}
+
 export function useSneakers(userId?: string) {
   const [sneakers, setSneakers] = useState<Sneaker[]>([]);
   const [loading, setLoading] = useState(true);
@@ -145,15 +253,22 @@ export function useSneakers(userId?: string) {
       const { data, error } = await supabase
         .from('sneakers')
         .select('*')
-        .eq('user_id', userId)
+        .or(`user_id.eq.${userId},user_id.is.null`)
         .order('created_at', { ascending: false });
 
       if (error) {
         throw error;
       }
 
-      setSneakers(data || []);
+      const fetchedSneakers = (data || []) as Sneaker[];
+      setSneakers(fetchedSneakers);
       setUsingLocalStorageFallback(false);
+      // Sync cache
+      try {
+        safeLocalStorage.setItem(`sneakers_inventory_${userId}`, JSON.stringify(fetchedSneakers));
+      } catch (cacheErr) {
+        console.debug('Failed to sync sneakers cache:', cacheErr);
+      }
     } catch (e: unknown) {
       const err = e as Error;
       console.warn('Error querying Supabase database:', err);
@@ -164,8 +279,8 @@ export function useSneakers(userId?: string) {
         const storageKey = `sneakers_inventory_${userId}`;
         const stored = safeLocalStorage.getItem(storageKey);
         setSneakers(stored ? JSON.parse(stored) : DEFAULT_SNEAKERS);
-      } catch {
-        // Fallback silently if localStorage fails or is empty
+      } catch (fallbackErr) {
+        console.debug('Fallback localStorage read error:', fallbackErr);
       }
     } finally {
       setLoading(false);
@@ -184,8 +299,10 @@ export function useSneakers(userId?: string) {
   };
 
   const addSneaker = async (sneaker: SneakerInsert) => {
-    if (!userId) return null;
-    const name = buildName(sneaker.brand, sneaker.model, sneaker.variant || '', sneaker.colorway);
+    if (!userId) {
+      throw new Error('You must be signed in to add sneakers.');
+    }
+    const name = sneaker.name?.trim() || buildName(sneaker.brand, sneaker.model, sneaker.variant || '', sneaker.colorway);
     
     const isLiveMode = isSupabaseConfigured && userId !== 'guest-user-bypass' && isValidUuid(userId) && !usingLocalStorageFallback;
 
@@ -204,47 +321,64 @@ export function useSneakers(userId?: string) {
       return newSneaker;
     }
 
+    // Get active session user id to avoid RLS auth mismatch
+    let activeAuthId = userId;
     try {
-      const payload = {
-        ...sneaker,
-        name,
-        variant: sneaker.variant || '',
-        worn: sneaker.worn || 0,
-        style: sneaker.style || [],
-        color: sneaker.color || [],
-        images: sneaker.images || [],
-        dates_worn: sneaker.dates_worn || [],
-        user_id: userId,
-      };
-
-      const { data, error } = await supabase
-        .from('sneakers')
-        .insert(payload)
-        .select();
-
-      if (error) throw error;
-      
-      if (data && data.length > 0) {
-        const createdItem = data[0];
-        setSneakers(prev => [createdItem, ...prev]);
-        return createdItem;
-      } else {
-        throw new Error('No data returned from Supabase insert');
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData?.session?.user?.id) {
+        activeAuthId = sessionData.session.user.id;
       }
     } catch (e) {
-      console.warn('Supabase addSneaker error, applying local fallback:', e);
-      const newSneaker: Sneaker = {
-        ...sneaker,
-        id: crypto.randomUUID?.() || Math.random().toString(36).substring(2, 11),
-        name,
-        variant: sneaker.variant || '',
-        user_id: userId,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      const updated = [newSneaker, ...sneakers];
-      saveToStorage(updated);
-      return newSneaker;
+      console.warn('Could not verify session user id:', e);
+    }
+
+    const payload: Record<string, unknown> = {
+      name,
+      brand: sneaker.brand || '',
+      model: sneaker.model || '',
+      variant: sneaker.variant || '',
+      colorway: sneaker.colorway || '',
+      height: sneaker.height || 'Low',
+      style: Array.isArray(sneaker.style) ? sneaker.style : [],
+      color: Array.isArray(sneaker.color) ? sneaker.color : [],
+      condition: sneaker.condition || 'Deadstock (DS)',
+      worn: typeof sneaker.worn === 'number' ? sneaker.worn : (parseInt(String(sneaker.worn), 10) || 0),
+      last_worn: sneaker.last_worn || null,
+      thumbnail_url: sneaker.thumbnail_url || sneaker.image_url || '',
+      image_url: sneaker.image_url || sneaker.thumbnail_url || '',
+      images: Array.isArray(sneaker.images) ? sneaker.images : [],
+      dates_worn: Array.isArray(sneaker.dates_worn) ? sneaker.dates_worn : [],
+      user_id: activeAuthId,
+    };
+
+    // Remove any undefined properties
+    Object.keys(payload).forEach(key => {
+      if (payload[key] === undefined) {
+        delete payload[key];
+      }
+    });
+
+    const { data, error: insertError } = await resilientSupabaseInsert(payload);
+
+    if (insertError) {
+      console.error('Supabase addSneaker failed:', insertError);
+      throw new Error(insertError.message || 'Database insert failed');
+    }
+
+    if (data && data.length > 0) {
+      const createdItem = data[0] as Sneaker;
+      setSneakers(prev => [createdItem, ...prev.filter(s => s.id !== createdItem.id)]);
+      try {
+        const storageKey = `sneakers_inventory_${userId}`;
+        const stored = safeLocalStorage.getItem(storageKey);
+        const list: Sneaker[] = stored ? JSON.parse(stored) : [];
+        safeLocalStorage.setItem(storageKey, JSON.stringify([createdItem, ...list.filter(s => s.id !== createdItem.id)]));
+      } catch (cacheErr) {
+        console.debug('Failed to cache new sneaker locally:', cacheErr);
+      }
+      return createdItem;
+    } else {
+      throw new Error('Supabase insert succeeded but returned no record');
     }
   };
 
@@ -255,7 +389,7 @@ export function useSneakers(userId?: string) {
 
     if (!isLiveMode) {
       const withNames: Sneaker[] = sneakersData.map(s => {
-        const name = buildName(s.brand, s.model, s.variant || '', s.colorway);
+        const name = s.name?.trim() || buildName(s.brand, s.model, s.variant || '', s.colorway);
         return {
           ...s,
           id: crypto.randomUUID?.() || Math.random().toString(36).substring(2, 11),
@@ -272,11 +406,33 @@ export function useSneakers(userId?: string) {
     }
 
     try {
+      let activeAuthId = userId;
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData?.session?.user?.id) {
+          activeAuthId = sessionData.session.user.id;
+        }
+      } catch (sessErr) {
+        console.debug('Could not get session in batch insert:', sessErr);
+      }
+
       const formatted = sneakersData.map(s => ({
-        ...s,
-        name: buildName(s.brand, s.model, s.variant || '', s.colorway),
+        name: s.name?.trim() || buildName(s.brand, s.model, s.variant || '', s.colorway),
+        brand: s.brand || '',
+        model: s.model || '',
         variant: s.variant || '',
-        user_id: userId,
+        colorway: s.colorway || '',
+        height: s.height || 'Low',
+        style: Array.isArray(s.style) ? s.style : [],
+        color: Array.isArray(s.color) ? s.color : [],
+        condition: s.condition || 'Deadstock (DS)',
+        worn: typeof s.worn === 'number' ? s.worn : (parseInt(String(s.worn), 10) || 0),
+        last_worn: s.last_worn || null,
+        thumbnail_url: s.thumbnail_url || s.image_url || '',
+        image_url: s.image_url || s.thumbnail_url || '',
+        images: Array.isArray(s.images) ? s.images : [],
+        dates_worn: Array.isArray(s.dates_worn) ? s.dates_worn : [],
+        user_id: activeAuthId,
       }));
 
       const { data, error } = await supabase
@@ -286,27 +442,14 @@ export function useSneakers(userId?: string) {
 
       if (error) throw error;
       if (data && data.length > 0) {
-        setSneakers(prev => [...data, ...prev]);
-        return data;
+        const newRecords = data as Sneaker[];
+        setSneakers(prev => [...newRecords, ...prev]);
+        return newRecords;
       }
       throw new Error('No data returned from Supabase batch insert');
     } catch (e) {
-      console.warn('Supabase addSneakersBatch error, applying local fallback:', e);
-      const withNames: Sneaker[] = sneakersData.map(s => {
-        const name = buildName(s.brand, s.model, s.variant || '', s.colorway);
-        return {
-          ...s,
-          id: crypto.randomUUID?.() || Math.random().toString(36).substring(2, 11),
-          name,
-          variant: s.variant || '',
-          user_id: userId,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-      });
-      const updated = [...withNames, ...sneakers];
-      saveToStorage(updated);
-      return withNames;
+      console.error('Supabase addSneakersBatch error:', e);
+      throw e;
     }
   };
 
@@ -323,7 +466,7 @@ export function useSneakers(userId?: string) {
       const m = updates.model !== undefined ? updates.model : current.model;
       const v = updates.variant !== undefined ? updates.variant : current.variant;
       const c = updates.colorway !== undefined ? updates.colorway : current.colorway;
-      const name = buildName(b, m, v, c);
+      const name = updates.name?.trim() || buildName(b, m, v, c);
 
       const updatedSneaker: Sneaker = {
         ...current,
@@ -344,7 +487,7 @@ export function useSneakers(userId?: string) {
       const m = updates.model !== undefined ? updates.model : current?.model || '';
       const v = updates.variant !== undefined ? updates.variant : current?.variant || '';
       const c = updates.colorway !== undefined ? updates.colorway : current?.colorway || '';
-      const name = buildName(b, m, v, c);
+      const name = updates.name?.trim() || buildName(b, m, v, c);
 
       const payload: Record<string, unknown> = {
         name,
@@ -366,17 +509,12 @@ export function useSneakers(userId?: string) {
       if (updates.image_url !== undefined) payload.image_url = updates.image_url;
       if (updates.images !== undefined) payload.images = updates.images;
 
-      const { data, error } = await supabase
-        .from('sneakers')
-        .update(payload)
-        .eq('id', id)
-        .eq('user_id', userId)
-        .select();
+      const { data, error } = await resilientSupabaseUpdate(id, userId, payload);
 
       if (error) throw error;
 
       if (data && data.length > 0) {
-        const updatedItem = data[0];
+        const updatedItem = data[0] as Sneaker;
         setSneakers(prev => prev.map(s => String(s.id) === String(id) ? updatedItem : s));
         return updatedItem;
       } else {
@@ -395,28 +533,8 @@ export function useSneakers(userId?: string) {
         return null;
       }
     } catch (e) {
-      console.warn('Supabase updateSneaker error, applying local fallback:', e);
-      const current = sneakers.find(s => String(s.id) === String(id));
-      if (current) {
-        const b = updates.brand !== undefined ? updates.brand : current.brand;
-        const m = updates.model !== undefined ? updates.model : current.model;
-        const v = updates.variant !== undefined ? updates.variant : current.variant;
-        const c = updates.colorway !== undefined ? updates.colorway : current.colorway;
-        const name = buildName(b, m, v, c);
-
-        const updatedSneaker: Sneaker = {
-          ...current,
-          ...updates,
-          variant: v || '',
-          name,
-          updated_at: new Date().toISOString(),
-        };
-
-        const updatedList = sneakers.map(s => String(s.id) === String(id) ? updatedSneaker : s);
-        saveToStorage(updatedList);
-        return updatedSneaker;
-      }
-      return null;
+      console.error('Supabase updateSneaker error:', e);
+      throw e;
     }
   };
 
@@ -435,17 +553,14 @@ export function useSneakers(userId?: string) {
       const { error } = await supabase
         .from('sneakers')
         .delete()
-        .eq('id', id)
-        .eq('user_id', userId);
+        .eq('id', id);
 
       if (error) throw error;
       setSneakers(prev => prev.filter(s => String(s.id) !== String(id)));
       return true;
     } catch (e) {
-      console.warn('Supabase deleteSneaker error, applying local fallback:', e);
-      const updatedList = sneakers.filter(s => String(s.id) !== String(id));
-      saveToStorage(updatedList);
-      return true;
+      console.error('Supabase deleteSneaker error:', e);
+      throw e;
     }
   };
 

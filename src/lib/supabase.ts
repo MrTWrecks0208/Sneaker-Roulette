@@ -104,11 +104,10 @@ export const STYLES = [
 
 export const COLORS = [
   'White', 'Ivory', 'Black', 'Gunmetal', 'Dark Gray', 'Gray', 'Light Gray', 'Dark Brown', 'Brown', 'Tan',
-  'Beige', 'Red', 'Crimson', 'Coral', 'Orange', 'Light Yellow', 'Yellow', 'Mint', 'Lime',
-  'Green', 'Forest Green', 'Olive', 'Teal', 'Turquoise', 'Light Blue', 'Aqua', 'Blue', 'Navy', 'Indigo',
-  'Purple', 'Maroon', 'Burgundy', 'Magenta', 'Pink', 'Hot Pink', 'Gold', 'Silver', 'Reflective',
-  'Glow', 'Iridescent', 'Ice', 'Multicolor', 'Paua', 'Light Green', 'Cyan Blue', 'Citrus', 'Gum',
-  'Green Cyan', 'Carolina Blue', 'Platinum',
+  'Gum', 'Beige', 'Red', 'Crimson', 'Coral', 'Orange', 'Citrus', 'Light Yellow', 'Yellow', 'Mint', 'Lime', 'Light Green',
+  'Green', 'Forest Green', 'Olive', 'Green Cyan', 'Teal', 'Turquoise', 'Aqua', 'Cyan Blue', 'Light Blue', 'Carolina Blue', 'Blue',  'Navy', 'Indigo',
+  'Purple', 'Paua', 'Maroon', 'Burgundy', 'Magenta', 'Pink', 'Hot Pink', 'Platinum', 'Gold', 'Silver', 'Reflective',
+  'Glow', 'Iridescent', 'Ice', 'Multicolor',
 ] as const;
 
 export function buildName(brand: string, model: string, variant: string, colorway: string): string {

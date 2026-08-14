@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Sneaker, SneakerInsert, BRANDS, BRAND_CATEGORIES, HEIGHTS, STYLES, COLORS, CONDITION_OPTIONS, buildName } from '../lib/supabase';
-import { X, Upload, Loader2, Camera, Sparkles, ChevronDown, Search, Check, Star, Info, Lock } from 'lucide-react';
+import { X, Upload, Loader2, Camera, Sparkles, ChevronDown, Search, Check, Star, Info, Lock, Plus, Minus } from 'lucide-react';
 import PhotoGuideModal from './PhotoGuide';
 import { useSubscription } from '../hooks/useSubscription';
 import multicolorImg from '../assets/images/multicolor_swatch_1783883698636.jpg';
@@ -419,7 +419,7 @@ export default function SneakerForm({ sneaker, onSave, onCancel, onOpenSubscript
     }
     return 'Deadstock (DS)';
   });
-  const [worn, setWorn] = useState(sneaker?.worn || 0);
+  const [worn, setWorn] = useState<number | string>(sneaker?.worn ?? 0);
   const [lastWornAt, setLastWornAt] = useState<string>(sneaker?.last_worn || '');
   const [imageUrl, setImageUrl] = useState(sneaker?.thumbnail_url || '');
   const [images, setImages] = useState<string[]>(() => {
@@ -605,27 +605,35 @@ export default function SneakerForm({ sneaker, onSave, onCancel, onOpenSubscript
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    const finalName = autoName || nameInput;
-    const primaryImage = imageUrl || images[0] || '';
-    const finalImages = images.length > 0 ? images : (primaryImage ? [primaryImage] : []);
-    await onSave({
-      name: finalName,
-      brand,
-      model,
-      variant,
-      colorway,
-      height: height || 'Low',
-      style,
-      color,
-      condition,
-      worn,
-      last_worn: lastWornAt ? new Date(lastWornAt).toISOString() : null,
-      thumbnail_url: primaryImage,
-      image_url: primaryImage,
-      images: finalImages,
-      dates_worn: sneaker?.dates_worn || (lastWornAt ? [new Date(lastWornAt).toISOString()] : []),
-    });
-    setSaving(false);
+    setLookupMessage(null);
+    try {
+      const finalName = autoName || nameInput;
+      const primaryImage = imageUrl || images[0] || '';
+      const finalImages = images.length > 0 ? images : (primaryImage ? [primaryImage] : []);
+      await onSave({
+        name: finalName,
+        brand,
+        model,
+        variant,
+        colorway,
+        height: height || 'Low',
+        style,
+        color,
+        condition,
+        worn: Math.max(0, parseInt(String(worn), 10) || 0),
+        last_worn: lastWornAt ? new Date(lastWornAt).toISOString() : null,
+        thumbnail_url: primaryImage,
+        image_url: primaryImage,
+        images: finalImages,
+        dates_worn: sneaker?.dates_worn || (lastWornAt ? [new Date(lastWornAt).toISOString()] : []),
+      });
+    } catch (err: unknown) {
+      console.error('Save sneaker error:', err);
+      const e = err as Error;
+      setLookupMessage(`Error saving to database: ${e?.message || 'Please check your connection'}`);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -860,14 +868,64 @@ export default function SneakerForm({ sneaker, onSave, onCancel, onOpenSubscript
           {/* Times Worn and Last Worn Date */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Times Worn</label>
-              <input
-                type="number"
-                min="0"
-                value={worn}
-                onChange={e => setWorn(parseInt(e.target.value) || 0)}
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors"
-              />
+              <label htmlFor="sneaker-form-worn-input" className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Times Worn</label>
+              <div className="relative flex items-center">
+                <input
+                  id="sneaker-form-worn-input"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={worn}
+                  onChange={e => {
+                    const val = e.target.value;
+                    if (val === '') {
+                      setWorn('');
+                    } else {
+                      const num = parseInt(val, 10);
+                      if (!isNaN(num) && num >= 0) {
+                        setWorn(num);
+                      }
+                    }
+                  }}
+                  onBlur={() => {
+                    if (worn === '' || isNaN(Number(worn))) {
+                      setWorn(0);
+                    }
+                  }}
+                  onKeyDown={e => {
+                    if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      setWorn(prev => (Number(prev) || 0) + 1);
+                    } else if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      setWorn(prev => Math.max(0, (Number(prev) || 0) - 1));
+                    }
+                  }}
+                  placeholder="0"
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded-lg pl-3 pr-20 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-blue-500 transition-colors"
+                />
+                <div className="absolute right-1.5 flex items-center gap-1">
+                  <button
+                    type="button"
+                    id="sneaker-form-worn-dec-btn"
+                    onClick={() => setWorn(prev => Math.max(0, (Number(prev) || 0) - 1))}
+                    disabled={Number(worn) <= 0}
+                    className="w-7 h-7 flex items-center justify-center rounded bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 disabled:opacity-30 disabled:hover:bg-zinc-800 disabled:cursor-not-allowed text-zinc-300 hover:text-white transition-colors"
+                    title="Decrease worn count"
+                  >
+                    <Minus className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    id="sneaker-form-worn-inc-btn"
+                    onClick={() => setWorn(prev => (Number(prev) || 0) + 1)}
+                    className="w-7 h-7 flex items-center justify-center rounded bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-zinc-300 hover:text-white transition-colors"
+                    title="Increase worn count"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
             </div>
             <div>
               <div className="flex items-center justify-between mb-1.5">

@@ -235,20 +235,36 @@ function App() {
   });
 
   const handleSave = async (data: SneakerInsert) => {
-    if (editSneaker) {
-      const result = await updateSneaker(editSneaker.id, data);
-      setEditSneaker(null);
-      if (result) showToast('success', 'Sneaker updated');
-      else showToast('error', 'Failed to update sneaker');
-      return result;
+    try {
+      if (editSneaker) {
+        const result = await updateSneaker(editSneaker.id, data);
+        if (result) {
+          setEditSneaker(null);
+          showToast('success', 'Sneaker updated successfully');
+          return result;
+        } else {
+          showToast('error', 'Failed to update sneaker in database.');
+          return null;
+        }
+      }
+      const result = await addSneaker(data);
+      if (result) {
+        setShowForm(false);
+        // Reset filters so newly added pair is immediately visible
+        clearAllFilters();
+        showToast('success', 'Sneaker added to collection');
+        return result;
+      } else {
+        showToast('error', 'Failed to add sneaker to database.');
+        return null;
+      }
+    } catch (err: unknown) {
+      console.error('Error saving sneaker:', err);
+      const e = err as Error;
+      const errMsg = e?.message || 'Database error occurred while saving sneaker.';
+      showToast('error', errMsg);
+      throw err;
     }
-    const result = await addSneaker(data);
-    setShowForm(false);
-    // Reset filters so newly added pair is immediately visible
-    clearAllFilters();
-    if (result) showToast('success', 'Sneaker added to collection');
-    else showToast('error', 'Failed to add sneaker');
-    return result;
   };
 
   const handleEdit = (sneaker: Sneaker) => {
@@ -544,16 +560,32 @@ function App() {
   style text[] DEFAULT '{}',
   color text[] DEFAULT '{}',
   worn integer NOT NULL DEFAULT 0,
+  condition text DEFAULT 'Deadstock (DS)',
   thumbnail_url text DEFAULT '',
   image_url text DEFAULT '',
+  images text[] DEFAULT '{}',
+  dates_worn timestamptz[] DEFAULT '{}',
   last_worn timestamptz DEFAULT NULL,
   user_id uuid REFERENCES auth.users(id),
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
 
+-- Ensure all modern columns exist on existing databases
+ALTER TABLE sneakers ADD COLUMN IF NOT EXISTS condition text DEFAULT 'Deadstock (DS)';
+ALTER TABLE sneakers ADD COLUMN IF NOT EXISTS images text[] DEFAULT '{}';
+ALTER TABLE sneakers ADD COLUMN IF NOT EXISTS dates_worn timestamptz[] DEFAULT '{}';
+ALTER TABLE sneakers ADD COLUMN IF NOT EXISTS variant text DEFAULT '';
+ALTER TABLE sneakers ADD COLUMN IF NOT EXISTS height text DEFAULT 'Low';
+
 -- Enable RLS
 ALTER TABLE sneakers ENABLE ROW LEVEL SECURITY;
+
+-- Drop old policies to prevent duplicates on rerun
+DROP POLICY IF EXISTS "Users can view own sneakers" ON sneakers;
+DROP POLICY IF EXISTS "Users can insert own sneakers" ON sneakers;
+DROP POLICY IF EXISTS "Users can update own sneakers" ON sneakers;
+DROP POLICY IF EXISTS "Users can delete own sneakers" ON sneakers;
 
 -- Select policy
 CREATE POLICY "Users can view own sneakers"
