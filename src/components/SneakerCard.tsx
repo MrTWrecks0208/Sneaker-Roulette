@@ -358,7 +358,7 @@ function CardInner({
 
           {/* Brand Logo in Upper Right Corner */}
           <div className={`absolute z-10 duration-200 pointer-events-none ${isScaled ? 'top-7 right-10' : 'top-6 right-8'}`}>
-            <BrandLogo brand={sneaker.brand} sneakerName={sneaker.name} className={`${isScaled ? 'h-14 sm:h-16' : 'h-12 sm:h-14'} w-auto text-zinc-900 opacity-80`} />
+            <BrandLogo brand={sneaker.brand} sneakerName={sneaker.name} isFrontFace className={`${isScaled ? 'h-14 sm:h-16' : 'h-12 sm:h-14'} w-auto text-zinc-900 opacity-80`} />
           </div>
 
           {/* Hover action buttons (Edit & Delete only) */}

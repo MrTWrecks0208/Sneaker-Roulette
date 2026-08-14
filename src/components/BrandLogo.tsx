@@ -13,11 +13,13 @@ export function BrandLogo({
   sneakerName,
   name,
   className,
+  isFrontFace,
 }: {
   brand: string;
   sneakerName?: string;
   name?: string;
   className?: string;
+  isFrontFace?: boolean;
 }) {
   const hasTextColor = className && /\btext-/.test(className);
   const colorClass = hasTextColor ? '' : 'text-black';
@@ -35,11 +37,14 @@ export function BrandLogo({
   const isNike = !isJordan && (bLower.includes('nike') || nLower.includes('nike'));
   const isAdidas = !isYeezy && (bLower.includes('adidas') || nLower.includes('adidas'));
 
+  const isFront = isFrontFace ?? (Boolean(className && (className.includes('h-12') || className.includes('h-14') || className.includes('opacity-80'))));
+
   const ctx: BrandLogoContext = {
     brand,
     sneakerName,
     name,
     className,
+    isFrontFace: isFront,
     logoClass,
     combinedName,
     bLower,

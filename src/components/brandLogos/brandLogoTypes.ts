@@ -3,6 +3,7 @@ export interface BrandLogoContext {
   sneakerName?: string;
   name?: string;
   className?: string;
+  isFrontFace?: boolean;
   logoClass: string;
   combinedName: string;
   bLower: string;
