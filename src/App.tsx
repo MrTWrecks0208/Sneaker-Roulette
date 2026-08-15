@@ -324,7 +324,7 @@ function App() {
           <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center shadow-xl shadow-red-500/10 animate-bounce">
             <Footprints className="w-6 h-6 text-white" />
           </div>
-          <span className="text-sm font-semibold text-zinc-400 uppercase tracking-widest animate-pulse">Loading Locker...</span>
+          <span className="text-sm font-semibold text-zinc-400 uppercase tracking-widest animate-pulse">Loading Collection...</span>
         </div>
       </div>
     );
@@ -358,9 +358,9 @@ function App() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowPicker(true)}
-                className="hidden sm:flex items-center justify-center w-[120px] h-9 gap-3 bg-rose-600/10 text-rose-400 text-md font-medium rounded-2xl border border-rose-600/20 hover:bg-rose-500/20 transition-colors cursor-pointer"
+                className="hidden sm:flex items-center pb-2 pt-1.5 justify-center w-[110px] h-9 gap-3 bg-emerald-600/10 text-emerald-400 text-md font-medium rounded-2xl border border-emerald-600/20 hover:bg-emerald-500/20 transition-colors cursor-pointer"
               >
-                <LifeBuoy className="w-5 h-5 text-rose-400" />
+                <LifeBuoy className="w-5 h-5 text-emerald-400" />
                 Spin
               </button>
               <button
@@ -371,9 +371,9 @@ function App() {
                     setShowImport(true);
                   }
                 }}
-                className="hidden sm:flex items-center justify-center w-[120px] h-9 gap-1.5 bg-amber-600/10 text-amber-400 text-md font-medium rounded-2xl border border-amber-700/20 hover:bg-amber-600/20 transition-colors cursor-pointer"
+                className="hidden sm:flex items-center pb-2 pt-1.5 justify-center w-[110px] h-9 gap-1.5 bg-sky-600/10 text-sky-400 text-md font-medium rounded-2xl border border-sky-700/20 hover:bg-sky-600/20 transition-colors cursor-pointer"
               >
-                <Upload className="w-5 h-5 text-amber-400" />
+                <Upload className="w-5 h-5 text-sky-400" />
                 Import
               </button>
               <button
@@ -387,9 +387,9 @@ function App() {
                     setShowForm(true);
                   }
                 }}
-                className="flex items-center justify-center w-[120px] h-9 gap-1.5 bg-sky-600/10 text-sky-400 text-md font-medium rounded-2xl border border-sky-700/20 hover:bg-sky-600/20 transition-colors cursor-pointer"
+                className="flex items-center justify-center w-[110px] h-9 pb-2 pt-1.5 gap-1.5 bg-rose-600/10 text-rose-400 text-md font-medium rounded-2xl border border-rose-700/20 hover:bg-rose-600/20 transition-colors cursor-pointer"
               >
-                <Plus className="w-5 h-5 text-sky-400" />
+                <Plus className="w-5 h-5 text-rose-400" />
                 Add
               </button>
 
@@ -1079,7 +1079,7 @@ CREATE POLICY "Users can delete own sneakers"
             
             <div className="p-5">
               <p className="text-sm text-zinc-300 leading-relaxed">
-                Are you sure you want to delete <strong className="text-zinc-100 font-semibold">{sneakerToDelete.name || 'this unnamed sneaker'}</strong> from your locker?
+                Are you sure you want to delete <strong className="text-zinc-100 font-semibold">{sneakerToDelete.name || 'this unnamed sneaker'}</strong> from your collection?
               </p>
             </div>
 

@@ -243,7 +243,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <Footprints className="w-5 h-5 text-white" />
               </div>
               <span className="font-extrabold text-xs tracking-wider text-white uppercase hidden sm:inline">
-                KICK LOCKER
+                SNEAKER COLLECTION
               </span>
             </div>
 
@@ -922,14 +922,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {activeTab === 'about' && (
               <div className="p-6 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 space-y-4 text-xs animate-in fade-in duration-150">
                 <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
-                  ABOUT KICK LOCKER
+                  ABOUT SNEAKER ROULETTE
                 </h3>
                 <p className="text-zinc-300 leading-relaxed">
-                  Kick Locker v2.4.0 — Premium Sneaker Inventory & Rotation Management.
+                  Sneaker Roulette v2.4.0 — Premium Sneaker Inventory & Rotation Management.
                 </p>
                 <div className="text-[11px] text-zinc-400 space-y-1 pt-2 border-t border-zinc-800">
                   <p>Built with React, Vite, Tailwind CSS & Supabase.</p>
-                  <p>&copy; 2026 Kick Locker Inc. All rights reserved.</p>
+                  <p>&copy; 2026 Sneaker Roulette All rights reserved.</p>
                 </div>
               </div>
             )}

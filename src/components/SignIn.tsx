@@ -11,6 +11,7 @@ interface SignInProps {
 export default function SignIn({ onSuccess }: SignInProps) {
   const { signIn, signUp, signInWithGoogle, signInAsGuest, error: authError } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
+  const [identifier, setIdentifier] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
@@ -42,10 +43,18 @@ export default function SignIn({ onSuccess }: SignInProps) {
     setValidationError(null);
     setLoading(true);
 
-    if (!email || !password || (isSignUp && !username)) {
-      setValidationError('Please fill in all required fields.');
-      setLoading(false);
-      return;
+    if (isSignUp) {
+      if (!username.trim() || !email.trim() || !password) {
+        setValidationError('Please provide a username, email, and password.');
+        setLoading(false);
+        return;
+      }
+    } else {
+      if (!identifier.trim() || !password) {
+        setValidationError('Please enter your username and password.');
+        setLoading(false);
+        return;
+      }
     }
 
     if (password.length < 6) {
@@ -56,7 +65,7 @@ export default function SignIn({ onSuccess }: SignInProps) {
 
     try {
       if (isSignUp) {
-        const res = await signUp(email, password, username);
+        const res = await signUp(email.trim(), password, username.trim());
         if (res.success) {
           sessionStorage.setItem('just_signed_in', 'true');
           onSuccess?.();
@@ -64,12 +73,12 @@ export default function SignIn({ onSuccess }: SignInProps) {
           setValidationError(res.error || 'Failed to create account.');
         }
       } else {
-        const res = await signIn(email, password);
+        const res = await signIn(identifier.trim(), password);
         if (res.success) {
           sessionStorage.setItem('just_signed_in', 'true');
           onSuccess?.();
         } else {
-          setValidationError(res.error || 'Invalid email or password.');
+          setValidationError(res.error || 'Invalid username or password.');
         }
       }
     } catch (err: unknown) {
@@ -123,7 +132,7 @@ export default function SignIn({ onSuccess }: SignInProps) {
           transition={{ delay: 0.1, duration: 0.6 }}
           className="mt-6 text-center text-3xl font-extrabold text-zinc-100 tracking-tight"
         >
-          {isSignUp ? 'Create your locker' : 'Sign in to your locker'}
+          {isSignUp ? 'Create your collection' : 'Sign in to view your collection'}
         </motion.h2>
         
         <motion.p
@@ -171,46 +180,76 @@ export default function SignIn({ onSuccess }: SignInProps) {
           </AnimatePresence>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
-            {isSignUp && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="space-y-1.5"
-              >
+            {isSignUp ? (
+              <>
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-1.5"
+                >
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider">Choose Username</label>
+                    <span className="text-[10px] text-zinc-500 font-normal">Unique Handle</span>
+                  </div>
+                  <div className="relative">
+                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-zinc-500" />
+                    <input
+                      type="text"
+                      required
+                      value={username}
+                      onChange={(e) => {
+                        setUsername(e.target.value);
+                        if (validationError) setValidationError(null);
+                      }}
+                      placeholder="e.g. SneakerHead99"
+                      className="w-full bg-zinc-950 border border-zinc-800/80 rounded-2xl pl-11 pr-4 py-3 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-red-500/80 focus:ring-1 focus:ring-red-500/30 transition-all"
+                    />
+                  </div>
+                  <p className="text-[11px] text-zinc-500 font-medium">This will be your primary login handle and visible name.</p>
+                </motion.div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider">Email Address</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-zinc-500" />
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (validationError) setValidationError(null);
+                      }}
+                      placeholder="name@example.com"
+                      className="w-full bg-zinc-950 border border-zinc-800/80 rounded-2xl pl-11 pr-4 py-3 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-red-500/80 focus:ring-1 focus:ring-red-500/30 transition-all"
+                    />
+                  </div>
+                  <p className="text-[11px] text-zinc-500 font-medium">Used for security recovery and notifications.</p>
+                </div>
+              </>
+            ) : (
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider">Choose Username</label>
-                  <span className="text-[10px] text-zinc-500 font-normal">Custom Handle</span>
+                  <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider">Username or Email</label>
+                  <span className="text-[10px] text-zinc-500 font-normal">Primary Login</span>
                 </div>
                 <div className="relative">
                   <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-zinc-500" />
                   <input
                     type="text"
                     required
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="e.g. SneakerHead99"
+                    value={identifier}
+                    onChange={(e) => {
+                      setIdentifier(e.target.value);
+                      if (validationError) setValidationError(null);
+                    }}
+                    placeholder="Username or email address"
                     className="w-full bg-zinc-950 border border-zinc-800/80 rounded-2xl pl-11 pr-4 py-3 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-red-500/80 focus:ring-1 focus:ring-red-500/30 transition-all"
                   />
                 </div>
-                <p className="text-[11px] text-zinc-500 font-medium">This will be your visible display name in your locker.</p>
-              </motion.div>
-            )}
-
-            <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-zinc-500" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  className="w-full bg-zinc-950 border border-zinc-800/80 rounded-2xl pl-11 pr-4 py-3 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-red-500/80 focus:ring-1 focus:ring-red-500/30 transition-all"
-                />
               </div>
-            </div>
+            )}
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
@@ -222,7 +261,10 @@ export default function SignIn({ onSuccess }: SignInProps) {
                   type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (validationError) setValidationError(null);
+                  }}
                   placeholder="••••••••"
                   className="w-full bg-zinc-950 border border-zinc-800/80 rounded-2xl pl-11 pr-11 py-3 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-red-500/80 focus:ring-1 focus:ring-red-500/30 transition-all"
                 />
@@ -292,10 +334,16 @@ export default function SignIn({ onSuccess }: SignInProps) {
             <button
               type="button"
               onClick={() => {
-                setIsSignUp(!isSignUp);
+                const nextState = !isSignUp;
+                setIsSignUp(nextState);
                 setValidationError(null);
+                if (nextState) {
+                  if (identifier && !username) setUsername(identifier);
+                } else {
+                  if (username && !identifier) setIdentifier(username);
+                }
               }}
-              className="text-xs text-red-400 hover:text-red-300 transition-colors font-semibold uppercase tracking-wider"
+              className="text-xs text-red-400 hover:text-red-300 transition-colors font-semibold uppercase tracking-wider cursor-pointer"
             >
               {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
             </button>

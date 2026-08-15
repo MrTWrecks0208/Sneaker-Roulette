@@ -9,7 +9,7 @@ interface LoadingScreenProps {
 export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
   const [progress, setProgress] = useState(0);
   const [videoError, setVideoError] = useState(false);
-  const [loadingText, setLoadingText] = useState('Initializing Locker...');
+  const [loadingText, setLoadingText] = useState('Initializing Collection...');
   const videoRef = useRef<HTMLVideoElement>(null);
   const duration = 8000; // Matches the uploaded video duration (8.04s) perfectly
 
@@ -31,13 +31,13 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
 
       // Dynamic text updates for a premium, immersive feel
       if (calculatedProgress < 25) {
-        setLoadingText('Initializing Locker...');
+        setLoadingText('Initializing Your Collection...');
       } else if (calculatedProgress < 50) {
-        setLoadingText('Loading Sneaker Collection...');
+        setLoadingText('Loading Your Collection...');
       } else if (calculatedProgress < 75) {
         setLoadingText('Balancing the Roulette Wheel...');
       } else if (calculatedProgress < 95) {
-        setLoadingText('Polishing the Kicks...');
+        setLoadingText('Polishing Your Kicks...');
       } else {
         setLoadingText('Ready to Spin!');
       }
@@ -106,7 +106,7 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
                   Sneaker <span className="text-red-500">Roulette</span>
                 </span>
               </div>
-              <p className="text-xs text-zinc-500">Loading your luxury locker...</p>
+              <p className="text-xs text-zinc-500 uppercase">Loading your collection...</p>
             </div>
           )}
         </div>

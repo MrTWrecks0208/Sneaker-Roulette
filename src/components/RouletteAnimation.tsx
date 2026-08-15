@@ -291,7 +291,7 @@ export default function RouletteAnimation({ onComplete }: RouletteAnimationProps
       >
         <div className="flex items-center gap-2 px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-full">
           <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
-          <span className="text-[10px] font-bold text-amber-400 tracking-wider uppercase">Locker Roulette</span>
+          <span className="text-[10px] font-bold text-amber-400 tracking-wider uppercase">Sneaker Roulette</span>
         </div>
         <h2 className="text-lg sm:text-xl font-bold text-zinc-100 tracking-widest uppercase text-shadow">
           Choosing Your Pair

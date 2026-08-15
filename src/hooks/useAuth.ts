@@ -110,18 +110,32 @@ export function useAuth() {
     setError(null);
     setLoading(true);
 
+    const cleanUsername = (username || email.split('@')[0]).trim();
+    const cleanEmail = email.trim().toLowerCase();
+
     if (!isSupabaseConfigured) {
-      // Simulate SignUp
+      // Simulate SignUp in local sandbox
       await new Promise(resolve => setTimeout(resolve, 800));
       const mockUser: UserProfile = {
         id: crypto.randomUUID?.() || Math.random().toString(36).substring(2, 11),
-        email,
+        email: cleanEmail,
         user_metadata: {
-          username: username || email.split('@')[0],
-          full_name: username || email.split('@')[0],
-          avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(username || email)}`,
+          username: cleanUsername,
+          full_name: cleanUsername,
+          avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(cleanUsername)}`,
         },
       };
+
+      // Save to mock registered users list for multi-account testing
+      try {
+        const rawList = safeLocalStorage.getItem('sneakers_mock_registered_users');
+        const list = rawList ? JSON.parse(rawList) : [];
+        list.push({ ...mockUser, password });
+        safeLocalStorage.setItem('sneakers_mock_registered_users', JSON.stringify(list));
+      } catch {
+        // ignore local storage error
+      }
+
       safeLocalStorage.setItem('sneakers_mock_user', JSON.stringify(mockUser));
       window.dispatchEvent(new Event('mock-auth-change'));
       setUser(mockUser);
@@ -131,17 +145,31 @@ export function useAuth() {
 
     try {
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: cleanEmail,
         password,
         options: {
           data: {
-            username: username,
-            full_name: username,
+            username: cleanUsername,
+            full_name: cleanUsername,
           },
         },
       });
 
       if (error) throw error;
+
+      // Also upsert into profiles table if available
+      if (data.user) {
+        try {
+          await supabase.from('profiles').upsert({
+            id: data.user.id,
+            username: cleanUsername,
+            email: cleanEmail,
+          });
+        } catch {
+          // Non-blocking if profiles table not created yet
+        }
+      }
+
       return { success: true, user: data.user };
     } catch (err: unknown) {
       const e = err as Error;
@@ -152,21 +180,46 @@ export function useAuth() {
     }
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (identifier: string, password: string) => {
     setError(null);
     setLoading(true);
+    const cleanId = (identifier || '').trim();
 
     if (!isSupabaseConfigured) {
-      // Simulate SignIn
+      // Simulate SignIn in local sandbox
       await new Promise(resolve => setTimeout(resolve, 800));
-      const mockUser: UserProfile = {
+
+      // Try looking up in mock registered accounts
+      let matchedMock: UserProfile | null = null;
+      try {
+        const rawList = safeLocalStorage.getItem('sneakers_mock_registered_users');
+        const list = rawList ? JSON.parse(rawList) : [];
+        const found = list.find((u: { username?: string; email?: string; user_metadata?: { username?: string } }) =>
+          (u.username && u.username.toLowerCase() === cleanId.toLowerCase()) ||
+          (u.user_metadata?.username && u.user_metadata.username.toLowerCase() === cleanId.toLowerCase()) ||
+          (u.email && u.email.toLowerCase() === cleanId.toLowerCase())
+        );
+        if (found) {
+          matchedMock = {
+            id: found.id,
+            email: found.email,
+            user_metadata: found.user_metadata,
+          };
+        }
+      } catch {
+        // ignore
+      }
+
+      const mockUser: UserProfile = matchedMock || {
         id: crypto.randomUUID?.() || Math.random().toString(36).substring(2, 11),
-        email,
+        email: cleanId.includes('@') ? cleanId : `${cleanId.toLowerCase()}@example.com`,
         user_metadata: {
-          full_name: email.split('@')[0],
-          avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(email)}`,
+          username: cleanId.includes('@') ? cleanId.split('@')[0] : cleanId,
+          full_name: cleanId.includes('@') ? cleanId.split('@')[0] : cleanId,
+          avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(cleanId)}`,
         },
       };
+
       safeLocalStorage.setItem('sneakers_mock_user', JSON.stringify(mockUser));
       window.dispatchEvent(new Event('mock-auth-change'));
       setUser(mockUser);
@@ -175,8 +228,36 @@ export function useAuth() {
     }
 
     try {
+      let targetEmail = cleanId;
+
+      // If user entered a username instead of an email (no '@'), look up their email
+      if (!cleanId.includes('@')) {
+        let foundEmail = false;
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('email')
+            .ilike('username', cleanId)
+            .maybeSingle();
+
+          if (profile?.email) {
+            targetEmail = profile.email;
+            foundEmail = true;
+          }
+        } catch {
+          // If profile table lookup fails, proceed to fallback attempt
+        }
+
+        if (!foundEmail && !targetEmail.includes('@')) {
+          // If it's not a valid email format and username was not found in profiles
+          setError(`No account found matching username "${cleanId}". If you are new here, please create an account.`);
+          setLoading(false);
+          return { success: false, error: `No account found matching username "${cleanId}".` };
+        }
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: targetEmail,
         password,
       });
 
@@ -185,10 +266,13 @@ export function useAuth() {
       return { success: true, user: data.user };
     } catch (err: unknown) {
       const e = err as Error;
-      console.error('Sign in error:', e);
-      setError(e.message || 'Invalid login credentials.');
+      const msg = e.message?.toLowerCase().includes('invalid login credentials')
+        ? 'Invalid username/email or password.'
+        : e.message || 'Invalid login credentials.';
+      console.error('Sign in error:', msg);
+      setError(msg);
       setLoading(false);
-      return { success: false, error: e.message };
+      return { success: false, error: msg };
     }
   };
 
