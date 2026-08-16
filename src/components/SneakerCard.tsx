@@ -95,7 +95,7 @@ export default function SneakerCard({ sneaker, onEdit, onDelete, onIncrementWorn
       <div
         onClick={handleCardClick}
         title="Click to flip • Double-click to expand"
-        className="group relative w-full max-w-[288px] h-[415px] mx-auto cursor-pointer [perspective:1000px] select-none"
+        className="group relative w-full max-w-[288px] h-[440px] mx-auto cursor-pointer [perspective:1000px] select-none"
       >
         <CardInner 
           sneaker={sneaker} 
@@ -130,7 +130,7 @@ export default function SneakerCard({ sneaker, onEdit, onDelete, onIncrementWorn
 
           {/* Scaled-up Card */}
           <div
-            className="group relative w-[340px] sm:w-[380px] h-[500px] sm:h-[540px] cursor-pointer [perspective:1200px]"
+            className="group relative w-[340px] sm:w-[380px] h-[530px] sm:h-[570px] cursor-pointer [perspective:1200px]"
             onClick={handleEnlargedCardClick}
             title="Click to flip • Double-click to close"
           >
@@ -411,41 +411,43 @@ function CardInner({
 
         {/* Content Container */}
         <div className={`bg-white flex-1 flex flex-col justify-between ${isScaled ? 'p-4' : 'p-3'}`}>
-          <h3 className={`font-bold text-gray-900 leading-tight line-clamp-2 ${isScaled ? 'text-base h-11' : 'text-sm h-9'}`} title={sneaker.name}>
-            {sneaker.name || 'Unnamed Sneaker'}
-          </h3>
+          <div className="flex flex-col">
+            <h3 className={`font-bold text-gray-900 leading-snug line-clamp-2 ${isScaled ? 'text-base min-h-[2.75rem] mb-3' : 'text-sm min-h-[2.35rem] mb-2.5'}`} title={sneaker.name}>
+              {sneaker.name || 'Unnamed Sneaker'}
+            </h3>
 
-          {/* Style pills */}
-          {sneaker.style.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {sneaker.style.map((st) => (
-                <span
-                  key={st}
-                  className={`px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-md font-medium ${isScaled ? 'text-xs' : 'text-[10px]'}`}
-                >
-                  {st}
-                </span>
-              ))}
-            </div>
-          )}
+            {/* Style pills */}
+            {sneaker.style.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-2">
+                {sneaker.style.map((st) => (
+                  <span
+                    key={st}
+                    className={`px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-md font-medium ${isScaled ? 'text-xs' : 'text-[10px]'}`}
+                  >
+                    {st}
+                  </span>
+                ))}
+              </div>
+            )}
 
-          {/* Color swatches */}
-          {sneaker.color.length > 0 && (
-            <div className={`flex items-center flex-wrap ${isScaled ? 'gap-2 pt-1.5' : 'gap-1.5 pt-1'}`}>
-              {sneaker.color.map((c, idx) => {
-                const val = COLOR_HEX[c] || (c.startsWith('#') ? c : '#cccccc');
-                const isImage = val.startsWith('/') || val.startsWith('data:') || val.includes('assets/') || val.includes('blob:');
-                return (
-                  <div
-                    key={`${c}-${idx}`}
-                    className={`rounded-full border border-gray-900 hover:scale-125 transition-all duration-200 bg-center bg-cover ${isScaled ? 'w-4 h-4' : 'w-3.5 h-3.5'}`}
-                    style={isImage ? { backgroundImage: `url(${val})` } : { backgroundColor: val }}
-                    title={c}
-                  />
-                );
-              })}
-            </div>
-          )}
+            {/* Color swatches */}
+            {sneaker.color.length > 0 && (
+              <div className={`flex items-center flex-wrap ${isScaled ? 'gap-2 pt-1' : 'gap-1.5 pt-0.5'}`}>
+                {sneaker.color.map((c, idx) => {
+                  const val = COLOR_HEX[c] || (c.startsWith('#') ? c : '#cccccc');
+                  const isImage = val.startsWith('/') || val.startsWith('data:') || val.includes('assets/') || val.includes('blob:');
+                  return (
+                    <div
+                      key={`${c}-${idx}`}
+                      className={`rounded-full border border-gray-900 hover:scale-125 transition-all duration-200 bg-center bg-cover ${isScaled ? 'w-4 h-4' : 'w-3.5 h-3.5'}`}
+                      style={isImage ? { backgroundImage: `url(${val})` } : { backgroundColor: val }}
+                      title={c}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
           {/* Last Worn Footer */}
           <div className={`border-t border-gray-100 flex items-center justify-between text-gray-500 font-medium ${isScaled ? 'pt-2.5 mt-2.5 text-xs' : 'pt-2 mt-2 text-[10px]'}`}>
