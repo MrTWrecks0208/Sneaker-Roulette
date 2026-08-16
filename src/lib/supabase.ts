@@ -103,7 +103,7 @@ export const STYLES = [
 ] as const;
 
 export const COLORS = [
-  'White', 'Ivory', 'Black', 'Gunmetal', 'Dark Gray', 'Gray', 'Light Gray', 'Dark Brown', 'Brown', 'Tan',
+  'White', 'Ivory', 'Cream', 'Black', 'Gunmetal', 'Dark Gray', 'Gray', 'Light Gray', 'Dark Brown', 'Brown', 'Tan',
   'Gum', 'Beige', 'Red', 'Crimson', 'Coral', 'Orange', 'Citrus', 'Light Yellow', 'Yellow', 'Mint', 'Lime', 'Light Green',
   'Green', 'Forest Green', 'Olive', 'Green Cyan', 'Teal', 'Turquoise', 'Aqua', 'Cyan Blue', 'Light Blue', 'Carolina Blue', 'Blue',  'Navy', 'Indigo',
   'Purple', 'Paua', 'Maroon', 'Burgundy', 'Magenta', 'Pink', 'Hot Pink', 'Platinum', 'Gold', 'Silver', 'Reflective',
