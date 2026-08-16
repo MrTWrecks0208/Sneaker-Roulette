@@ -14,7 +14,8 @@ import SneakerListView from './components/SneakerListView';
 import SneakerTableView from './components/SneakerTableView';
 import PhotoGuideModal from './components/PhotoGuide';
 import SubscriptionModal from './components/SubscriptionModal';
-import { SettingsModal, UserPreferences, DEFAULT_PREFERENCES } from './components/SettingsModal';
+import { SettingsModal } from './components/SettingsModal';
+import { UserPreferences, DEFAULT_PREFERENCES } from './types';
 import { useSubscription } from './hooks/useSubscription';
 import {
   Plus, Upload, Search, Footprints,

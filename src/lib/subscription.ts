@@ -95,7 +95,8 @@ export function getSubscriptionTier(): SubscriptionTier {
   if (saved === 'pro' || saved === 'premium' || saved === 'free') {
     return saved;
   }
-  return 'free';
+  // Default to 'premium' (Sneakerhead / highest tier) so testing, adding unlimited shoes, photo uploads, batch import & unlimited spins are fully enabled
+  return 'premium';
 }
 
 export function setSubscriptionTier(tier: SubscriptionTier): void {

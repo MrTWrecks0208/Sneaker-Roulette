@@ -23,22 +23,11 @@ import { User } from '@supabase/supabase-js';
 import { Sneaker, BRANDS } from '../lib/supabase';
 import { SubscriptionTier, TIER_CONFIGS, setSubscriptionTier } from '../lib/subscription';
 import { safeLocalStorage } from '../lib/utils';
+import type { UserPreferences } from '../types';
+import { DEFAULT_PREFERENCES } from '../types';
 
-export interface UserPreferences {
-  defaultRouletteFilter: string;
-  excludeRecentlyWorn: string;
-  favoriteBrands: string[];
-  defaultSort: string;
-  theme: 'Dark' | 'Light' | 'System';
-}
-
-export const DEFAULT_PREFERENCES: UserPreferences = {
-  defaultRouletteFilter: 'All Sneakers',
-  excludeRecentlyWorn: 'Last 3 days',
-  favoriteBrands: ['Nike', 'Jordan', 'Adidas'],
-  defaultSort: 'created_at-desc',
-  theme: 'Dark',
-};
+export type { UserPreferences };
+export { DEFAULT_PREFERENCES };
 
 const AVATAR_PRESETS = [
   { id: '1', label: 'Sneaker Robot', url: 'https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&q=80&w=250' },
