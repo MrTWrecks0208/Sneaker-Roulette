@@ -1,3 +1,3 @@
 # Sneaker-Roulette
 
-[![Open in Bolt](https://bolt.new/static/open-in-bolt.svg)](https://bolt.new/~/sb1-7rvcrfnj)
+An interactive sneaker inventory organizer and roulette selector.
