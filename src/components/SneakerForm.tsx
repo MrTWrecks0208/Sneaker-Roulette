@@ -5,6 +5,7 @@ import PhotoGuideModal from './PhotoGuide';
 import { useSubscription } from '../hooks/useSubscription';
 import multicolorImg from '../assets/images/multicolor_swatch_1783883698636.jpg';
 import iridescentImg from '../assets/images/iridescent.png';
+import glitterImg from '../assets/images/glitter.png';
 
 const COLOR_GLOW: Record<string, { bg: string; text: string; border: string; shadow?: string }> = {
   'White':            { bg: 'rgba(255,255,255,.80)', text: '#000000', border: 'rgba(255,255,255,.80)' },
@@ -25,8 +26,10 @@ const COLOR_GLOW: Record<string, { bg: string; text: string; border: string; sha
   'Orange':           { bg: 'rgba(249,115,22,.80)',  text: '#ffffff', border: 'rgba(249,115,22,.80)' },
   'Light Yellow':     { bg: 'rgba(254,249,195,.80)', text: '#000000', border: 'rgba(254,249,195,.80)' },
   'Yellow':           { bg: 'rgba(250,204,21,.80)',  text: '#000000', border: 'rgba(250,204,21,.80)' },
+  'Lemon Lime':       { bg: 'rgba(227,255,0,.80)',   text: '#000000', border:'rgba(227,255,0,.80)'   },
   'Mint':             { bg: 'rgba(170,240,200,.80)', text: '#000000', border: 'rgba(170,240,200,.80)' },
   'Lime':             { bg: 'rgba(0,255,0,.80)',     text: '#000000', border: 'rgba(0,255,0,.80)' },
+  'Emerald':          { bg: 'rgba(56,195,108,.80)',  text: '#000000', border: 'rgba(56,195,108,.80)' },
   'Green':            { bg: 'rgba(34,197,94,.80)',   text: '#ffffff', border: 'rgba(34,197,94,.80)' },
   'Forest Green':     { bg: 'rgba(34,100,60,.80)',   text: '#ffffff', border: 'rgba(34,139,34,.80)' },
   'Olive':            { bg: 'rgba(128,128,0,.80)',   text: '#ffffff', border: 'rgba(128,128,0,.80)' },
@@ -235,10 +238,10 @@ function parseSneakerName(name: string): ParsedName {
     if (splitIndex === -1) {
       const knownColors = new Set([
         'white', 'ivory', 'black', 'gunmetal', 'dark gray', 'gray', 'grey', 'light gray', 'dark brown', 'brown', 'tan',
-        'beige', 'red', 'crimson', 'orange', 'light yellow', 'yellow', 'mint', 'lime green',
+        'beige', 'red', 'crimson', 'orange', 'light yellow', 'yellow', 'mint', 'lime green', 'emerald', 'lemon lime',
         'green', 'forest green', 'olive', 'teal', 'turquoise', 'light blue', 'aqua', 'blue', 'navy', 'indigo',
         'purple', 'maroon', 'burgundy', 'magenta', 'pink', 'hot pink', 'gold', 'silver', 'reflective',
-        'glow', 'iridescent', 'ice', 'multicolor', 'carolina blue', 'paua', 'light green', 'cyan blue',
+        'glow', 'iridescent', 'ice', 'multicolor', 'glitter', 'carolina blue', 'paua', 'light green', 'cyan blue',
         'citrus', 'gum', 'green cyan', 'platinum'
       ]);
       for (let i = 1; i < filteredTokens.length; i++) {
@@ -832,12 +835,13 @@ export default function SneakerForm({ sneaker, onSave, onCancel, onOpenSubscript
                 const selected = color.includes(c);
                 const isMulticolor = c === 'Multicolor';
                 const isIridescent = c === 'Iridescent';
+                const isGlitter = c === 'Glitter';
                 return (
                   <button
                     key={c}
                     type="button"
                     onClick={() => toggleMultiSelect(color, c, setColor)}
-                    className={'px-2 pt-1 pb-1.5 rounded-2xl text-xs font-medium transition-all duration-200 border ' + (selected && (glow || isMulticolor || isIridescent) ? '' : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-zinc-500')}
+                    className={'px-2 pt-1 pb-1.5 rounded-2xl text-xs font-medium transition-all duration-200 border ' + (selected && (glow || isMulticolor || isIridescent || isGlitter) ? '' : 'bg-zinc-900 text-zinc-400 border-zinc-700 hover:border-zinc-500')}
                     style={selected ? (isMulticolor ? {
                       backgroundImage: `url(${multicolorImg})`,
                       backgroundSize: 'cover',
@@ -852,12 +856,19 @@ export default function SneakerForm({ sneaker, onSave, onCancel, onOpenSubscript
                       color: '#000000',
                       borderColor: '#ffffff',
                       textShadow: '0px 1px 3px rgba(255,255,255,0.8)',
+                    } : (isGlitter ? {
+                      backgroundImage: `url(${glitterImg})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      color: '#000000',
+                      borderColor: '#ffffff',
+                      textShadow: '0px 1px 3px rgba(255,255,255,0.9), 0px 0px 2px #ffffff',
                     } : (glow ? {
                       backgroundColor: glow.bg,
                       color: glow.text,
                       borderColor: glow.border,
                       boxShadow: glow.shadow,
-                    } : undefined))) : undefined}
+                    } : undefined)))) : undefined}
                   >
                     {c}
                   </button>

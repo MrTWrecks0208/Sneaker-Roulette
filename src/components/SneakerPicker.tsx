@@ -240,18 +240,19 @@ export default function SneakerPicker({ sneakers, onWear, onClose, resultCount, 
               )}
 
               <div className="flex gap-3">
+              <button
+                  onClick={handleReject}
+                  className="flex-1 py-2.5 bg-rose-600 text-white text-base font-semibold rounded-xl border border-rose-500 hover:bg-rose-500 transition-colors flex items-center justify-center gap-2 cursor-pointer focus:outline-none"
+                >
+                  <X className="w-5 h-5" /> Try Again
+                </button>
                 <button
                   onClick={handleWear}
                   className="flex-1 py-2.5 bg-emerald-600 text-white text-base font-semibold rounded-xl hover:bg-emerald-500 transition-colors flex items-center justify-center gap-2 cursor-pointer focus:outline-none"
                 >
                   <Check className="w-5 h-5" /> Wear These
                 </button>
-                <button
-                  onClick={handleReject}
-                  className="flex-1 py-2.5 bg-rose-600 text-white text-base font-semibold rounded-xl border border-rose-500 hover:bg-rose-500 transition-colors flex items-center justify-center gap-2 cursor-pointer focus:outline-none"
-                >
-                  <X className="w-5 h-5" /> Try Again
-                </button>
+                
               </div>
             </div>
           ) : (
@@ -260,11 +261,11 @@ export default function SneakerPicker({ sneakers, onWear, onClose, resultCount, 
               {/* Filter Selection */}
               <div className="space-y-3">
                 <label className="flex items-center gap-2 text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                  <Filter className="w-3.5 h-3.5" /> Pick By
+                  <Filter className="w-3.5 h-3.5 text-sky-400" /> Filter By
                 </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
                   {([
-                    { key: 'random', label: 'Random', icon: Shuffle, activeClass: 'bg-red-500/20 text-red-400 border-red-500/40' },
+                    { key: 'random', label: 'Random', icon: Shuffle, activeClass: 'bg-rose-500/20 text-rose-400 border-rose-500/40' },
                     { key: 'least_worn', label: 'Least Worn', icon: Footprints, activeClass: 'bg-amber-500/20 text-amber-400 border-amber-500/40' },
                     { key: 'style', label: 'Style', icon: HighTopSneaker, activeClass: 'bg-sky-500/20 text-sky-400 border-sky-500/40' },
                     { key: 'color', label: 'Color', icon: Paintbrush, activeClass: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' },

@@ -8,6 +8,7 @@ import { getBrandLogoGroup5 } from './brandLogos/logosGroup5';
 import { getBrandLogoGroup6 } from './brandLogos/logosGroup6';
 import { getBrandLogoGroup7 } from './brandLogos/logosGroup7';
 import { getBrandLogoGroup8 } from './brandLogos/logosGroup8';
+import { getBrandLogoGroup9 } from './brandLogos/logosGroup9';
 
 export function BrandLogo({
   brand,
@@ -64,7 +65,8 @@ export function BrandLogo({
     getBrandLogoGroup5(ctx) ||
     getBrandLogoGroup6(ctx) ||
     getBrandLogoGroup7(ctx) ||
-    getBrandLogoGroup8(ctx) || (
+    getBrandLogoGroup8(ctx) ||
+    getBrandLogoGroup9(ctx) || (
       <div title={brand || 'Sneaker'} className={`inline-flex items-center justify-center shrink-0 ${logoClass}`}>
         <span className="font-bold text-xs uppercase tracking-wider text-current truncate max-w-[120px]">
           {brand || ''}

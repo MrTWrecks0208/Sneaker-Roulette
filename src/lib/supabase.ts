@@ -60,7 +60,7 @@ export const BRAND_CATEGORIES = [
       'Ferragamo', 'Givenchy', 'Golden Goose', 'Gucci', 'Hermés', 'Jacquemus',
       'Jimmy Choo', 'Kate Spade', 'Kenneth Cole', 'Lanvin', 'Louis Vuitton',
       'Maison Margiela', 'Maison Mihara Yasuhiro', 'Michael Kors', 'Moncler', 'Off-White', 'Onitsuka Tiger',
-      'Other', 'Prada', 'Raf Simons', 'Rick Owens', 'Tom Ford', 'Tory Burch',
+      'Prada', 'Raf Simons', 'Rick Owens', 'Tom Ford', 'Tory Burch',
       'Versace', 'Saint Laurent (YSL)',
     ],
   },
@@ -90,6 +90,12 @@ export const BRAND_CATEGORIES = [
       'Wolverine',
     ],
   },
+  {
+    category: 'OTHER',
+    brands: [
+      'Other',
+    ],
+  }
 ] as const;
 
 export const BRANDS = BRAND_CATEGORIES.flatMap(c => c.brands);
@@ -104,10 +110,10 @@ export const STYLES = [
 
 export const COLORS = [
   'White', 'Ivory', 'Cream', 'Black', 'Gunmetal', 'Dark Gray', 'Gray', 'Light Gray', 'Dark Brown', 'Brown', 'Tan',
-  'Gum', 'Beige', 'Red', 'Crimson', 'Coral', 'Orange', 'Citrus', 'Light Yellow', 'Yellow', 'Mint', 'Lime', 'Light Green',
-  'Green', 'Forest Green', 'Olive', 'Green Cyan', 'Teal', 'Turquoise', 'Aqua', 'Cyan Blue', 'Light Blue', 'Carolina Blue', 'Blue',  'Navy', 'Indigo',
+  'Gum', 'Beige', 'Red', 'Crimson', 'Coral', 'Orange', 'Citrus', 'Light Yellow', 'Yellow', 'Lemon Lime', 'Light Green', 'Lime', 'Mint',
+  'Emerald', 'Green', 'Forest Green', 'Olive', 'Green Cyan', 'Teal', 'Turquoise', 'Aqua', 'Cyan Blue', 'Light Blue', 'Carolina Blue', 'Blue',  'Navy', 'Indigo',
   'Purple', 'Paua', 'Maroon', 'Burgundy', 'Magenta', 'Pink', 'Hot Pink', 'Platinum', 'Gold', 'Silver', 'Reflective',
-  'Glow', 'Iridescent', 'Ice', 'Multicolor',
+  'Glow', 'Iridescent', 'Ice', 'Multicolor', 'Glitter',
 ] as const;
 
 export function buildName(brand: string, model: string, variant: string, colorway: string): string {
