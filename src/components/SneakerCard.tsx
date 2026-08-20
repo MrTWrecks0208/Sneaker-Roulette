@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Sneaker } from '../lib/supabase';
+import { Sneaker, getSneakerName } from '../lib/supabase';
 import { Trash2, Edit3, Footprints, X, ChevronLeft, ChevronRight, Maximize2, Plus, Minus } from 'lucide-react';
 import { COLOR_HEX } from '../lib/colors';
 import { BrandLogo } from './BrandLogo';
@@ -263,8 +263,8 @@ function InteractiveWornBadge({
   const [isHovered, setIsHovered] = useState(false);
 
   const containerClasses = isScaled
-    ? 'w-24 h-7.5 text-xs rounded-lg'
-    : 'w-[82px] h-7 text-[10px] rounded-md';
+    ? 'w-20 h-7 text-sm rounded-lg'
+    : 'w-[68px] h-6 text-[10px] rounded-md';
 
   return (
     <div
@@ -323,6 +323,7 @@ function CardInner({
   isFlipped?: boolean;
   isScaled?: boolean;
 }) {
+  const displayName = getSneakerName(sneaker);
   const stats = calculateWearStats(sneaker.dates_worn, sneaker.times_worn, sneaker.last_worn);
 
   const handleDecrementWear = (e: React.MouseEvent) => {
@@ -340,10 +341,10 @@ function CardInner({
   };
 
   return (
-    <div className={`w-full h-full relative transition-transform duration-700 ease-in-out [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''} ${isScaled ? 'rounded-2xl shadow-2xl' : 'rounded-xl shadow-md hover:shadow-2xl'}`}>
+    <div className={`w-full h-full relative transition-transform duration-700 ease-in-out [transform-style:preserve-3d] [-webkit-transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''} ${isScaled ? 'rounded-2xl shadow-2xl' : 'rounded-xl shadow-md hover:shadow-2xl'}`}>
       
       {/* ─── FRONT FACE ─── */}
-      <div className={`absolute inset-0 w-full h-full bg-white overflow-hidden [backface-visibility:hidden] flex flex-col justify-between border border-gray-100 ${isScaled ? 'rounded-2xl' : 'rounded-xl'}`}>
+      <div className={`absolute inset-0 w-full h-full bg-white overflow-hidden [backface-visibility:hidden] [-webkit-backface-visibility:hidden] [transform:translateZ(1px)] flex flex-col justify-between border border-gray-100 ${isScaled ? 'rounded-2xl' : 'rounded-xl'} ${isFlipped ? 'invisible pointer-events-none opacity-0' : 'visible opacity-100'} transition-opacity duration-300`}>
         {/* Image Container */}
         <div className={`relative bg-gradient-to-br from-gray-50 to-gray-100 aspect-square flex items-center justify-center overflow-hidden ${isScaled ? 'p-8' : 'p-6'}`}>
           {sneaker.thumbnail_url ? (
@@ -357,12 +358,12 @@ function CardInner({
           )}
 
           {/* Brand Logo in Upper Right Corner */}
-          <div className={`absolute z-10 duration-200 pointer-events-none ${isScaled ? 'top-7 right-10' : 'top-6 right-8'}`}>
-            <BrandLogo brand={sneaker.brand} sneakerName={sneaker.name} isFrontFace className={`${isScaled ? 'h-14 sm:h-16' : 'h-12 sm:h-14'} w-auto text-zinc-900 opacity-80`} />
+          <div className={`absolute pointer-events-none [backface-visibility:hidden] [-webkit-backface-visibility:hidden] ${isScaled ? 'top-7 right-10' : 'top-6 right-8'}`}>
+            <BrandLogo brand={sneaker.brand} sneakerName={displayName} isFrontFace className={`${isScaled ? 'h-14 sm:h-16' : 'h-12 sm:h-14'} w-auto text-zinc-900 opacity-80`} />
           </div>
 
           {/* Hover action buttons (Edit & Delete only) */}
-          <div className={`absolute z-20 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${isScaled ? 'top-3 right-3' : 'top-2 right-2'}`}>
+          <div className={`absolute flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${isScaled ? 'top-3 right-3' : 'top-2 right-2'}`}>
             <button
               type="button"
               onClick={(e) => {
@@ -388,7 +389,7 @@ function CardInner({
           </div>
 
           {/* Interactive Worn count badge (50/50 split on hover) */}
-          <div className="absolute bottom-2 left-2 z-20">
+          <div className="absolute bottom-2 left-2">
             <InteractiveWornBadge
               worn={sneaker.worn || 0}
               onIncrement={handleIncrementWear}
@@ -412,8 +413,8 @@ function CardInner({
         {/* Content Container */}
         <div className={`bg-white flex-1 flex flex-col justify-between ${isScaled ? 'p-4' : 'p-3'}`}>
           <div className="flex flex-col">
-            <h3 className={`font-bold text-gray-900 leading-snug line-clamp-2 ${isScaled ? 'text-base min-h-[2.75rem] mb-3' : 'text-sm min-h-[2.35rem] mb-2.5'}`} title={sneaker.name}>
-              {sneaker.name || 'Unnamed Sneaker'}
+            <h3 className={`font-bold text-gray-900 leading-snug line-clamp-2 ${isScaled ? 'text-base min-h-[2.75rem] mb-3' : 'text-sm min-h-[2.35rem] mb-2.5'}`} title={displayName}>
+              {displayName}
             </h3>
 
             {/* Style pills */}
@@ -460,16 +461,16 @@ function CardInner({
       </div>
 
       {/* ─── BACK FACE ─── */}
-      <div className={`absolute inset-0 w-full h-full bg-white text-gray-900 overflow-hidden [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col border border-gray-200 shadow-md ${isScaled ? 'rounded-2xl p-4' : 'rounded-xl p-3'}`}>
+      <div className={`absolute inset-0 w-full h-full bg-white text-gray-900 overflow-hidden [backface-visibility:hidden] [-webkit-backface-visibility:hidden] [transform:rotateY(180deg)_translateZ(1px)] flex flex-col border border-gray-200 shadow-md ${isScaled ? 'rounded-2xl p-4' : 'rounded-xl p-3'} ${!isFlipped ? 'invisible pointer-events-none opacity-0' : 'visible opacity-100'} transition-opacity duration-300`}>
         
         {/* 1. Name at the Top */}
         <div className={`flex items-start justify-between gap-2 pb-2 border-b border-gray-100 shrink-0 ${isScaled ? 'h-[76px]' : 'h-[64px]'}`}>
           <div className="flex-1 min-w-0 pr-1 flex flex-col justify-start overflow-hidden">
             <div className="flex items-center gap-1.5 mb-1 shrink-0">
-              <BrandLogo brand={sneaker.brand} sneakerName={sneaker.name} className="h-4 w-auto text-zinc-900" />
+              <BrandLogo brand={sneaker.brand} sneakerName={displayName} className="h-4 w-auto text-zinc-900" />
             </div>
-            <h4 className={`font-bold text-gray-900 leading-tight break-words ${isScaled ? 'text-base' : 'text-xs sm:text-sm'}`} title={sneaker.name}>
-              {sneaker.name || 'Unnamed Sneaker'}
+            <h4 className={`font-bold text-gray-900 leading-tight break-words ${isScaled ? 'text-base' : 'text-xs sm:text-sm'}`} title={displayName}>
+              {displayName}
             </h4>
           </div>
           <div className="flex items-center gap-1 shrink-0">

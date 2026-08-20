@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sneaker } from '../lib/supabase';
+import { Sneaker, getSneakerName } from '../lib/supabase';
 import { Trash2, Edit3, Footprints, Plus, Minus } from 'lucide-react';
 import { COLOR_HEX } from '../lib/colors';
 import { BrandLogo } from './BrandLogo';
@@ -89,34 +89,36 @@ export default function SneakerTableView({
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-850">
-            {sneakers.map(sneaker => (
-              <tr key={sneaker.id} className="hover:bg-zinc-900/30 transition-colors group">
-                {/* 1. Thumbnail & Name */}
-                <td className="py-3 px-5 whitespace-nowrap">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-zinc-950 border border-zinc-800 rounded-lg flex items-center justify-center p-1.5 flex-shrink-0 overflow-hidden">
-                      {sneaker.thumbnail_url ? (
-                        <img
-                          src={sneaker.thumbnail_url}
-                          alt={sneaker.name}
-                          className="w-full h-full object-contain"
-                        />
-                      ) : (
-                        <Footprints className="w-4 h-4 text-zinc-700" />
-                      )}
+            {sneakers.map(sneaker => {
+              const displayName = getSneakerName(sneaker);
+              return (
+                <tr key={sneaker.id} className="hover:bg-zinc-900/30 transition-colors group">
+                  {/* 1. Thumbnail & Name */}
+                  <td className="py-3 px-5 whitespace-nowrap">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-zinc-950 border border-zinc-800 rounded-lg flex items-center justify-center p-1.5 flex-shrink-0 overflow-hidden">
+                        {sneaker.thumbnail_url ? (
+                          <img
+                            src={sneaker.thumbnail_url}
+                            alt={displayName}
+                            className="w-full h-full object-contain"
+                          />
+                        ) : (
+                          <Footprints className="w-4 h-4 text-zinc-700" />
+                        )}
+                      </div>
+                      <span className="font-bold text-sm text-zinc-200 group-hover:text-zinc-100 max-w-[180px] truncate" title={displayName}>
+                        {displayName}
+                      </span>
                     </div>
-                    <span className="font-bold text-sm text-zinc-200 group-hover:text-zinc-100 max-w-[180px] truncate" title={sneaker.name}>
-                      {sneaker.name || 'Unnamed Sneaker'}
-                    </span>
-                  </div>
-                </td>
+                  </td>
 
-                {/* 2. Brand */}
-                <td className="py-3 px-5">
-                  <div className="flex items-center max-h-5 scale-75 origin-left">
-                    <BrandLogo brand={sneaker.brand} sneakerName={sneaker.name} />
-                  </div>
-                </td>
+                  {/* 2. Brand */}
+                  <td className="py-3 px-5">
+                    <div className="flex items-center max-h-5 scale-75 origin-left">
+                      <BrandLogo brand={sneaker.brand} sneakerName={displayName} />
+                    </div>
+                  </td>
 
                 {/* 3. Height */}
                 <td className="py-2 px-3.5 whitespace-nowrap">
@@ -206,7 +208,8 @@ export default function SneakerTableView({
                   </div>
                 </td>
               </tr>
-            ))}
+            );
+          })}
           </tbody>
         </table>
       </div>

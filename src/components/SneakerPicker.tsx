@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Sneaker } from '../lib/supabase';
+import { Sneaker, getSneakerName } from '../lib/supabase';
 import { Shuffle, Check, X, Filter, Footprints, Sparkles, Paintbrush, Crown, Lock } from 'lucide-react';
 import RouletteAnimation from './RouletteAnimation';
 import { useSubscription } from '../hooks/useSubscription';
@@ -186,14 +186,14 @@ export default function SneakerPicker({ sneakers, onWear, onClose, resultCount, 
                         >
                           <div className={`w-14 h-14 rounded-lg bg-zinc-900/60 p-1 flex items-center justify-center shrink-0 border ${isHighlighted ? 'border-zinc-300/60' : 'border-zinc-800/80'}`}>
                             {sneaker.thumbnail_url ? (
-                              <img src={sneaker.thumbnail_url} alt={sneaker.name} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                              <img src={sneaker.thumbnail_url} alt={getSneakerName(sneaker)} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
                             ) : (
                               <Footprints className={`w-7 h-7 ${isHighlighted ? 'text-zinc-600' : 'text-zinc-500'}`} />
                             )}
                           </div>
                           <div className="flex-1 min-w-0 space-y-1">
                             <h4 className={`text-xs font-bold truncate ${isHighlighted ? 'text-zinc-900' : 'text-zinc-100'}`}>
-                              {sneaker.name}
+                              {getSneakerName(sneaker)}
                             </h4>
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${isHighlighted ? 'bg-zinc-900/10 text-zinc-800 border border-zinc-900/10' : 'bg-sky-500/10 text-sky-400 border border-sky-500/20'}`}>

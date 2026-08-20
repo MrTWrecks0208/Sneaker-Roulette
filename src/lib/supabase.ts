@@ -113,9 +113,15 @@ export const COLORS = [
   'Gum', 'Beige', 'Red', 'Crimson', 'Coral', 'Orange', 'Citrus', 'Light Yellow', 'Yellow', 'Lemon Lime', 'Light Green', 'Lime', 'Mint',
   'Emerald', 'Green', 'Forest Green', 'Olive', 'Green Cyan', 'Teal', 'Turquoise', 'Aqua', 'Cyan Blue', 'Light Blue', 'Carolina Blue', 'Blue',  'Navy', 'Indigo',
   'Purple', 'Paua', 'Maroon', 'Burgundy', 'Magenta', 'Pink', 'Hot Pink', 'Platinum', 'Gold', 'Silver', 'Reflective',
-  'Glow', 'Iridescent', 'Ice', 'Multicolor', 'Glitter',
+  'Glow', 'Iridescent', 'Ice', 'Multicolor', 'Glitter', 'Eggplant',
 ] as const;
 
 export function buildName(brand: string, model: string, variant: string, colorway: string): string {
-  return [brand, model, variant, colorway].filter(Boolean).join(' ');
+  return [brand, model, variant, colorway].filter(Boolean).join(' ').trim();
+}
+
+export function getSneakerName(sneaker: { name?: string; brand?: string; model?: string; variant?: string; colorway?: string }): string {
+  const computed = buildName(sneaker.brand || '', sneaker.model || '', sneaker.variant || '', sneaker.colorway || '');
+  if (computed) return computed;
+  return sneaker.name?.trim() || 'Unnamed Sneaker';
 }

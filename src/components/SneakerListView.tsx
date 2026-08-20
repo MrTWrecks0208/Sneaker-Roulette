@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sneaker } from '../lib/supabase';
+import { Sneaker, getSneakerName } from '../lib/supabase';
 import { Trash2, Edit3, Footprints, Plus, Minus, Calendar } from 'lucide-react';
 import { COLOR_HEX } from '../lib/colors';
 import { BrandLogo } from './BrandLogo';
@@ -84,6 +84,8 @@ export default function SneakerListView({
             })
           : null;
 
+        const displayName = getSneakerName(sneaker);
+
         return (
           <div
             key={sneaker.id}
@@ -96,7 +98,7 @@ export default function SneakerListView({
                 {sneaker.thumbnail_url ? (
                   <img
                     src={sneaker.thumbnail_url}
-                    alt={sneaker.name}
+                    alt={displayName}
                     className="w-full h-full object-contain"
                   />
                 ) : (
@@ -107,8 +109,8 @@ export default function SneakerListView({
               {/* Sneaker Info */}
               <div className="min-w-0 space-y-1.5 flex-1">
                 <div className="flex items-center flex-wrap gap-2">
-                  <h3 className="font-bold text-sm text-zinc-100 truncate max-w-[200px] md:max-w-[300px]" title={sneaker.name}>
-                    {sneaker.name || 'Unnamed Sneaker'}
+                  <h3 className="font-bold text-sm text-zinc-100 truncate max-w-[200px] md:max-w-[300px]" title={displayName}>
+                    {displayName}
                   </h3>
                   {sneaker.height && (
                     <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider border ${
@@ -133,7 +135,7 @@ export default function SneakerListView({
                 <div className="flex items-center gap-3 flex-wrap text-xs text-zinc-400">
                   {/* Brand Logo Only */}
                   <div className="h-5 flex items-center justify-center text-zinc-300 shrink-0">
-                    <BrandLogo brand={sneaker.brand} sneakerName={sneaker.name} className="h-4 text-zinc-300" />
+                    <BrandLogo brand={sneaker.brand} sneakerName={displayName} className="h-4 text-zinc-300" />
                   </div>
 
                   {/* Styles displayed as separate pills */}

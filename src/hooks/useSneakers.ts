@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase, Sneaker, SneakerInsert, buildName } from '../lib/supabase';
+import { supabase, Sneaker, SneakerInsert, buildName, getSneakerName } from '../lib/supabase';
 import { safeLocalStorage } from '../lib/utils';
 
 const DEFAULT_SNEAKERS: Sneaker[] = [
@@ -241,7 +241,8 @@ export function useSneakers(userId?: string) {
         const storageKey = `sneakers_inventory_${userId}`;
         const stored = safeLocalStorage.getItem(storageKey);
         if (stored) {
-          setSneakers(JSON.parse(stored));
+          const list: Sneaker[] = JSON.parse(stored);
+          setSneakers(list.map(s => ({ ...s, name: getSneakerName(s) })));
         } else {
           // Put default sneakers in first time
           safeLocalStorage.setItem(storageKey, JSON.stringify(DEFAULT_SNEAKERS));
@@ -266,7 +267,10 @@ export function useSneakers(userId?: string) {
         throw error;
       }
 
-      const fetchedSneakers = (data || []) as Sneaker[];
+      const fetchedSneakers = ((data || []) as Sneaker[]).map(s => ({
+        ...s,
+        name: getSneakerName(s),
+      }));
       setSneakers(fetchedSneakers);
       setUsingLocalStorageFallback(false);
       // Sync cache
@@ -284,7 +288,12 @@ export function useSneakers(userId?: string) {
       try {
         const storageKey = `sneakers_inventory_${userId}`;
         const stored = safeLocalStorage.getItem(storageKey);
-        setSneakers(stored ? JSON.parse(stored) : DEFAULT_SNEAKERS);
+        if (stored) {
+          const list: Sneaker[] = JSON.parse(stored);
+          setSneakers(list.map(s => ({ ...s, name: getSneakerName(s) })));
+        } else {
+          setSneakers(DEFAULT_SNEAKERS);
+        }
       } catch (fallbackErr) {
         console.debug('Fallback localStorage read error:', fallbackErr);
       }

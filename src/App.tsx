@@ -343,26 +343,24 @@ function App() {
     <div className="min-h-screen bg-zinc-950">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3">
-                <img
-                  src="https://i.postimg.cc/sgbkTBQW/imageedit-41-6518783016.png"
-                  alt="Sneaker Roulette"
-                  className="h-16 sm:h-18 w-auto object-cover"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 sm:h-20">
+            <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+              <img
+                src="https://i.postimg.cc/sgbkTBQW/imageedit-41-6518783016.png"
+                alt="Sneaker Roulette"
+                className="h-10 sm:h-16 md:h-18 w-auto object-contain shrink-0"
+                referrerPolicy="no-referrer"
+              />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <button
                 onClick={() => setShowPicker(true)}
-                className="hidden sm:flex items-center pb-2 pt-1.5 justify-center w-[110px] h-9 gap-3 bg-emerald-600/10 text-emerald-400 text-md font-medium rounded-2xl border border-emerald-600/20 hover:bg-emerald-500/20 transition-colors cursor-pointer"
+                className="flex items-center justify-center h-9 px-2.5 sm:px-3 sm:w-[110px] gap-1.5 sm:gap-2 bg-emerald-600/10 text-emerald-400 text-xs sm:text-sm font-medium rounded-2xl border border-emerald-600/20 hover:bg-emerald-500/20 transition-colors cursor-pointer shrink-0"
               >
-                <LifeBuoy className="w-5 h-5 text-emerald-400" />
-                Spin
+                <LifeBuoy className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-emerald-400 shrink-0" />
+                <span>Spin</span>
               </button>
               <button
                 onClick={() => {
@@ -372,10 +370,10 @@ function App() {
                     setShowImport(true);
                   }
                 }}
-                className="hidden sm:flex items-center pb-2 pt-1.5 justify-center w-[110px] h-9 gap-1.5 bg-sky-600/10 text-sky-400 text-md font-medium rounded-2xl border border-sky-700/20 hover:bg-sky-600/20 transition-colors cursor-pointer"
+                className="flex items-center justify-center h-9 px-2.5 sm:px-3 sm:w-[110px] gap-1.5 sm:gap-2 bg-sky-600/10 text-sky-400 text-xs sm:text-sm font-medium rounded-2xl border border-sky-700/20 hover:bg-sky-600/20 transition-colors cursor-pointer shrink-0"
               >
-                <Upload className="w-5 h-5 text-sky-400" />
-                Import
+                <Upload className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-sky-400 shrink-0" />
+                <span>Import</span>
               </button>
               <button
                 onClick={() => {
@@ -388,13 +386,13 @@ function App() {
                     setShowForm(true);
                   }
                 }}
-                className="flex items-center justify-center w-[110px] h-9 pb-2 pt-1.5 gap-1.5 bg-rose-600/10 text-rose-400 text-md font-medium rounded-2xl border border-rose-700/20 hover:bg-rose-600/20 transition-colors cursor-pointer"
+                className="flex items-center justify-center h-9 px-2.5 sm:px-3 sm:w-[110px] gap-1.5 sm:gap-2 bg-rose-600/10 text-rose-400 text-xs sm:text-sm font-medium rounded-2xl border border-rose-700/20 hover:bg-rose-600/20 transition-colors cursor-pointer shrink-0"
               >
-                <Plus className="w-5 h-5 text-rose-400" />
-                Add
+                <Plus className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-rose-400 shrink-0" />
+                <span>Add</span>
               </button>
 
-              <div className="h-8 w-px bg-zinc-800/80 mx-1 hidden sm:block" />
+              <div className="h-8 w-px bg-zinc-800/80 mx-0.5 sm:mx-1 hidden sm:block" />
 
               <div className="flex flex-col items-start gap-1">
                 <div className="relative" id="user-menu-container">
@@ -683,21 +681,6 @@ CREATE POLICY "Users can delete own sneakers"
             )}
           </div>
         )}
-        {/* Mobile action buttons */}
-        <div className="flex sm:hidden gap-2">
-          <button
-            onClick={() => setShowPicker(true)}
-            className="flex-1 flex items-center justify-center gap-2 py-3 bg-emerald-600/10 text-emerald-400 text-sm font-medium rounded-xl border border-emerald-500/20"
-          >
-            <LifeBuoy className="w-6 h-6 text-emerald-400" /> Spin the Wheel
-          </button>
-          <button
-            onClick={() => setShowImport(true)}
-            className="flex-1 flex items-center justify-center gap-2 py-3 bg-zinc-800 text-white text-sm font-medium rounded-xl border border-zinc-700"
-          >
-            <Upload className="w-4 h-4" /> Import
-          </button>
-        </div>
 
         {/* Search & Filters */}
         <div className="space-y-3">

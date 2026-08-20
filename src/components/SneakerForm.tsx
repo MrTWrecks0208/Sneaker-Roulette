@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Sneaker, SneakerInsert, BRANDS, BRAND_CATEGORIES, HEIGHTS, STYLES, COLORS, CONDITION_OPTIONS, buildName } from '../lib/supabase';
+import { Sneaker, SneakerInsert, BRANDS, BRAND_CATEGORIES, HEIGHTS, STYLES, COLORS, CONDITION_OPTIONS, buildName, getSneakerName } from '../lib/supabase';
 import { X, Upload, Loader2, Camera, Sparkles, ChevronDown, Search, Check, Star, Info, Lock, Plus, Minus } from 'lucide-react';
 import PhotoGuideModal from './PhotoGuide';
 import { useSubscription } from '../hooks/useSubscription';
@@ -41,13 +41,14 @@ const COLOR_GLOW: Record<string, { bg: string; text: string; border: string; sha
   'Navy':             { bg: 'rgba(30,58,138,.80)',   text: '#ffffff', border: 'rgba(30,64,175,.80)' },
   'Indigo':           { bg: 'rgba(99,102,241,.80)',  text: '#ffffff', border: 'rgba(99,102,241,.80)' },
   'Purple':           { bg: 'rgba(168,85,247,.80)',  text: '#ffffff', border: 'rgba(168,85,247,.80)' },
+  'Eggplant':         { bg: 'rgba(73,57,81,.80)',    text: '#ffffff', border: 'rgba(73,57,81,.80)'   },
   'Maroon':           { bg: 'rgba(128,0,0,.80)',     text: '#ffffff', border: 'rgba(128,0,0,.80)' },
   'Burgundy':         { bg: 'rgba(128,0,32,.80)',    text: '#ffffff', border: 'rgba(128,0,32,.80)' },
   'Magenta':          { bg: 'rgba(216,0,115,.80)',   text: '#ffffff', border: 'rgba(216,0,115,.80)' },
   'Pink':             { bg: 'rgba(236,72,153,.80)',  text: '#000000', border: 'rgba(236,72,153,.80)' },
   'Hot Pink':         { bg: 'rgba(255,0,110,.80)',   text: '#ffffff', border: 'rgba(255,0,110,.80)' },
   'Gold':             { bg: 'rgba(239,191,4,.80)',   text: '#000000', border: 'rgba(255,215,0,.80)' },
-  'Silver':           { bg: 'rgba(192,192,192,.80)', text: '#000000', border: 'rgba(192,192,192,.80)' },
+  'Silver':           { bg: 'rgba(188,198,204,.80)', text: '#000000', border: 'rgba(188,198,204,.80)' },
   'Reflective':       { bg: 'rgba(200,210,220,.80)', text: '#000000', border: 'rgba(200,210,220,.80)' },
   'Glow':             { bg: 'rgba(190,253,183,.80)', text: '#000000', border: 'rgba(190,253,183,.80)' },
   'Iridescent':       { bg: 'rgba(180,160,255,.80)', text: '#ffffff', border: 'rgba(180,160,255,.80)' },
@@ -389,7 +390,7 @@ function BrandSelect({ value, onChange }: { value: string; onChange: (b: string)
                               : 'text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100'
                           }`}
                         >
-                          <span>{b}</span>
+                          <span>{b === 'Other' ? 'Other (Enter manually)' : b}</span>
                           {isSelected && <Check className="w-4 h-4 text-blue-400 shrink-0" />}
                         </button>
                       );
@@ -409,8 +410,14 @@ function BrandSelect({ value, onChange }: { value: string; onChange: (b: string)
 
 export default function SneakerForm({ sneaker, onSave, onCancel, onOpenSubscriptionModal }: SneakerFormProps) {
   const { config, isLastWornAllowed, maxImages } = useSubscription();
-  const [nameInput, setNameInput] = useState(sneaker ? buildName(sneaker.brand, sneaker.model, sneaker.variant || '', sneaker.colorway) : '');
+  const [nameInput, setNameInput] = useState(sneaker ? getSneakerName(sneaker) : '');
   const [brand, setBrand] = useState(sneaker?.brand || '');
+  const [isCustomBrand, setIsCustomBrand] = useState<boolean>(() => {
+    if (sneaker?.brand) {
+      return sneaker.brand === 'Other' || !BRANDS.filter(b => b !== 'Other').includes(sneaker.brand);
+    }
+    return false;
+  });
   const [model, setModel] = useState(sneaker?.model || '');
   const [height, setHeight] = useState(sneaker?.height || '');
   const [variant, setVariant] = useState(sneaker?.variant || '');
@@ -445,7 +452,9 @@ export default function SneakerForm({ sneaker, onSave, onCancel, onOpenSubscript
 
   useEffect(() => {
     if (sneaker) {
+      setNameInput(getSneakerName(sneaker));
       setBrand(sneaker.brand);
+      setIsCustomBrand(sneaker.brand === 'Other' || (!BRANDS.filter(b => b !== 'Other').includes(sneaker.brand) && Boolean(sneaker.brand)));
       setModel(sneaker.model);
       setHeight(sneaker.height);
       setVariant(sneaker.variant);
@@ -471,11 +480,28 @@ export default function SneakerForm({ sneaker, onSave, onCancel, onOpenSubscript
     }
   };
 
+  const handleBrandChange = (newBrand: string) => {
+    setUserEditedFields(true);
+    if (newBrand === 'Other') {
+      setIsCustomBrand(true);
+      setBrand('');
+    } else {
+      setIsCustomBrand(false);
+      setBrand(newBrand);
+    }
+  };
+
   const handleNameChange = useCallback((value: string) => {
     setNameInput(value);
     if (!userEditedFields) {
       const parsed = parseSneakerName(value);
-      setBrand(parsed.brand);
+      if (parsed.brand) {
+        setBrand(parsed.brand);
+        setIsCustomBrand(parsed.brand === 'Other' || !BRANDS.filter(b => b !== 'Other').includes(parsed.brand));
+      } else {
+        setBrand('');
+        setIsCustomBrand(false);
+      }
       setModel(parsed.model);
       setVariant(parsed.variant);
       setColorway(parsed.colorway);
@@ -577,6 +603,7 @@ export default function SneakerForm({ sneaker, onSave, onCancel, onOpenSubscript
       const parsed = parseSneakerName(q);
       if (parsed.brand && parsed.model) {
         setBrand(parsed.brand);
+        setIsCustomBrand(parsed.brand === 'Other' || !BRANDS.filter(b => b !== 'Other').includes(parsed.brand));
         setModel(parsed.model);
         setVariant(parsed.variant);
         setColorway(parsed.colorway || '');
@@ -597,6 +624,7 @@ export default function SneakerForm({ sneaker, onSave, onCancel, onOpenSubscript
     setNameInput(s);
     const parsed = parseSneakerName(s);
     setBrand(parsed.brand);
+    setIsCustomBrand(parsed.brand === 'Other' || !BRANDS.filter(b => b !== 'Other').includes(parsed.brand));
     setModel(parsed.model);
     setVariant(parsed.variant);
     setColorway(parsed.colorway);
@@ -716,11 +744,52 @@ export default function SneakerForm({ sneaker, onSave, onCancel, onOpenSubscript
 
           {/* Brand */}
           <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wider">Brand</label>
-            <BrandSelect
-              value={brand}
-              onChange={handleFieldEdit(setBrand)}
-            />
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-medium text-zinc-400 uppercase tracking-wider">Brand</label>
+              {isCustomBrand && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCustomBrand(false);
+                    handleBrandChange('');
+                  }}
+                  className="text-xs text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 cursor-pointer"
+                >
+                  Select from list
+                </button>
+              )}
+            </div>
+            {isCustomBrand ? (
+              <div className="relative flex items-center">
+                <input
+                  type="text"
+                  value={brand}
+                  onChange={e => {
+                    setUserEditedFields(true);
+                    setBrand(e.target.value);
+                  }}
+                  placeholder="Enter brand name..."
+                  autoFocus
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors pr-20"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCustomBrand(false);
+                    handleBrandChange('');
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-zinc-100 text-xs rounded-md border border-zinc-700 transition-colors cursor-pointer"
+                  title="Switch back to brand list"
+                >
+                  List
+                </button>
+              </div>
+            ) : (
+              <BrandSelect
+                value={brand}
+                onChange={handleBrandChange}
+              />
+            )}
           </div>
 
           {/* Model & Height */}
